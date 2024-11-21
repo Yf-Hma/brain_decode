@@ -1,0 +1,101 @@
+# Implementation code of the paper: A Multimodal LLM for the Non-Invasive Decoding of Spoken Text from Brain Recordings
+
+![model](figs/MLLM_V2.png)
+## Requirements
+```bash
+python install -r requirement.txt
+```
+
+* Download vicuna-7b-v1.3 from https://huggingface.co/lmsys/vicuna-7b-v1.3 in the folder 'llm'
+* Download CLIP in the main folder: git clone https://github.com/openai/CLIP
+
+* To use other data storage paths, change the configuration file: src/config.py
+
+## Preprocessing raw:
+#### Preprocessing raw fMRI data:
+
+* Create a folder “data/raw_data/convers_bold” and upload to it the 2.2.0 version of the repository from the OpenNeuro platform:
+https://openneuro.org/datasets/ds001740/versions/2.2.0
+
+* Create a folder “data/raw_data/transcriptions and upload to it the raw Transcriptions from the Ortolang platform:
+https://www.ortolang.fr/market/corpora/convers/v2?path=%2FTranscriptions
+
+
+
+* Preprocessing raw 4D voxel BOLD signals and splitting them into chunk
+```bash
+python src/process_raw_bold_signal.py --n_rois 200 --data_path data/raw_data/convers_data
+python src/data_builder_tools/split_bold_files.py --fmri_data_path data/raw_data/convers_data/fMRI_data_200
+```
+
+#### Processing transcription files
+```bash
+python src/data_builder_tools/textgrid_to_text.py
+```
+
+#### Building training and test data
+Using json files to associate paths of bold chunks and the associated input and response text sentences for instruction tuning:
+```bash
+python src/data_builder_tools/build_data.py
+python src/data_builder_tools/build_tokenizer.py
+```
+
+
+## Train and test Transformer-based models
+
+```bash
+python  train_transformers.py [-h] [-seed SEED] [--test] [--retrain] [--load]
+                             [--model_name {Transformer,CNNTransformer,DuplexTransformerConv,BipartiteTransformerConv,DeconvBipartiteTransformerConv}]
+```   
+Example: training and testing DeconvBipartiteTransformer
+```bash
+python  train_transformers.py -m DeconvBipartiteTransformerConv
+python  train_transformers.py -m DeconvBipartiteTransformerConv --test
+```   
+
+
+## Train and test MLLMs
+Note that this requires a trained DeconvBipartiteTransformer.
+```bash
+  python trainer.py
+  Arguments:
+    --model_name {MllmBrainToTextV0, MllmBrainToTextV1, MllmBrainToTextV2}   name of the model to train.
+    --test                To test the model
+    --retrain             retrain from existing checkpoint
+    --starting_epoch      starting epoch in case of retrain is True
+    --save_epochs         number of epochs before saving the checkpoint
+    --epochs              number of training epochs (default 300)
+    --batch_size          Batch size (default 32)
+    --saved_checkpoint    Path of the trained model in case of “retrain“ or “test“ is True
+```
+
+Example
+```bash
+python  trainer.py -m MllmBrainToTextV0
+python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV2_200_spoken_300.pth
+```   
+To use multiple GPUs, use trainer_dist.py instead of trainer.py
+
+
+## Evaluation and Benchmarking
+```bash
+python src/evaluation.py
+```
+
+
+## Benchmark on perceived speech decoding:
+* Download training and test datasets in the folder "data/semantic_decoding" as outlined in: https://github.com/HuthLab/semantic-decoding
+* To run the experiments on this dataset, run the following commands from "comparison_semantic_perceived_GPT_2023" folder:
+```bash
+python src/prepare_Tang2023_datasets.py -s subject (choices=['S1', 'S2', 'S3'])
+python src/build_tokenizer.py
+python train_transformers.py s subject
+python trainer.py -s subject
+python trainer.py --test -s subject --saving_path trained_model_path
+```   
+
+## Notes
+* The structure of this repository is in work progress
+* Some parts of the code of this project are adapted from InstructBlip (https://github.com/salesforce/LAVIS/blob/main/projects/instructblip/README.md), we thank the authors for their great work.
+
+* In the comparison on perceived speech decoding, we used the same datasets and configuration setup in https://www.nature.com/articles/s41593-023-01304-9. Data preprocessing and preparation scripts are taken from :https://github.com/HuthLab/semantic-decoding. We thank the authors for their great work.
