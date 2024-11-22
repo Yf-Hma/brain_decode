@@ -67,14 +67,22 @@ Note that this requires a trained DeconvBipartiteTransformer.
     --epochs              number of training epochs (default 300)
     --batch_size          Batch size (default 32)
     --saved_checkpoint    Path of the trained model in case of “retrain“ or “test“ is True
+    --load_in_4bit       to load the llm quantized in 4 bits for inference.")
 ```
 
 Example
 ```bash
 python  trainer.py -m MllmBrainToTextV0
-python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV2_200_spoken_300.pth
+python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV2_200_spoken_300.pth --test
+```
+
+* To use multiple GPUs, use trainer_dist.py instead of trainer.py
+* To use the version with a quantized LLM for inference, include the 'load_in_4bit' parameter. Example:
+
+Example
+```bash
+python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV2_200_spoken_300.pth --test --load_in_4bit
 ```   
-To use multiple GPUs, use trainer_dist.py instead of trainer.py
 
 
 ## Evaluation and Benchmarking

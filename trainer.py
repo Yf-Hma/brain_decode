@@ -41,7 +41,7 @@ def train (model, model_name, type, data_loader, saving_path, epochs = 100, save
 	for epoch in range(starting_epoch, epochs + 1):
 		print ('-------- Epoch: ', epoch)
 		mean_loss = 0
-        
+
 		if epoch > (epochs - 20) and epochs > 20:
 			save_epochs = 2
 
@@ -51,7 +51,7 @@ def train (model, model_name, type, data_loader, saving_path, epochs = 100, save
 			optim.zero_grad()
 			loss.backward()
 			optim.step()
-     
+
 		if epoch % save_epochs == 0 and (mean_loss / len (data_loader)) < best_loss:
 			best_loss = mean_loss
 			print(model_name + "_" + type, epoch, saving_path)
@@ -85,6 +85,8 @@ if __name__ == '__main__':
     parser.add_argument("--saved_checkpoint", "-s", type = str)
     parser.add_argument("--type", "-t", type = str, default = 'spoken', choices = ['spoken', 'perceived'])
     parser.add_argument("--saving_path", default = "trained_models")
+    parser.add_argument('--load_in_4bit', action='store_true', help = "to load the llm quantized in 4 bits for inference.")
+
 
     args = parser.parse_args()
 
@@ -97,7 +99,7 @@ if __name__ == '__main__':
     torch.manual_seed(args.seed)
 
     data_loader = data_builder(args.batch_size)
-    llm = models_dict[args.model_name]()
+    llm = models_dict[args.model_name](load_in_4bit = args.load_in_4bit)
 
 
     name = args.model_name + "_" + str (configs.src_fmri_features) + '_' + args.type
@@ -110,9 +112,9 @@ if __name__ == '__main__':
     else:
         if args.retrain:
             llm = load_from_checkpoint(llm, args.saved_checkpoint)
-            
-        
-        train (llm, 
+
+
+        train (llm,
                name,
                configs.type,
                data_loader["train"],

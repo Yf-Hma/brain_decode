@@ -53,3 +53,12 @@ if __name__ == '__main__':
     text_files =  text_files_left + text_files_right
 
     trained_tokenizer = train_tokenizer(text_files, "")
+
+    input_string = "j'ai encore l'aubergine en forme de batman c'est la même c'était exactement la même c'est la même que tout à l'heure oui"#.replace ("'", " ")
+    print (input_string)
+
+    output = trained_tokenizer.encode(input_string, add_special_tokens=True)
+
+    print(output)
+
+    print (trained_tokenizer.decode(output.ids, skip_special_tokens = False))

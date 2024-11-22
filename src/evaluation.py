@@ -1,11 +1,21 @@
 import glob
 import torch
 from transformers import FlaubertModel, FlaubertTokenizer
+
+import nltk
+nltk.download('punkt')
+nltk.download('punkt_tab')
+nltk.download('wordnet')
+
 from nltk.translate.bleu_score import sentence_bleu
 from nltk.translate.bleu_score import SmoothingFunction
 
+
+
+
 from nltk.translate import meteor
 from nltk import word_tokenize
+
 
 class LPTS:
     def __init__(self):
@@ -138,9 +148,9 @@ if __name__ == "__main__":
     final_lpips = total_lpips / len(full_preds)
 
     f.write ("%s ; %s ; %s ; %s ; %s ; %s\n"%(filename.split('.txt')[0], round (final_bleu * 100, 2),
-                                                                         round (final_meteor * 100, 2), 
-                                                                         round (final_jaccard*100, 2), 
-                                                                         round (final_word_overlap, 4), 
+                                                                         round (final_meteor * 100, 2),
+                                                                         round (final_jaccard*100, 2),
+                                                                         round (final_word_overlap, 4),
                                                                          round (final_lpips[0].cpu().detach().item(), 4))
                                               )
   f.close()
