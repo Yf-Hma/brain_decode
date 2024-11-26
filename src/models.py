@@ -1,8 +1,6 @@
 import os
 import sys
-# sys.path.append('benchmark_transformers')
-from transformers import AutoTokenizer
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from packaging import version
 import transformers
 import torch
@@ -24,6 +22,7 @@ class MllmBrainToTextV0(nn.Module):
         drop_path_rate=0,
         max_txt_len=128,
         max_output_txt_len=256,
+        load_in_4bit = False
     ):
         super().__init__()
 
@@ -37,11 +36,11 @@ class MllmBrainToTextV0(nn.Module):
 
         tokenizer = Tokenizer.from_file("tools/tokenizer-trained.json")
         vocab_len = tokenizer.get_vocab_size()
-        
+
         model_name_or_path = configs.LLM_DIR
         self.device = "cuda"
         encoder_path = os.path.join (configs.MODELS_TRAIN_DIR, "DeconvBipartiteTransformerConv_%d_%s.pt"%(src_fmri_features, configs.type))
-                                     
+
         model = DeconvBipartiteTransformerConv(time_steps, src_fmri_features, max_size, vocab_len, d_model, d_ff, N, heads, self.device).to(self.device)
         model = model.float()
         model.load_state_dict(torch.load(encoder_path, weights_only=True))
@@ -53,13 +52,25 @@ class MllmBrainToTextV0(nn.Module):
 
 
         self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
-        self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
-                                                              device_map=self.device,
-                                                              trust_remote_code=True,
-                                                              torch_dtype=torch.bfloat16,
-                                                              local_files_only=True)
 
+        if load_in_4bit:
+            bnb_config = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type="nf4",
+                    bnb_4bit_compute_dtype=torch.bfloat16)
 
+            self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
+                                                                  device_map=self.device,
+                                                                  trust_remote_code=True,
+                                                                  quantization_config=bnb_config,
+                                                                  local_files_only=True)
+        else:
+            self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
+                                                                  device_map=self.device,
+                                                                  trust_remote_code=True,
+                                                                  torch_dtype=torch.bfloat16,
+                                                                  local_files_only=True)
 
         self.llm_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
         self.llm_tokenizer.add_special_tokens({'bos_token': '</s>'})
@@ -273,7 +284,7 @@ class MllmBrainToText(nn.Module):
 
         tokenizer = Tokenizer.from_file("tools/tokenizer-trained.json")
         vocab_len = tokenizer.get_vocab_size()
-        
+
         model_name_or_path = configs.LLM_DIR
         self.device = "cuda"
 
@@ -524,7 +535,7 @@ class MllmBrainToTextV2(nn.Module):
 
         tokenizer = Tokenizer.from_file("tools/tokenizer-trained.json")
         vocab_len = tokenizer.get_vocab_size()
-        
+
         self.device = "cuda"
 
         # self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
@@ -540,7 +551,7 @@ class MllmBrainToTextV2(nn.Module):
         for param in self.frmi_encoder.parameters():
             param.requires_grad = False
         self.frmi_encoder.eval()
-            
+
         self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
         self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="cuda:0",
                                                         trust_remote_code=True,

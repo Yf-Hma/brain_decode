@@ -6,7 +6,7 @@ import argparse
 from nilearn.image import load_img
 from nilearn import datasets
 from nilearn.maskers import NiftiLabelsMasker
-import src.config as configs
+import config as configs
 
 
 
@@ -84,15 +84,18 @@ if __name__ == '__main__':
 
     parser = argparse. ArgumentParser ()
     parser. add_argument ("--concat", "-ct", help = "remove previous files", action="store_true")
-    parser.add_argument("--data_path", default = "data/raw_data/convers_data")
+    parser.add_argument("--data_path", default = "data/raw_data/fmri_bold/ds001740-2.2.0")
+    parser.add_argument("--output_data_path", '-o', default = "data/raw_data/fmri_bold")
     parser.add_argument("--n_rois", type = int, default = 200)
     args = parser.parse_args()
 
     n_rois = args.n_rois
     data_path = args.data_path
 
+    out_data_path = args.output_data_path
+
     atlas = datasets.fetch_atlas_schaefer_2018(n_rois=n_rois, verbose=0)
-    
+
     atlas_img = load_img(atlas['maps'])
 
     masker = NiftiLabelsMasker(
@@ -118,8 +121,8 @@ if __name__ == '__main__':
         subject = "sub-%02d"%(s + 1)
         print (subject)
 
-        if not os.path.exists ("%s/%s/%s"%(data_path,folder_name, subject)):
-            os.makedirs("%s/%s/%s"%(data_path,folder_name, subject))
+        if not os.path.exists ("%s/%s/%s"%(out_data_path,folder_name, subject)):
+            os.makedirs("%s/%s/%s"%(out_data_path,folder_name, subject))
 
         bold_signal = pd. DataFrame ()
 
@@ -166,13 +169,13 @@ if __name__ == '__main__':
             for i in range(nb_hh_convers):
                 begin = nearestPoint (index, hh_convers.values[i][1]) + (385 * indice_block)
                 end = nearestPoint (index, hh_convers.values[i][2]) + (385 * indice_block)  + 3 # add two observatiosn after the end of the conversation
-                conversation_to_dataframe (data_path, folder_name, bold_signal, colnames, index, begin, end, "CONV1", hh, args. concat)
+                conversation_to_dataframe (out_data_path, folder_name, bold_signal, colnames, index, begin, end, "CONV1", hh, args. concat)
                 hh += 2
 
             for i in range(nb_hr_convers):
                 begin = nearestPoint (index, hr_convers.values[i][1]) + (385 * indice_block)
                 end = nearestPoint (index, hr_convers.values[i][2]) + (385 * indice_block) + 3 # add two observatiosn after the end of the conversation
-                conversation_to_dataframe (data_path, folder_name, bold_signal, colnames, index, begin, end, "CONV2", hr, args. concat)
+                conversation_to_dataframe (out_data_path, folder_name, bold_signal, colnames, index, begin, end, "CONV2", hr, args. concat)
 
                 hr += 2
             indice_block += 1

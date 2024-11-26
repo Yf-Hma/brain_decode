@@ -14,7 +14,7 @@ python install -r requirement.txt
 ## Preprocessing raw:
 #### Preprocessing raw fMRI data:
 
-* Create a folder “data/raw_data/convers_bold” and upload to it the 2.2.0 version of the repository from the OpenNeuro platform:
+* Create a folder “data/raw_data/fmri_bold and upload to it the 2.2.0 version of the repository from the OpenNeuro platform:
 https://openneuro.org/datasets/ds001740/versions/2.2.0
 
 * Create a folder “data/raw_data/transcriptions and upload to it the raw Transcriptions from the Ortolang platform:
@@ -24,8 +24,8 @@ https://www.ortolang.fr/market/corpora/convers/v2?path=%2FTranscriptions
 
 * Preprocessing raw 4D voxel BOLD signals and splitting them into chunk
 ```bash
-python src/process_raw_bold_signal.py --n_rois 200 --data_path data/raw_data/convers_data
-python src/data_builder_tools/split_bold_files.py --fmri_data_path data/raw_data/convers_data/fMRI_data_200
+python src/process_raw_bold_signal.py --n_rois 200 --data_path data/raw_data/fmri_bold  -o data/raw_data/fmri_bold
+python src/data_builder_tools/split_bold_files.py --fmri_data_path data/raw_data/fmri_bold/fMRI_data_200
 ```
 
 #### Processing transcription files

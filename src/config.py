@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 
-STORAGE_DIR = "data/raw_data/convers_data"
+STORAGE_DIR = "data/raw_data/fmri_bold"
 BOLD_DATA_PATH = STORAGE_DIR
 MODELS_TRAIN_DIR =  "trained_models"
 
