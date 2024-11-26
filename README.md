@@ -1,6 +1,7 @@
 # Implementation code of the paper: A Multimodal LLM for the Non-Invasive Decoding of Spoken Text from Brain Recordings
 
 ![model](figs/MLLM_V2.png)
+
 ## Requirements
 ```bash
 python install -r requirement.txt
@@ -14,26 +15,26 @@ python install -r requirement.txt
 ## Preprocessing raw:
 #### Preprocessing raw fMRI data:
 
-* Create a folder “data/raw_data/fmri_bold and upload to it the 2.2.0 version of the repository from the OpenNeuro platform:
+* Create a folder named “data/raw_data/fmri_bold” and upload the version 2.2.0 of the datasets repository from the OpenNeuro platform into it:
 https://openneuro.org/datasets/ds001740/versions/2.2.0
 
-* Create a folder “data/raw_data/transcriptions and upload to it the raw Transcriptions from the Ortolang platform:
+* Create a folder named “data/raw_data/transcriptions" and upload  the raw Transcriptions from the Ortolang platform into it:
 https://www.ortolang.fr/market/corpora/convers/v2?path=%2FTranscriptions
 
 
-
-* Preprocessing raw 4D voxel BOLD signals and splitting them into chunk
+* Processing raw 4D voxel BOLD signals and segmenting them into fixed-duration sequences:
 ```bash
 python src/process_raw_bold_signal.py --n_rois 200 --data_path data/raw_data/fmri_bold  -o data/raw_data/fmri_bold
 python src/data_builder_tools/split_bold_files.py --fmri_data_path data/raw_data/fmri_bold/fMRI_data_200
 ```
 
 #### Processing transcription files
+* Processing transcription files (conversations) and segmenting them into fixed-duration text sequences:
 ```bash
 python src/data_builder_tools/textgrid_to_text.py
 ```
 
-#### Building training and test data
+#### Building and training and test data
 Using json files to associate paths of bold chunks and the associated input and response text sentences for instruction tuning:
 ```bash
 python src/data_builder_tools/build_data.py
