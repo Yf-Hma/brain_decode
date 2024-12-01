@@ -3,13 +3,11 @@
 ![model](figs/MLLM_V2.png)
 
 ## Requirements
-```bash
-python install -r requirement.txt
-```
 
-* Download vicuna-7b-v1.3 from https://huggingface.co/lmsys/vicuna-7b-v1.3 in the folder 'llm'
-* Download CLIP in the main folder: git clone https://github.com/openai/CLIP
-
+* python 3.9.19
+* Required packages:  ```python install -r requirement.txt```
+* vicuna-7b-v1.3 from https://huggingface.co/lmsys/vicuna-7b-v1.3 in the folder 'llm'
+* CLIP in the main folder: git clone https://github.com/openai/CLIP
 * To use other data storage paths, change the configuration file: src/config.py
 
 ## Preprocessing raw:
@@ -24,7 +22,7 @@ https://www.ortolang.fr/market/corpora/convers/v2?path=%2FTranscriptions
 
 * Processing raw 4D voxel BOLD signals and segmenting them into fixed-duration sequences:
 ```bash
-python src/process_raw_bold_signal.py --n_rois 200 --data_path data/raw_data/fmri_bold  -o data/raw_data/fmri_bold
+python src/process_raw_bold_signal.py --n_rois 200 --data_path data/raw_data/fmri_bold/ds001740-2.2.0  -o data/raw_data/fmri_bold
 python src/data_builder_tools/split_bold_files.py --fmri_data_path data/raw_data/fmri_bold/fMRI_data_200
 ```
 
@@ -34,7 +32,7 @@ python src/data_builder_tools/split_bold_files.py --fmri_data_path data/raw_data
 python src/data_builder_tools/textgrid_to_text.py
 ```
 
-#### Building and training and test data
+#### Building training and test data
 Using json files to associate paths of bold chunks and the associated input and response text sentences for instruction tuning:
 ```bash
 python src/data_builder_tools/build_data.py
@@ -74,7 +72,7 @@ Note that this requires a trained DeconvBipartiteTransformer.
 Example
 ```bash
 python  trainer.py -m MllmBrainToTextV0
-python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV2_200_spoken_300.pth --test
+python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV0_200_spoken_300.pth --test
 ```
 
 * To use multiple GPUs, use trainer_dist.py instead of trainer.py
@@ -82,7 +80,7 @@ python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV2_200_
 
 Example
 ```bash
-python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV2_200_spoken_300.pth --test --load_in_4bit
+python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV0_200_spoken_300.pth --test --batch_size 16 --load_in_4bit
 ```   
 
 

@@ -41,7 +41,9 @@ class MllmBrainToTextV0(nn.Module):
         self.device = "cuda"
         encoder_path = os.path.join (configs.MODELS_TRAIN_DIR, "DeconvBipartiteTransformerConv_%d_%s.pt"%(src_fmri_features, configs.type))
 
-        model = DeconvBipartiteTransformerConv(time_steps, src_fmri_features, max_size, vocab_len, d_model, d_ff, N, heads, self.device).to(self.device)
+        model = DeconvBipartiteTransformerConv(time_steps, src_fmri_features, max_size,\
+                                               vocab_len, d_model, d_ff, N, heads, self.device)\
+                                               .to(self.device)
         model = model.float()
         model.load_state_dict(torch.load(encoder_path, weights_only=True))
         self.frmi_encoder = model.encoder
@@ -96,7 +98,7 @@ class MllmBrainToTextV0(nn.Module):
         enable_autocast = self.device != torch.device("cpu")
 
         if enable_autocast:
-            return torch.cuda.amp.autocast(dtype=dtype)
+            return torch.amp.autocast('cuda', dtype=dtype)
         else:
             return contextlib.nullcontext()
 
@@ -241,7 +243,7 @@ class MllmBrainToTextV0(nn.Module):
             outputs = self.llm_model.generate(
                 inputs_embeds=inputs_embeds,
                 attention_mask=attention_mask,
-                do_sample=use_nucleus_sampling,
+                do_sample=True,
                 top_p=top_p,
                 temperature=temperature,
                 num_beams=num_beams,
@@ -271,6 +273,7 @@ class MllmBrainToText(nn.Module):
         drop_path_rate=0,
         max_txt_len=128,
         max_output_txt_len=256,
+        load_in_4bit = False
     ):
         super().__init__()
 
@@ -302,12 +305,27 @@ class MllmBrainToText(nn.Module):
         self.frmi_encoder.eval()
 
         self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
-        self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
-                                                              device_map=self.device,
-                                                              trust_remote_code=True,
-                                                              torch_dtype=torch.bfloat16,
-                                                              local_files_only=True)
 
+
+
+        if load_in_4bit:
+            bnb_config = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type="nf4",
+                    bnb_4bit_compute_dtype=torch.bfloat16)
+
+            self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
+                                                                  device_map=self.device,
+                                                                  trust_remote_code=True,
+                                                                  quantization_config=bnb_config,
+                                                                  local_files_only=True)
+        else:
+            self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
+                                                                  device_map=self.device,
+                                                                  trust_remote_code=True,
+                                                                  torch_dtype=torch.bfloat16,
+                                                                  local_files_only=True)
 
 
         self.llm_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
@@ -483,7 +501,7 @@ class MllmBrainToText(nn.Module):
             outputs = self.llm_model.generate(
                 inputs_embeds=inputs_embeds,
                 attention_mask=attention_mask,
-                do_sample=use_nucleus_sampling,
+                do_sample=True,
                 top_p=top_p,
                 temperature=temperature,
                 num_beams=num_beams,
@@ -511,7 +529,8 @@ class MllmBrainToTextV2(nn.Module):
         img_size=256,
         drop_path_rate=0,
         max_txt_len=128,
-        max_output_txt_len=256):
+        max_output_txt_len=256,
+        load_in_4bit = False):
         super().__init__()
 
         model_name_or_path = configs.LLM_DIR
@@ -552,12 +571,27 @@ class MllmBrainToTextV2(nn.Module):
             param.requires_grad = False
         self.frmi_encoder.eval()
 
-        self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
-        self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="cuda:0",
-                                                        trust_remote_code=True,
-                                                        torch_dtype=torch.bfloat16,
-                                                        local_files_only=True)
 
+        if load_in_4bit:
+            bnb_config = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type="nf4",
+                    bnb_4bit_compute_dtype=torch.bfloat16)
+
+            self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
+                                                                  device_map=self.device,
+                                                                  trust_remote_code=True,
+                                                                  quantization_config=bnb_config,
+                                                                  local_files_only=True)
+        else:
+            self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
+                                                                  device_map=self.device,
+                                                                  trust_remote_code=True,
+                                                                  torch_dtype=torch.bfloat16,
+                                                                  local_files_only=True)
+
+        self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
 
         self.llm_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
         self.llm_tokenizer.add_special_tokens({'bos_token': '</s>'})
@@ -589,7 +623,7 @@ class MllmBrainToTextV2(nn.Module):
         enable_autocast = self.device != torch.device("cpu")
 
         if enable_autocast:
-            return torch.cuda.amp.autocast(dtype=dtype)
+            return torch.amp.autocast('cuda', dtype=dtype)
         else:
             return contextlib.nullcontext()
 
@@ -746,7 +780,7 @@ class MllmBrainToTextV2(nn.Module):
             outputs = self.llm_model.generate(
                 inputs_embeds=inputs_embeds,
                 attention_mask=attention_mask,
-                do_sample=use_nucleus_sampling,
+                do_sample=True,
                 top_p=top_p,
                 temperature=temperature,
                 num_beams=num_beams,

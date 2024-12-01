@@ -9,15 +9,13 @@ setuptools==69.5.1
 ftfy
 tokenizers
 sentencepiece
-accelerate
+accelerate==0.26.1
 bitsandbytes==0.44.1
-torch
+torch==2.5.1
 torchvision
 sacremoses
 transformers==4.40.2
 tqdm==4.66.4
-wandb==0.18.1
-transformers==4.40.2
 wandb==0.18.1
 auto_mix_prep==0.2.0
 nilearn==0.10.4
