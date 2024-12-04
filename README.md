@@ -83,7 +83,6 @@ Example
 python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV0_200_spoken_300.pth --test --batch_size 16 --load_in_4bit
 ```   
 
-
 ## Evaluation and Benchmarking
 ```bash
 python src/evaluation.py
@@ -100,6 +99,12 @@ python train_transformers.py s subject
 python trainer.py -s subject
 python trainer.py --test -s subject --saving_path trained_model_path
 ```   
+
+## TODO
+- [ ] Provide pretrained checkpoints.
+- [ ] Add NSD datasets.
+- [ ] Test other LLMs (Mistral, LLama3, etc.)
+
 
 ## Notes
 * The structure of this repository is in work progress
