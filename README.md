@@ -1,6 +1,9 @@
-# Implementation code of the paper: A Multimodal LLM for the Non-Invasive Decoding of Spoken Text from Brain Recordings
+### A Multimodal LLM for the Non-Invasive Decoding of Spoken Text from Brain Recordings
 
-![model](figs/MLLM_V2.png)
+
+![model](figs/overview_1.png)
+
+ In this paper, we propose and end-to-end multimodal large language model for decoding the spoken text in a human-human or human-robot interactions. The proposed architecture is founded on  ($i$) an encoder derived from a specific transformer with the incorporation of an augmented embedding layer for the encoder and a better-adjusted attention mechanism than that present in the state of the art, and ($ii$) a frozen LLM adapted via instruction tuning to align the embedding of the input modalities to decode the output text. A benchmark in performed on two publicly available datasets where fMRI brain activity and conversational signals are recorded synchronously.
 
 ## Requirements
 
