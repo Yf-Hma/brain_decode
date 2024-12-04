@@ -13,8 +13,8 @@
 * CLIP in the main folder: git clone https://github.com/openai/CLIP
 * To use other data storage paths, change the configuration file: src/config.py
 
-## Preprocessing raw:
-#### Preprocessing raw fMRI data:
+## Preprocessing raw data:
+#### Preprocessing raw BOLD signal:
 
 * Create a folder named “data/raw_data/fmri_bold” and upload the version 2.2.0 of the datasets repository from the OpenNeuro platform into it:
 https://openneuro.org/datasets/ds001740/versions/2.2.0
