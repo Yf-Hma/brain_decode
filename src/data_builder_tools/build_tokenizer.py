@@ -10,6 +10,12 @@ from tokenizers.pre_tokenizers import Whitespace, CharDelimiterSplit
 
 from glob import glob
 
+import os, sys
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+import configs
+
 
 unk_token = "<UNK>"  # token for unknown words
 spl_tokens = ["<PAD>", "<SOS>", "<EOS>", "<MASK>", "<UNK>"]  # special tokens
@@ -47,8 +53,8 @@ def train_tokenizer(files, alg='BPE'):
 
 if __name__ == '__main__':
 
-    text_files_right = glob ("data/processed_data/interlocutor_text_data/**/*.txt", recursive=True)
-    text_files_left = glob ("data/processed_data/participant_text_data/**/*.txt", recursive=True)
+    text_files_right = glob ("%s/processed_data/interlocutor_text_data/**/*.txt"%configs.DATA_PATH, recursive=True)
+    text_files_left = glob ("%s/processed_data/participant_text_data/**/*.txt"%configs.DATA_PATH, recursive=True)
 
     text_files =  text_files_left + text_files_right
 

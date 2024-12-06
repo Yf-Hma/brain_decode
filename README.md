@@ -25,8 +25,8 @@ https://www.ortolang.fr/market/corpora/convers/v2?path=%2FTranscriptions
 
 * Processing raw 4D voxel BOLD signals and segmenting them into fixed-duration sequences:
 ```bash
-python src/process_raw_bold_signal.py --n_rois 200 --data_path data/raw_data/fmri_bold/ds001740-2.2.0  -o data/raw_data/fmri_bold
-python src/data_builder_tools/split_bold_files.py --fmri_data_path data/raw_data/fmri_bold/fMRI_data_200
+python src/process_raw_bold_signal.py --n_rois 200
+python src/data_builder_tools/split_bold_files.py
 ```
 
 #### Processing transcription files
@@ -45,10 +45,6 @@ python src/data_builder_tools/build_tokenizer.py
 
 ## Train and test Transformer-based models
 
-```bash
-python  train_transformers.py [-h] [-seed SEED] [--test] [--retrain] [--load]
-                             [--model_name {Transformer,CNNTransformer,DuplexTransformerConv,BipartiteTransformerConv,DeconvBipartiteTransformerConv}]
-```   
 Example: training and testing DeconvBipartiteTransformer
 ```bash
 python  train_transformers.py -m DeconvBipartiteTransformerConv
@@ -57,22 +53,7 @@ python  train_transformers.py -m DeconvBipartiteTransformerConv --test
 
 
 ## Train and test MLLMs
-Note that this requires a trained DeconvBipartiteTransformer.
-```bash
-  python trainer.py
-  Arguments:
-    --model_name {MllmBrainToTextV0, MllmBrainToTextV1, MllmBrainToTextV2}   name of the model to train.
-    --test                To test the model
-    --retrain             retrain from existing checkpoint
-    --starting_epoch      starting epoch in case of retrain is True
-    --save_epochs         number of epochs before saving the checkpoint
-    --epochs              number of training epochs (default 300)
-    --batch_size          Batch size (default 32)
-    --saved_checkpoint    Path of the trained model in case of “retrain“ or “test“ is True
-    --load_in_4bit       to load the llm quantized in 4 bits for inference.")
-```
-
-Example
+Note that this requires a trained DeconvBipartiteTransformer (ex. MllmBrainToTextV0).
 ```bash
 python  trainer.py -m MllmBrainToTextV0
 python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV0_200_spoken_300.pth --test

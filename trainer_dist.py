@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 import torch.distributed as dist
 import torch.multiprocessing as mp
 
-import src.config as configs
+import src.configs as configs
 
 
 def main_worker(gpu, ngpus_per_node, models_dict, args):
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     parser.add_argument("--save_epochs", default = 5, type = int)
     parser.add_argument("--epochs", default = 300, type = int)
     parser.add_argument("--saved_checkpoint", "-s", type = str)
-    parser.add_argument("--saving_path", default = "trained_models")
+    #parser.add_argument("--saving_path", default = "trained_models")
 
     parser.add_argument('--gpu', default=None, type=int, help='GPU id to use.')
     parser.add_argument('--dist-url', default='tcp://127.0.0.1:3456', type=str, help='')
@@ -164,6 +164,9 @@ if __name__ == '__main__':
     parser.add_argument("--gpu_devices", type=int, nargs='+', default=None, help="")
 
     args = parser.parse_args()
+
+    args = parser.parse_args()
+    args.saving_path = configs.MODELS_TRAIN_DIR
 
     models_dict = {
     'MllmBrainToTextV0':MllmBrainToTextV0,

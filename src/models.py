@@ -11,7 +11,7 @@ from CLIP import clip
 from tokenizers import Tokenizer
 
 from src.transformers_src.Transformer import DeconvBipartiteTransformerConv
-import src.config as configs
+import src.configs as configs
 
 
 class MllmBrainToTextV0(nn.Module):

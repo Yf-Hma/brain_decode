@@ -1,7 +1,14 @@
 import re
 from glob import glob
-import os
+import os, sys
 import shutil
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+import configs
+
+
 
 def parse_textgrid(file_path):
     with open(file_path, 'r') as file:
@@ -96,24 +103,24 @@ def extract_text_from_textgrid (text_grid_files, out_dir, interval_length=12, la
 if __name__ == '__main__':
     # Usage example
 
-    if not os.path.exists("data/processed_data"):
-        os.makedirs('data/processed_data')
+    if not os.path.exists("%s/processed_data"%configs.DATA_PATH):
+        os.makedirs('%s/processed_data'%configs.DATA_PATH)
 
-    if os.path.exists("data/processed_data/interlocutor_text_data"):
-        shutil.rmtree('data/processed_data/interlocutor_text_data')
+    if os.path.exists("%s/processed_data/interlocutor_text_data"%configs.DATA_PATH):
+        shutil.rmtree('%s/processed_data/interlocutor_text_data'%configs.DATA_PATH)
 
-    os.makedirs('data/processed_data/interlocutor_text_data')
-
-
-    if os.path.exists("data/processed_data/participant_text_data"):
-        shutil.rmtree('data/processed_data/participant_text_data')
-
-    os.makedirs('data/processed_data/participant_text_data')
+    os.makedirs('%s/processed_data/interlocutor_text_data'%configs.DATA_PATH)
 
 
-    text_grid_files = glob ("data/raw_data/transcriptions/**/*_right-filter.TextGrid", recursive=True)
+    if os.path.exists("%s/processed_data/participant_text_data"%configs.DATA_PATH):
+        shutil.rmtree('%s/processed_data/participant_text_data'%configs.DATA_PATH)
 
-    extract_text_from_textgrid (text_grid_files, "data/processed_data/interlocutor_text_data/", interval_length=12, lagged = True)
+    os.makedirs('%s/processed_data/participant_text_data'%configs.DATA_PATH)
 
-    text_grid_files = glob ("data/raw_data/transcriptions/**/*_left-reduc.TextGrid", recursive=True)
-    extract_text_from_textgrid (text_grid_files, "data/processed_data/participant_text_data/", interval_length=12, lagged = False)
+
+    text_grid_files = glob ("%s/raw_data/transcriptions/**/*_right-filter.TextGrid"%configs.DATA_PATH, recursive=True)
+
+    extract_text_from_textgrid (text_grid_files, "%s/processed_data/interlocutor_text_data/"%configs.DATA_PATH, interval_length=12, lagged = True)
+
+    text_grid_files = glob ("%s/raw_data/transcriptions/**/*_left-reduc.TextGrid"%configs.DATA_PATH, recursive=True)
+    extract_text_from_textgrid (text_grid_files, "%s/processed_data/participant_text_data/"%configs.DATA_PATH, interval_length=12, lagged = False)

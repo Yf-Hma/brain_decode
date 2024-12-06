@@ -1,9 +1,14 @@
-import os, shutil
+import os, shutil, sys
 from glob import glob
 import pandas as pd
 import numpy as np
-
 import argparse
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
+import configs
 
 def split_tensor(tensor, sub_tensor_length, exclude_steps):
     #time_steps = tensor.size(0)
@@ -34,22 +39,22 @@ def read_bold_append(fmri_paths):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--fmri_data_path", default = "data/raw_data/convers_data/fMRI_data_200")
+    #parser.add_argument("--fmri_data_path", default = "data/raw_data/convers_data/fMRI_data_200")
     args = parser.parse_args()
 
 
-    if os.path.exists("data/processed_data/fMRI_data_split"):
-        shutil.rmtree('data/processed_data/fMRI_data_split')
+    if os.path.exists("%s/processed_data/fMRI_data_split"%configs.DATA_PATH):
+        shutil.rmtree('%s/processed_data/fMRI_data_split'%configs.DATA_PATH)
 
-    os.makedirs('data/processed_data/fMRI_data_split')
+    os.makedirs('%s/processed_data/fMRI_data_split'%configs.DATA_PATH)
 
-    bold_files = glob ("%s/**/*.csv"%args.fmri_data_path, recursive=True)
+    bold_files = glob ("%s/**/*.csv"%configs.PROCESSED_FMRI_DATA_PATH, recursive=True)
 
     for filename in bold_files:
 
         data = read_bold_append ([filename])
         filename = filename.split (".csv")[0]
-        filename_out = "data/processed_data/fMRI_data_split/" + filename.split ('/')[-2] + "_" + filename.split ('/')[-1]
+        filename_out = os.path.join ("%s/processed_data/fMRI_data_split/"%configs.DATA_PATH, filename.split ('/')[-2] + "_" + filename.split ('/')[-1])
 
         for i, data_split in enumerate(data):
             outfile = filename_out + "_split%d.npy"%(i+1)

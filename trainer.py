@@ -3,6 +3,7 @@ import torch
 from src.load_data import data_builder
 from src.models import *
 
+import src.configs as configs
 
 def save_checkpoint(model, model_name, cur_epoch, saving_path, is_best=False):
 
@@ -84,11 +85,11 @@ if __name__ == '__main__':
     parser.add_argument("--epochs", default = 300, type = int)
     parser.add_argument("--saved_checkpoint", "-s", type = str)
     parser.add_argument("--type", "-t", type = str, default = 'spoken', choices = ['spoken', 'perceived'])
-    parser.add_argument("--saving_path", default = "trained_models")
     parser.add_argument('--load_in_4bit', action='store_true', help = "to load the llm quantized in 4 bits for inference.")
 
 
     args = parser.parse_args()
+    args.saving_path = configs.MODELS_TRAIN_DIR
 
     models_dict = {
     'MllmBrainToTextV0':MllmBrainToTextV0,

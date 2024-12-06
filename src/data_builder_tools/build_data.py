@@ -1,9 +1,14 @@
 from glob import glob
 import pandas as pd
-import json, os
+import json, os, sys
 import numpy as np
 import random
 import shutil
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+import configs
 
 def load_vocab_from_json(file_path):
     with open(file_path, 'r') as file:
@@ -34,7 +39,7 @@ def text_files_to_dic (text_files):
     out_dict = []
 
     for filename_left in text_files:
-        image_path = "data/raw_data/images/" + filename_left.split ('-')[-1].split ('.')[0] + ".jpg"
+        image_path = "%s/raw_data/images/"%configs.DATA_PATH + filename_left.split ('-')[-1].split ('.')[0] + ".jpg"
         filename_right = filename_left.replace ("participant_text_data", "interlocutor_text_data")
 
         with open(filename_right) as file:
@@ -50,14 +55,14 @@ def text_files_to_dic (text_files):
             lines_left.append (" ")
 
         for i in range (5):
-            associated_bold_file = "data/processed_data/fMRI_data_split/" + filename_right.split ('/')[-1].split (".")[0] + "_split%d.npy"%(i+1)
+            associated_bold_file = "%s/processed_data/fMRI_data_split/"%configs.DATA_PATH + filename_right.split ('/')[-1].split (".")[0] + "_split%d.npy"%(i+1)
             out_dict.append ({"image": image_path, "bold_signal": associated_bold_file, "text-output": lines_left[i], "text-input": lines_right[i]})
     return out_dict
 
 if __name__ == "__main__":
 
     random.seed(42)
-    text_files = sorted (glob ("data/processed_data/participant_text_data/**/*.txt", recursive=True))
+    text_files = sorted (glob ("%s/processed_data/participant_text_data/**/*.txt"%configs.DATA_PATH, recursive=True))
 
     random.shuffle(text_files)
 
@@ -67,8 +72,8 @@ if __name__ == "__main__":
     train_list = text_files_to_dic (text_files_train)
     test_list = text_files_to_dic (text_files_test)
 
-    with open('data/train.json', 'w') as output_file:
+    with open('%s/train.json'%configs.JSON_DATA_PATH_OUT, 'w') as output_file:
         json.dump(train_list, output_file)
 
-    with open('data/test.json', 'w') as output_file:
+    with open('%s/test.json'%configs.JSON_DATA_PATH_OUT, 'w') as output_file:
         json.dump(test_list, output_file)

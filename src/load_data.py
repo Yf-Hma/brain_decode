@@ -8,6 +8,8 @@ from PIL import Image
 from torchvision import transforms
 from CLIP import clip
 
+import src.configs as configs
+
 class BoldCaptioningDataset(Dataset):
     def __init__(self, dataset):
         super(BoldCaptioningDataset, self).__init__()
@@ -74,10 +76,10 @@ class BoldCaptioningDataset(Dataset):
         return collated_dict
 
 def data_builder (batch_size=32):
-    with open("data/train.json") as json_file:
+    with open("%s/train.json"%configs.JSON_DATA_PATH_OUT) as json_file:
         train_dataset = BoldCaptioningDataset (json.load(json_file))
 
-    with open("data/test.json") as json_file:
+    with open("%s/test.json"%configs.JSON_DATA_PATH_OUT) as json_file:
         test_dataset = BoldCaptioningDataset (json.load(json_file))
 
     data_loaders = {}
@@ -88,10 +90,10 @@ def data_builder (batch_size=32):
     return data_loaders
 
 def data_builder_v0 (batch_size=32):
-    with open("data/train.json") as json_file:
+    with open("%s/train.json"%configs.JSON_DATA_PATH_OUT) as json_file:
         train_dataset = BoldCaptioningDataset (json.load(json_file))
 
-    with open("data/test.json") as json_file:
+    with open("%s/test.json"%configs.JSON_DATA_PATH_OUT) as json_file:
         test_dataset = BoldCaptioningDataset (json.load(json_file))
 
     return train_dataset, test_dataset

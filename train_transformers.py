@@ -6,7 +6,7 @@ from src.transformers_src.Transformer import *
 from src.transformers_src.Train_Function import train_model
 from src.transformers_src.Inference import inference
 
-import src.config as configs
+import src.configs as configs
 
 models_dict = {
 'Transformer':Transformer,
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument("--epochs", default = 200, type = int)
     parser.add_argument("--lr", default = 0.0001, type = float)
     parser.add_argument("--wandb_log", action='store_true', default = 'False')
-    parser.add_argument("--saving_path", default = "trained_models")
+    #parser.add_argument("--saving_path", default = "trained_models")
 
 
     parser.add_argument("--type", "-t", type = str, default = 'spoken', choices = ['spoken', 'perceived'])
@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     ################ Model Training/Testing ##############
     name = args.model_name  + '_' + str(src_fmri_features) + '_' + args.type
-    out_name = os.path.join (args.saving_path, name)
+    out_name = os.path.join (configs.MODELS_TRAIN_DIR, name)
 
 
     if args.test:
