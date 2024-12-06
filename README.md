@@ -66,13 +66,12 @@ python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV0_200_
 python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV0_200_spoken_300.pth --test --batch_size 16 --load_in_4bit
 ```   
 
-## Evaluation and Benchmarking
+## Evaluation
 ```bash
 python src/evaluation.py
 ```
 
-
-## Benchmark on perceived speech decoding:
+## Experiment on perceived speech decoding:
 * Download training and test datasets in the folder "data/semantic_decoding" as outlined in: https://github.com/HuthLab/semantic-decoding
 * To run the experiments on this dataset, run the following commands from "comparison_semantic_perceived_GPT_2023" folder:
 ```bash
