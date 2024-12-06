@@ -3,29 +3,19 @@ import torch.nn.functional as F
 import torch.nn as nn
 from nltk.translate.bleu_score import sentence_bleu
 from nltk.translate.bleu_score import SmoothingFunction
-#import wandb
-from .LPTS import LPTS
-from .Metric import word_overlap_percentage, jaccard_similarity, detokenize, remove_word
-
+from .Metric import word_overlap_percentage, jaccard_similarity, detokenize, remove_word, LPTS
 
 
 def add_filling_tokens_convert_to_tensor(token_id_list, sos_token_id, eos_token_id, pad_token_id, max_size):
-
     token_ids_tensors = []
-
     for id_list in token_id_list:
-
         id_list = [sos_token_id] + id_list + [eos_token_id]
         token_id = [pad_token_id for _ in range (max_size)]
-
         for i in range (len (id_list)):
             if i < len (token_id):
                 token_id[i] = id_list[i]
-
         if len (token_id) < len (id_list):
             token_id[-1] = eos_token_id
-
-        #id_tensor = torch.tensor(token_id)
         token_ids_tensors.append(token_id)
     return torch.Tensor(token_ids_tensors).type(torch.int64)
 
@@ -117,10 +107,6 @@ def generate_sentence_ids(model, src, sos_token_id, eos_token_id, pad_token_id, 
 def print_output_sentence(output, trg_des, saving_file, tokenizer, pad_token_id, eos_token_id, nlp_lpips):
     smoothie = SmoothingFunction().method1
     trg_des = trg_des.flatten().tolist()
-    # trg_desc =[x for x in trg_des if x != pad_token_id]
-    # trg_desc = [x for x in trg_desc if x != eos_token_id]
-    # trg_desc = [x for x in trg_desc if x != 1]
-    # trg_desc = [x for x in trg_desc if x != 0]
 
     output_words = tokenizer.decode(output[0].type(torch.int64).tolist(), skip_special_tokens = True).split (' ')
 

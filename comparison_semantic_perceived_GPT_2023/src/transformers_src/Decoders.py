@@ -1,13 +1,9 @@
 import torch.nn as nn
 import torch
 import copy
-from .InceptionTranspose import InceptionTranspose
-from .CNNEmbedding import CNNEmbedding
-from .Scaled_Positional_encoding import ScaledPositionalEncoding, PositionalEncoding
-from .DecoderLayer import DecoderLayer, DecoderLayerConv, AlternatingDecoderLayer, AlternatingDecoderLayerConv, AlternatingDecoderLayerConv2, DuplexDecoderLayerConv, SimplexDecoderLayerConv
-from .AddNorm import Norm
-from .FlowBasedEmbedding import RecurrentFlowEmbedding
 
+from .layers import *
+from .DecoderLayer import DecoderLayer, DecoderLayerConv, AlternatingDecoderLayer, AlternatingDecoderLayerConv, AlternatingDecoderLayerConv2, DuplexDecoderLayerConv, SimplexDecoderLayerConv
 
 def get_clones(module, N):
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])

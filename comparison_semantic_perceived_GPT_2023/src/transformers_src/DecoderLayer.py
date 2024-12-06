@@ -1,10 +1,5 @@
 import torch.nn as nn
-from .AddNorm import Norm
-from .Multi_head_attention import MultiHeadAttention, MultiHeadDuplexAttention, MultiHeadSimplexAttention
-from .Multi_layer_Encoder_Decoder_Attention import MultiLayerAttention
-from .ConvFeedForward import ConvFeedForward
-from .FeedForward import FeedForward
-
+from .layers import *
 
 class DecoderLayer(nn.Module):
     def __init__(self, d_model, d_ff, heads, N, dropout=0.1):
@@ -29,7 +24,6 @@ class DecoderLayer(nn.Module):
         x2 = self.norm_3(x)
         x = x + self.dropout_3(self.ff(x2))
         return x
-
 
 class AlternatingDecoderLayer(nn.Module):
     def __init__(self, d_model, d_ff, heads, N, dropout=0.1):

@@ -3,10 +3,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 from nltk.translate.bleu_score import sentence_bleu
 from nltk.translate.bleu_score import SmoothingFunction
-#import wandb
-from .LPTS import LPTS
-from .Metric import word_overlap_percentage, jaccard_similarity
-
+from .Metric import word_overlap_percentage, jaccard_similarity, detokenize, remove_word, LPTS
 
 
 def add_filling_tokens_convert_to_tensor(token_id_list, sos_token_id, eos_token_id, pad_token_id, max_size):

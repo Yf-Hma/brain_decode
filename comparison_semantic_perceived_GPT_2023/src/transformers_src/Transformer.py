@@ -2,10 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .Encoders import Encoder, CNNEncoder, AlternatingEncoder, ConvAlternatingEncoder, FlowAlternatingEncoder, AlternatingEncoderConv, AlternatingEncoderConv2, LstmAlternatingEncoder, DuplexEncoderConv, SimplexEncoderConv, DeconvAlternatingEncoderConv
+from .Encoders import Encoder, CNNEncoder, AlternatingEncoder, ConvAlternatingEncoder, FlowAlternatingEncoder, AlternatingEncoderConv, AlternatingEncoderConv2, DuplexEncoderConv, SimplexEncoderConv, DeconvAlternatingEncoderConv
 from .Decoders import Decoder, CNNDecoder, FasttextCNNDecoder, AlternatingDecoder, CNNAlternatingDecoder, ConvAlternatingDecoder, ConvAlternatingDecoder2, AlternatingDecoderFasttext, DuplexDecoderConv, SimplexDecoderConv
-
-from .FlowBasedEmbedding import RecurrentFlowEmbedding
 
 # Classic Transformer
 class Transformer(nn.Module):

@@ -1,8 +1,10 @@
 import torch.nn as nn
-from .AddNorm import Norm
-from .Multi_head_attention import MultiHeadAttention, MultiHeadDuplexAttention, MultiHeadSimplexAttention
-from .ConvFeedForward import ConvFeedForward
-from .FeedForward import FeedForward
+
+from .layers import *
+# from .AddNorm import Norm
+# from .Multi_head_attention import MultiHeadAttention, MultiHeadDuplexAttention, MultiHeadSimplexAttention
+# from .ConvFeedForward import ConvFeedForward
+# from .FeedForward import FeedForward
 
 class EncoderLayerConv(nn.Module):
     def __init__(self, d_model, d_ff, heads, dropout=0.1):

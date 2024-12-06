@@ -4,9 +4,9 @@ import torch.nn as nn
 from nltk.translate.bleu_score import sentence_bleu
 from nltk.translate.bleu_score import SmoothingFunction
 from torch.distributions import MultivariateNormal
-from .Metric import word_overlap_percentage, jaccard_similarity, detokenize, remove_word
+from .Metric import word_overlap_percentage, jaccard_similarity, detokenize, remove_word, LPTS
 from .Inference import generate_sentence_ids
-from .LPTS import LPTS
+# from .LPTS import LPTS
 import os
 
 
@@ -80,7 +80,6 @@ def train_model(out_path, model, train_dataset, batch_size, optimizer, num_epoch
             output, softmax_output = model(src.float(),input_decoder.float())
 
             # print (output.shape, label_decoder.shape)
-            # exit ()
             # Compute loss
             loss = criterion(output.reshape(-1, output.size(-1)), label_decoder.reshape(-1))
 
