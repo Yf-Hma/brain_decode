@@ -61,8 +61,7 @@ python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV0_200_
 
 * To use multiple GPUs, use trainer_dist.py instead of trainer.py
 * To use the version with a quantized LLM for inference, include the 'load_in_4bit' parameter. Example:
-
-Example
+  
 ```bash
 python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV0_200_spoken_300.pth --test --batch_size 16 --load_in_4bit
 ```   
