@@ -43,7 +43,7 @@ python src/data_builder_tools/build_tokenizer.py
 ```
 
 
-## Train and test Transformer-based models
+## Stage 1: Train Transformer-based models
 
 Example: training and testing DeconvBipartiteTransformer
 ```bash
@@ -52,7 +52,7 @@ python  train_transformers.py -m DeconvBipartiteTransformerConv --test
 ```   
 
 
-## Train and test MLLMs
+## Stage 2: Train and test the MLLM using the trained fmri encoder
 Note that this requires a trained DeconvBipartiteTransformer (ex. MllmBrainToTextV0).
 ```bash
 python  trainer.py -m MllmBrainToTextV0
@@ -61,7 +61,7 @@ python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV0_200_
 
 * To use multiple GPUs, use trainer_dist.py instead of trainer.py
 * To use the version with a quantized LLM for inference, include the 'load_in_4bit' parameter. Example:
-  
+
 ```bash
 python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV0_200_spoken_300.pth --test --batch_size 16 --load_in_4bit
 ```   
@@ -83,7 +83,7 @@ python trainer.py --test -s subject --saving_path trained_model_path
 ```   
 
 ## TODO
-- [ ] Provide pretrained checkpoints.
+- [x] Provide pretrained checkpoints.
 - [ ] Add NSD datasets.
 - [ ] Test other LLMs (Mistral, LLama3, etc.)
 
