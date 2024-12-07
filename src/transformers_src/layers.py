@@ -92,7 +92,7 @@ class FeedForward(nn.Module):
         out = self.fc1(x)
         out = self.relu(out)
         out = self.fc2(out)
-        return ou
+        return out
 
 class ScaledPositionalEncoding(nn.Module):
     def __init__(self, d_model, seq_length):
