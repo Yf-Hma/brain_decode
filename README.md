@@ -20,7 +20,7 @@
 https://openneuro.org/datasets/ds001740/versions/2.2.0
 
 * Create a folder named “data/raw_data/transcriptions" and upload  the raw Transcriptions from the Ortolang platform into it:
-https://www.ortolang.fr/market/corpora/convers/v2?path=%2FTranscriptions
+https://www.ortolang.fr/market/corpora/convers/v2
 
 
 * Processing raw 4D voxel BOLD signals and segmenting them into fixed-duration sequences:

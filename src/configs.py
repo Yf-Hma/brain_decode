@@ -1,6 +1,6 @@
 import os
 
-DATA_PATH="data/"
+DATA_PATH="data"
 
 JSON_DATA_PATH_OUT="data"
 

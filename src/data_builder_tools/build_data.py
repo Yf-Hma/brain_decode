@@ -39,6 +39,7 @@ def text_files_to_dic (text_files):
     out_dict = []
 
     for filename_left in text_files:
+
         image_path = "%s/raw_data/images/"%configs.DATA_PATH + filename_left.split ('-')[-1].split ('.')[0] + ".jpg"
         filename_right = filename_left.replace ("participant_text_data", "interlocutor_text_data")
 

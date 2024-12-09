@@ -11,7 +11,7 @@ import configs
 
 
 def parse_textgrid(file_path):
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding="utf8", errors='ignore') as file:
         content = file.read()
 
     # Regular expression to find intervals
@@ -89,8 +89,17 @@ def extract_text_from_textgrid (text_grid_files, out_dir, interval_length=12, la
             else:
                 texts.append (text)
 
-        file_name = '_'.join(file_path.split('_')[:-1])
-        file_name = out_dir + file_name.split ('/')[-3] + "_" + file_name.split ('/')[-2] + ".txt"
+
+        #elements = file_path.split ('/')[-1].split('.')[0].split ('_')
+        subject, sess, conv_type, conv_numb = file_path.split ('/')[-1].split('.')[0].split ('_')
+
+        subject = "sub-%s"%subject[1:]
+        sess = "convers-TestBlocks%s"%sess[-1]
+        conv_numb = conv_numb[:3]
+
+        file_name = '_'.join ([subject, sess, conv_type, conv_numb])
+        #file_name = '_'.join(file_path.split('_')[:-1])
+        file_name = out_dir + file_name + ".txt"
 
 
         with open(file_name, 'w') as f:
@@ -118,9 +127,8 @@ if __name__ == '__main__':
     os.makedirs('%s/processed_data/participant_text_data'%configs.DATA_PATH)
 
 
-    text_grid_files = glob ("%s/raw_data/transcriptions/**/*_right-filter.TextGrid"%configs.DATA_PATH, recursive=True)
 
+    text_grid_files = glob ("%s/raw_data/transcriptions/*conversant.TextGrid"%configs.DATA_PATH, recursive=True)
     extract_text_from_textgrid (text_grid_files, "%s/processed_data/interlocutor_text_data/"%configs.DATA_PATH, interval_length=12, lagged = True)
-
-    text_grid_files = glob ("%s/raw_data/transcriptions/**/*_left-reduc.TextGrid"%configs.DATA_PATH, recursive=True)
+    text_grid_files = glob ("%s/raw_data/transcriptions/*-participant.TextGrid"%configs.DATA_PATH, recursive=True)
     extract_text_from_textgrid (text_grid_files, "%s/processed_data/participant_text_data/"%configs.DATA_PATH, interval_length=12, lagged = False)
