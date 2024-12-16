@@ -18,10 +18,8 @@ class MllmBrainToTextV0(nn.Module):
 
     def __init__(
         self,
-        img_size=256,
-        drop_path_rate=0,
-        max_txt_len=128,
-        max_output_txt_len=256,
+        max_txt_len=configs.max_txt_len,
+        max_output_txt_len=configs.max_output_txt_len,
         load_in_4bit = False
     ):
         super().__init__()
@@ -86,8 +84,6 @@ class MllmBrainToTextV0(nn.Module):
             param.requires_grad = False
 
         self.llm_proj = nn.Linear(d_model, 4096).to(self.device)
-
-
         self.vision_llm_proj = nn.Linear(512, 4096).to(self.device)
 
         self.max_txt_len = max_txt_len
@@ -129,10 +125,9 @@ class MllmBrainToTextV0(nn.Module):
 
 
     def forward (self, sample):
-
         output_text = sample["text_output"]
         # Input text
-        input_text = ["En se basant sur ce contenu, réponds en Français : " for a in sample["text_input"]]
+        [configs.fixed_instruction + "'" + a  + "'"   + ": " for a in sample["text_input"]]
 
         # BOLD embeddings
         embeddings, masks = self.frmi_encoder (sample["bold_signal"].to(self.device))#.to(device))
@@ -202,31 +197,25 @@ class MllmBrainToTextV0(nn.Module):
     def generate(
         self,
         samples,
-        use_nucleus_sampling=False,
-        num_beams=1,
-        max_length=400,
-        max_new_tokens = 100,
-        min_length=1,
-        top_p=0.9,
-        repetition_penalty=1.5,
-        length_penalty=1,
-        num_captions=1,
-        temperature=1):
+        use_nucleus_sampling=configs.use_nucleus_sampling,
+        num_beams=configs.num_beams,
+        max_new_tokens = configs.max_new_tokens,
+        min_length=configs.min_length,
+        top_p=configs.top_p,
+        repetition_penalty=configs.repetition_penalty,
+        length_penalty=configs.length_penalty,
+        num_captions=configs.num_captions,
+        temperature=configs.temperature):
 
         self.llm_tokenizer.padding_side = "left"
 
-        image = samples["image"]
-        bs = image.size(0)
-
-        prompt = ["En se basant sur ce contenu, réponds en Français : "] *  len (samples["text_input"])
+        prompt = [configs.fixed_instruction] *  len (samples["text_input"])
 
         # Bold embedding
         bold_embeddings, _ = self.frmi_encoder (samples["bold_signal"].to(self.device))#.to(device))
         bold_embeddings = bold_embeddings[-1]
         inputs_llm_bold = self.llm_proj (bold_embeddings)
         atts_llm_bold = torch.ones(inputs_llm_bold.size()[:-1], dtype=torch.long).to(self.device)
-
-
 
         llm_tokens = self.llm_tokenizer(
             prompt,
@@ -248,9 +237,7 @@ class MllmBrainToTextV0(nn.Module):
                 temperature=temperature,
                 num_beams=num_beams,
                 max_new_tokens = max_new_tokens,
-                #max_length=max_length,
                 min_length=min_length,
-                # eos_token_id=self.eos_token_id,
                 repetition_penalty=repetition_penalty,
                 length_penalty=length_penalty,
                 num_return_sequences=num_captions,
@@ -269,10 +256,8 @@ class MllmBrainToText(nn.Module):
 
     def __init__(
         self,
-        img_size=256,
-        drop_path_rate=0,
-        max_txt_len=128,
-        max_output_txt_len=256,
+        max_txt_len=configs.max_txt_len,
+        max_output_txt_len=configs.max_output_txt_len,
         load_in_4bit = False
     ):
         super().__init__()
@@ -352,7 +337,7 @@ class MllmBrainToText(nn.Module):
         enable_autocast = self.device != torch.device("cpu")
 
         if enable_autocast:
-            return torch.cuda.amp.autocast(dtype=dtype)
+            return torch.amp.autocast("cuda", dtype=dtype)
         else:
             return contextlib.nullcontext()
 
@@ -386,7 +371,7 @@ class MllmBrainToText(nn.Module):
 
         output_text = sample["text_output"]
         # Input text
-        input_text = ["En se basant sur ce contenu, réponds en Français à la phrase suivante '" + a  + "' : " for a in sample["text_input"]]
+        [configs.fixed_instruction + "'" + a   + "'"  + ": " for a in sample["text_input"]]
 
         # BOLD embeddings
         embeddings, masks = self.frmi_encoder (sample["bold_signal"].to(self.device))#.to(device))
@@ -460,23 +445,22 @@ class MllmBrainToText(nn.Module):
     def generate(
         self,
         samples,
-        use_nucleus_sampling=False,
-        num_beams=1,
-        max_length=500,
-        max_new_tokens = 100,
-        min_length=1,
-        top_p=0.9,
-        repetition_penalty=1.5,
-        length_penalty=1,
-        num_captions=1,
-        temperature=1):
+        use_nucleus_sampling=configs.use_nucleus_sampling,
+        num_beams=configs.num_beams,
+        max_new_tokens = configs.max_new_tokens,
+        min_length=configs.min_length,
+        top_p=configs.top_p,
+        repetition_penalty=configs.repetition_penalty,
+        length_penalty=configs.length_penalty,
+        num_captions=configs.num_captions,
+        temperature=configs.temperature):
 
         self.llm_tokenizer.padding_side = "left"
 
         image = samples["image"]
         bs = image.size(0)
 
-        prompt = ["En se basant sur ce contenu, réponds en Français à la phrase suivante '" + a  + "' : " for a in samples["text_input"]]
+        prompt = [configs.fixed_instruction + "'" + a  + "' : " for a in samples["text_input"]]
 
         # Bold embedding
         bold_embeddings, _ = self.frmi_encoder (samples["bold_signal"].to(self.device))#.to(device))
@@ -526,10 +510,8 @@ class MllmBrainToTextV2(nn.Module):
 
     def __init__(
         self,
-        img_size=256,
-        drop_path_rate=0,
-        max_txt_len=128,
-        max_output_txt_len=256,
+        max_txt_len=configs.max_txt_len,
+        max_output_txt_len=configs.max_output_txt_len,
         load_in_4bit = False):
         super().__init__()
 
@@ -655,7 +637,7 @@ class MllmBrainToTextV2(nn.Module):
 
     def forward (self, sample):
 
-        input_text = ["En se basant sur ce contenu, réponds en Français à la phrase suivante '" + a  + "' : " for a in sample["text_input"]]
+        input_text = [configs.fixed_instruction + "'" + a  + "'"   + ": " for a in sample["text_input"]]
         output_text = sample["text_output"]
 
         # Images embedding and  alignement
@@ -697,7 +679,6 @@ class MllmBrainToTextV2(nn.Module):
             text_output_tokens.attention_mask,
         )
 
-
         # do not apply loss to the padding
         targets = llm_tokens['input_ids'].masked_fill(llm_tokens['input_ids'] == self.llm_tokenizer.pad_token_id, -100)
         # do not apply loss to the text input (i.e., instruction)
@@ -708,13 +689,10 @@ class MllmBrainToTextV2(nn.Module):
         empty_targets_bold = (torch.ones(atts_llm_bold.size(), dtype=torch.long).to(self.device).fill_(-100))
         empty_targets_image = (torch.ones(atts_llm_image.size(), dtype=torch.long).to(self.device).fill_(-100))
 
-
         targets = torch.cat([empty_targets_image, empty_targets_bold, targets], dim=1)
-
 
         # Input embeddings
         inputs_embeds = self.llm_model.get_input_embeddings()(llm_tokens['input_ids'])
-
 
         inputs_embeds = torch.cat([ input_llm_image, inputs_llm_bold, inputs_embeds], dim=1)
         attention_mask = torch.cat([ atts_llm_image, atts_llm_bold, llm_tokens['attention_mask']], dim=1)
@@ -736,23 +714,22 @@ class MllmBrainToTextV2(nn.Module):
     def generate(
         self,
         samples,
-        use_nucleus_sampling=False,
-        num_beams=1,
-        #max_length=500,
-        max_new_tokens = 100,
-        min_length=1,
-        top_p=0.9,
-        repetition_penalty=1.5,
-        length_penalty=1,
-        num_captions=1,
-        temperature=1):
+        use_nucleus_sampling=configs.use_nucleus_sampling,
+        num_beams=configs.num_beams,
+        max_new_tokens = configs.max_new_tokens,
+        min_length=configs.min_length,
+        top_p=configs.top_p,
+        repetition_penalty=configs.repetition_penalty,
+        length_penalty=configs.length_penalty,
+        num_captions=configs.num_captions,
+        temperature=configs.temperature):
 
         self.llm_tokenizer.padding_side = "left"
 
         image = samples["image"]
         bs = image.size(0)
 
-        prompt = ["En se basant sur ce contenu, réponds en Français à la phrase suivante '" + a  + "' : " for a in samples["text_input"]]
+        prompt = [configs.fixed_instruction + "'" + a  + "' :" for a in samples["text_input"]]
 
         bold_embeddings, _ = self.frmi_encoder (samples["bold_signal"].to(self.device))#.to(device))
         bold_embeddings = bold_embeddings[-1]
@@ -785,15 +762,12 @@ class MllmBrainToTextV2(nn.Module):
                 temperature=temperature,
                 num_beams=num_beams,
                 max_new_tokens = max_new_tokens,
-                #max_length=max_length,
                 min_length=min_length,
-                # eos_token_id=self.eos_token_id,
                 repetition_penalty=repetition_penalty,
                 length_penalty=length_penalty,
                 num_return_sequences=num_captions,
             )
 
-        #outputs[outputs == 0] = 2 # convert output id 0 to 2 (eos_token_id)
         output_text = self.llm_tokenizer.batch_decode(outputs, skip_special_tokens=True)
         output_text = [text.strip() for text in output_text]
 

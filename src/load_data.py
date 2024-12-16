@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
-from torchvision import transforms
+# from torchvision import transforms
 from CLIP import clip
 
 import src.configs as configs
@@ -15,7 +15,7 @@ class BoldCaptioningDataset(Dataset):
         super(BoldCaptioningDataset, self).__init__()
         self.dataset = dataset
         self.prompt = ""
-        self.max_words = 200
+        self.max_words = 500
         _, self.preprocess = clip.load("ViT-B/32", device="cuda")
         self.device = "cuda"
 
@@ -57,7 +57,7 @@ class BoldCaptioningDataset(Dataset):
             image = image.resize((224,224))
             images_input = self.preprocess(image)
         except:
-            images_input = None
+            images_input = torch.Tensor([0.])
 
         return {"bold_signal": bold_signal, "text_input":query, "text_output":caption, "image": images_input}
 

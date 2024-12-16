@@ -9,8 +9,6 @@ from nilearn.maskers import NiftiLabelsMasker
 import configs
 
 
-
-
 #============================================================
 def normalize_vect (x):
     max = np.max (x)
@@ -23,10 +21,21 @@ def normalize_vect (x):
 
 #============================================================
 def nearestPoint(vect, value):
-    dist = abs(value - vect[0])
-    pos = 0
+    """
+    Finds the index of the nearest point in a list or array that is greater than or equal to a given value.
+
+    Parameters:
+    - vect (list or array): A sequence of numeric values to search through.
+    - value (float): The target value to find the nearest match for.
+
+    Returns:
+    - pos (int): The index of the element in 'vect' that is closest to 'value' and greater than or equal to it.
+    """
+    dist = abs(value - vect[0]) # Initialize the smallest distance.
+    pos = 0 # Initialize the position of the closest point.
 
     for i in range(1, len(vect)):
+        # Check if the current element is closer and greater than or equal to the target value.
         if abs(value - vect[i]) < dist and value <= vect[i]:
             dist = abs(value - vect[i])
             pos = i
@@ -35,9 +44,19 @@ def nearestPoint(vect, value):
 
 #======================================================
 def bold_image_to_rois (file, atlas):
+    """
+    Transforms a 4D fMRI image into region-of-interest (ROI) time series using a specified atlas.
+
+    Parameters:
+    - file (str): Path to the 4D fMRI image file to be processed.
+    - atlas (NiftiMasker or similar object): An atlas or masker object used to extract ROI time series.
+
+    Returns:
+    - masked_data (numpy.ndarray): A 2D array where each row represents a time point,
+      and each column corresponds to a specific ROI defined by the atlas.
+    """
     fmri_img = load_img(file)
     masked_data = masker.fit_transform(fmri_img)
-    print (masked_data.shape)
     return masked_data
 
 
@@ -83,9 +102,6 @@ def conversation_to_dataframe (data_path, folder_name, data, colnames, index, be
 if __name__ == '__main__':
 
     parser = argparse. ArgumentParser ()
-    #parser. add_argument ("--concat", "-ct", help = "remove previous files", action="store_true")
-    #parser.add_argument("--data_path", default = "data/raw_data/fmri_bold/ds001740-2.2.0")
-    #parser.add_argument("--output_data_path", '-o', default = "raw_data/fmri_bold")
     parser.add_argument("--n_rois", type = int, default = 200, choices=[100,200,400])
     args = parser.parse_args()
 
@@ -93,7 +109,7 @@ if __name__ == '__main__':
     data_path = configs.RAW_FMRI_DATA_PATH
 
     # Output directory of the preprocessed data from configs file
-    args.output_data_path = configs.PROCESSED_FMRI_DATA_PATH 
+    args.output_data_path = configs.PROCESSED_FMRI_DATA_PATH
     out_data_path = args.output_data_path
 
 

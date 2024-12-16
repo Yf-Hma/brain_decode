@@ -22,7 +22,6 @@ def add_filling_tokens_convert_to_tensor(token_id_list, sos_token_id, eos_token_
 
 
 def inference(model, saving_file, tokenizer, vocab_len, test_dataset, sos_token_id, eos_token_id, pad_token_id, max_seq_len, device):
-
     total_loss = 0
     total_bleu = 0
     total_word_overlap_test = 0
@@ -33,13 +32,8 @@ def inference(model, saving_file, tokenizer, vocab_len, test_dataset, sos_token_
     #vocab = {v: k for k, v in vocab.items()}
     total_samples = len(test_dataset)
 
-
-
     for batch in test_dataset:
-        # batch_end = min(batch_start + batch_size, train_num_samples)
-        # batch = train_dataset[batch_start:batch_end]
         src, trg_sentences = batch["bold_signal"], batch["text_output"]
-
         trg = []
         for a in trg_sentences:
             trg.append(tokenizer.encode(a, add_special_tokens=False).ids)
@@ -47,18 +41,14 @@ def inference(model, saving_file, tokenizer, vocab_len, test_dataset, sos_token_
         trg = add_filling_tokens_convert_to_tensor(trg, sos_token_id, eos_token_id, pad_token_id, max_seq_len)
         src, trg = src.to(device), trg.to(device)
 
-
-
-
         output_ids, _, output = generate_sentence_ids(model, src.float(), sos_token_id,
                                                       eos_token_id, pad_token_id,
                                                       max_seq_len - 1, vocab_len, device)
         output = output.float()
-        loss = criterion(output.view(-1, output.size(-1)), trg[:,1:].view(-1))
+
         bleu_score, lpips_dist, overlap_score, jaccard_score = print_output_sentence(output_ids, trg, saving_file,
                                                                                      tokenizer, pad_token_id,
                                                                                      eos_token_id, nlp_lpips)
-        total_loss += loss
         total_bleu += bleu_score
         total_lpips_test += lpips_dist.item()
         total_word_overlap_test += overlap_score
@@ -70,7 +60,7 @@ def inference(model, saving_file, tokenizer, vocab_len, test_dataset, sos_token_
     lpips = total_lpips_test / total_samples
     jaccard = total_jaccard_test / total_samples
 
-    print(f"Sequence to sequence: BLEU: {bleu_score:.4f} Word Overlap: {word_overlap:.4f}% Jaccard Similarity: {jaccard:.4f} Test NLPIPS: {lpips:.4f}")
+    print(f"Test results: BLEU: {bleu_score:.4f} Word Overlap: {word_overlap:.4f}% Jaccard Similarity: {jaccard:.4f} LPIPS: {lpips:.4f}")
 
 def generate_sentence_ids(model, src, sos_token_id, eos_token_id, pad_token_id, max_length, vocab_len, device):
     model.eval()
@@ -125,5 +115,5 @@ def print_output_sentence(output, trg_des, saving_file, tokenizer, pad_token_id,
     jaccard_score = jaccard_similarity(desc_sentence, output_sentence)
 
     with open(saving_file, 'a') as f:
-        f.write(f'The predicted Conversation : {output_sentence1}\nThe target Conversation : {desc_sentence}\n\n')
+        f.write(f'The predicted Conversation : {output_sentence1}\nThe target Conversation : {desc_sentence}\n')
     return bleu_score, lpips_dist, overlap_score, jaccard_score

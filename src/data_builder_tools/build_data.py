@@ -10,30 +10,6 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 import configs
 
-def load_vocab_from_json(file_path):
-    with open(file_path, 'r') as file:
-        vocab = json.load(file)
-    return vocab
-
-
-def detokenize(token_ids, vocab_dict):
-    word_list = []
-    for tid in token_ids:
-        word = vocab_dict[int(tid)]
-        word_list.append(word)
-    sentence = ' '.join(word_list)
-    return sentence
-
-def read_statements(dialogues_paths, Column):
-    statements = []
-    for Dialogue_path in dialogues_paths:
-        df = pd.read_csv(Dialogue_path, dtype={'list_column': object})
-        df[Column] = df[Column].apply(eval)
-        statement_list = df[Column].to_list()
-        for s in statement_list:
-            statements.append(s)
-    return statements
-
 
 def text_files_to_dic (text_files):
     out_dict = []

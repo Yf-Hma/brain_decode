@@ -25,13 +25,12 @@ def split_tensor(tensor, sub_tensor_length, exclude_steps):
 
     return divided_tensors
 
-def read_bold_append(fmri_paths):
+def read_bold_and_split_to_chunks(fmri_paths, time_steps, bold_lag):
     tensor_list_train = []
     for fmri_path in fmri_paths:
         df = pd.read_csv(fmri_path, delimiter=',')
         tensor = np.array(df.iloc[0:, 1:].values)
-        #tensor = torch.from_numpy(tensor)
-        tensor_list = split_tensor(tensor, 10, 3)
+        tensor_list = split_tensor(tensor, time_steps, bold_lag)
         for t in list(tensor_list):
             tensor_list_train.append(t)
     return tensor_list_train
@@ -39,7 +38,6 @@ def read_bold_append(fmri_paths):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    #parser.add_argument("--fmri_data_path", default = "data/raw_data/convers_data/fMRI_data_200")
     args = parser.parse_args()
 
 
@@ -51,8 +49,7 @@ if __name__ == "__main__":
     bold_files = glob ("%s/**/*.csv"%configs.PROCESSED_FMRI_DATA_PATH, recursive=True)
 
     for filename in bold_files:
-
-        data = read_bold_append ([filename])
+        data = read_bold_and_split_to_chunks ([filename], configs.time_steps, configs.bold_lag)
         filename = filename.split (".csv")[0]
         filename_out = os.path.join ("%s/processed_data/fMRI_data_split/"%configs.DATA_PATH, filename.split ('/')[-2] + "_" + filename.split ('/')[-1])
 

@@ -29,16 +29,16 @@ if __name__ == '__main__':
 
 
     parser.add_argument("--type", "-t", type = str, default = 'spoken', choices = ['spoken', 'perceived'])
-    
+
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(args.seed)
-    
+
     batch_size = args.batch_size
     wandb_log = args.wandb_log
     epochs = args.epochs
     lr = args.lr
-    
+
     src_fmri_features = configs.src_fmri_features
     time_steps = configs.time_steps
     max_size = configs.max_size
@@ -72,8 +72,10 @@ if __name__ == '__main__':
 
     if args.test:
         model.load_state_dict(torch.load('%s.pt'%(out_name), weights_only=True))
-        saving_file = 'results/%s.txt'%(name)
-        inference(model, saving_file, tokenizer, vocab_len, data_loader["test"], sos_token_id, eos_token_id, pad_token_id, max_size, device)
+        results_file = 'results/%s.txt'%(name)
+        if os.path.exists (results_file):
+            os.remove (results_file)
+        inference(model, results_file, tokenizer, vocab_len, data_loader["test"], sos_token_id, eos_token_id, pad_token_id, max_size, device)
     else:
         if args.retrain:
             model = torch.load('%s.pt'%(out_name), map_location=torch.device(device))

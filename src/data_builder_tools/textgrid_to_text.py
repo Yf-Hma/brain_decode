@@ -11,6 +11,16 @@ import configs
 
 
 def parse_textgrid(file_path):
+    """
+    Parses a TextGrid file to extract interval information.
+
+    Args:
+        file_path (str): Path to the TextGrid file.
+
+    Returns:
+        list of tuples: Each tuple contains xmin (float), xmax (float), and text (str)
+                        representing the start time, end time, and label of an interval.
+    """
     with open(file_path, 'r', encoding="utf8", errors='ignore') as file:
         content = file.read()
 
@@ -32,10 +42,6 @@ def extract_text_by_intervals(intervals, interval_length=12, lagged = True):
     current_end = interval_length
     current_text = []
 
-    # if lagged:
-    #     lag = 0
-    # else:
-    #     lag = 3
     for start, end, text in intervals:
         start = float(start)
         end = float(end)
@@ -66,7 +72,6 @@ def extract_text_by_intervals(intervals, interval_length=12, lagged = True):
 
 def extract_text_from_textgrid (text_grid_files, out_dir, interval_length=12, lagged = False):
     for file_path in sorted (text_grid_files):
-
         intervals = parse_textgrid(file_path)
         extracted_texts = extract_text_by_intervals(intervals, 12, lagged)
 
@@ -111,7 +116,6 @@ def extract_text_from_textgrid (text_grid_files, out_dir, interval_length=12, la
 
 if __name__ == '__main__':
     # Usage example
-
     if not os.path.exists("%s/processed_data"%configs.DATA_PATH):
         os.makedirs('%s/processed_data'%configs.DATA_PATH)
 
@@ -120,15 +124,20 @@ if __name__ == '__main__':
 
     os.makedirs('%s/processed_data/interlocutor_text_data'%configs.DATA_PATH)
 
-
     if os.path.exists("%s/processed_data/participant_text_data"%configs.DATA_PATH):
         shutil.rmtree('%s/processed_data/participant_text_data'%configs.DATA_PATH)
 
     os.makedirs('%s/processed_data/participant_text_data'%configs.DATA_PATH)
 
-
-
     text_grid_files = glob ("%s/raw_data/transcriptions/*conversant.TextGrid"%configs.DATA_PATH, recursive=True)
-    extract_text_from_textgrid (text_grid_files, "%s/processed_data/interlocutor_text_data/"%configs.DATA_PATH, interval_length=12, lagged = True)
+
+    extract_text_from_textgrid (text_grid_files,
+                                "%s/processed_data/interlocutor_text_data/"%configs.DATA_PATH,
+                                interval_length=configs.interval_length,
+                                lagged = True)
+
     text_grid_files = glob ("%s/raw_data/transcriptions/*-participant.TextGrid"%configs.DATA_PATH, recursive=True)
-    extract_text_from_textgrid (text_grid_files, "%s/processed_data/participant_text_data/"%configs.DATA_PATH, interval_length=12, lagged = False)
+    extract_text_from_textgrid (text_grid_files,
+                                "%s/processed_data/participant_text_data/"%configs.DATA_PATH,
+                                interval_length=configs.interval_length,
+                                lagged = False)
