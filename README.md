@@ -72,7 +72,7 @@ python src/evaluation.py
 ```
 
 ##  Perceived speech decoding:
-* Download training and test datasets in the folder "data/semantic_decoding" as outlined in in the project [semantic-decoding](https://github.com/HuthLab/semantic-decoding).
+* Download training and test datasets in the folder "data/semantic_decoding" as outlined in the project [semantic-decoding](https://github.com/HuthLab/semantic-decoding).
 * To run the experiments on this dataset, run the following commands from "comparison_semantic_perceived_GPT_2023" folder:
 ```bash
 python src/prepare_Tang2023_datasets.py -s subject (choices=['S1', 'S2', 'S3'])
