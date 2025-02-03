@@ -91,7 +91,7 @@ This a comparison with brain understanding benchmark ([BrainHub](https://github.
 - Download the datasets using this [script](https://github.com/weihaox/UMBRAE/blob/main/umbrae/download_data.sh).
 - Download COCO annotations from this [link](https://huggingface.co/datasets/pscotti/naturalscenesdataset/blob/main/COCO_73k_annots.npy), and put it in the folder 'tools'
 - Update the configuration file 'src/configs_nsd' to specify the datasets path, llama3.2 path  where the put the trained models, and eventually to modify the hyperparameters.
-- To train and evaluate the model, from the folder 'comparison_NSD' execute the following scripts (example for subject 1): ```python train.py --subj 1```.  
+- To train and evaluate the model, from the folder 'comparison_NSD' execute the following scripts (example for subject 1): ```python main.py --subj 1```.  
 - Trained models are available in this [link](https://drive.google.com/file/d/1oQI5u0pXPS9TMvBMNdj13-_ljJy8F6wL/view?usp=sharing).
 - To get the evaluation scores for each subject based on the generated captions of the test set, refer to the Benchmark [project](https://github.com/weihaox/BrainHub).
 
