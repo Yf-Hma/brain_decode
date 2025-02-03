@@ -71,7 +71,7 @@ python  trainer.py -m MllmBrainToTextV0 -s trained_models/MllmBrainToTextV0_200_
 python src/evaluation.py
 ```
 
-##  Perceived speech decoding:
+##  Perceived Speech Decoding
 * Download training and test datasets in the folder "data/semantic_decoding" as outlined in the project [semantic-decoding](https://github.com/HuthLab/semantic-decoding).
 * To run the experiments on this dataset, run the following commands from "comparison_semantic_perceived_GPT_2023" folder:
 ```bash
@@ -83,7 +83,7 @@ python trainer.py --test -s subject --saving_path trained_model_path
 ```   
 
 
-##  Brain captioning - BrainHub benchmark on NSD datasets
+##  Brain captioning - BrainHub benchmark on NSD dataset
 This a comparison with brain understanding benchmark ([BrainHub](https://github.com/weihaox/BrainHub)), based on Natural Scenes Dataset [NSD](https://naturalscenesdataset.org/) and [COCO](https://cocodataset.org).
 
 #### Datasets and model's configuration
@@ -96,9 +96,7 @@ This a comparison with brain understanding benchmark ([BrainHub](https://github.
 - To get the evaluation scores for each subject based on the generated captions of the test set, refer to the Benchmark [project](https://github.com/weihaox/BrainHub).
 
 #### Results
-Unlike existing methods, we adapted our architecture with LLama3.2-8b and Lora finetuning (instead of frozen Vicuna-7b) for brain captioning using only brain fMRI signals and text during training, without using VLMs or brain-image alignment. We trained our models for each subject, and the results are promising.  The model achieved very competitive results, yielding to the first or second best scores based on  BLEU1, BLEU4, ROUGE, and METEOR. The next step is to train our model in a cross-subject manner.
-The generated caption on the test are in the folder "comparison_NSD/results".
-The hyperparameters and models weights are available to reproduce the results.
+Unlike existing methods, we adapted our architecture with LLama3.2-8b and Lora finetuning (instead of frozen Vicuna-7b) for brain captioning using only brain fMRI signals and text during training, without using VLMs or brain-image alignment. We trained our models for each subject, and the results are promising.  The model achieved very competitive results, yielding, in several cases, to the first or second best scores based on  BLEU1, BLEU4, ROUGE, and METEOR. The generated caption on the test are in the folder "comparison_NSD/results". As future work, we aim to train our model in a cross-subject manner.
 
 
 | Method    | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | CIDEr | SPICE | CLIPS | RefCLIPS |
@@ -138,7 +136,7 @@ The hyperparameters and models weights are available to reproduce the results.
 ## TODO
 - [x] Provide pretrained checkpoints.
 - [x] Apply the proposed methodology for NSD datasets - Brain captioning benchmark.
-- [ ] Cross-subject training for NSD datasets.
+- [ ] Cross-subject training for NSD dataset.
 - [ ] Test other decoders (LLama3, QwenV2, etc.)
 
 
