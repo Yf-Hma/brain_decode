@@ -16,10 +16,9 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-from src.models_nsd import MllmBrainToTextV0, MllmBrainToText_Deconv, MllmBrainToTextV0_clip, MllmBrainToText_Deconv_clip, MllmBrainToTextVIT
+from src.models_nsd import MllmBrainToTextV0
 from src.load_nsd_data import get_loaders
 import src.configs_nsd as configs
-from src.fmri_encoder import QuantizedBrainToTextVIT
 
 torch.cuda.empty_cache()
 def seed_everything(seed=0):
