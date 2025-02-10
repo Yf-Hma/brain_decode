@@ -11,7 +11,6 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
@@ -21,6 +20,7 @@ from src.load_nsd_data import get_loaders
 import src.configs_nsd as configs
 
 torch.cuda.empty_cache()
+
 def seed_everything(seed=0):
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -33,10 +33,9 @@ def seed_everything(seed=0):
     torch.backends.cudnn.benchmark = False
 
 seed_everything(42)
-# set_seed(42)
+set_seed(42)
 
-
-def main_single(ngpus_per_node, models_dict_type, data_path, args):
+def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, args):
 
     print('Making datasets..')
     name = args.model_name + "_" + str (args.subj) + '_' + configs.LLM_name
@@ -47,14 +46,14 @@ def main_single(ngpus_per_node, models_dict_type, data_path, args):
                                         rank = 0,
                                         world_size = 1
                                         )
+
     n_samples = 0
     for sample in train_loader:
         n_samples += 1
 
-    print('Making model..')
-    llm = models_dict_type[args.type](device = "cuda", load_in_4bit = args.load_in_4bit)
+    llm = models_dict_type[args.type](src_fmri_features, device = "cuda", load_in_4bit = args.load_in_4bit)
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
-    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs)
+    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs_max)
 
     if args.retrain:
         args.starting_epoch, best_loss = load_from_checkpoint(llm, optim, lr_scheduler, args.saved_checkpoint, args.starting_epoch, 0)
@@ -70,9 +69,10 @@ def main_single(ngpus_per_node, models_dict_type, data_path, args):
             name,
             configs.type,
             val_loader,
-            train_loader,
+            [train_loader],
             configs.MODELS_TRAIN_DIR,
             0,
+            src_fmri_features,
             args,
             n_samples = n_samples,
             epochs = args.epochs,
@@ -85,7 +85,7 @@ def main_single(ngpus_per_node, models_dict_type, data_path, args):
 
 
 
-def main_worker(rank, ngpus_per_node, models_dict_type, data_path, args):
+def main_worker(rank, ngpus_per_node, models_dict_type, data_path, src_fmri_features, args):
 
     torch.cuda.set_device(rank)
     dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
@@ -110,10 +110,9 @@ def main_worker(rank, ngpus_per_node, models_dict_type, data_path, args):
     print (n_samples)
 
     print('Making model..')
-    llm = models_dict_type[args.type](device = "cuda:%d"%rank, load_in_4bit = args.load_in_4bit)
+    llm = models_dict_type[args.type](src_fmri_features, device = "cuda:%d"%rank, load_in_4bit = args.load_in_4bit)
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
-    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs_max)
-    #lr_scheduler = None
+    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs)
 
     if args.retrain:
         args.starting_epoch, best_loss = load_from_checkpoint(llm, optim, lr_scheduler, args.saved_checkpoint, args.starting_epoch, rank)
@@ -133,9 +132,10 @@ def main_worker(rank, ngpus_per_node, models_dict_type, data_path, args):
             name,
             configs.type,
             val_loader,
-            train_loader,
+            [train_loader],
             configs.MODELS_TRAIN_DIR,
             rank,
+            src_fmri_features,
             args,
             n_samples = n_samples,
             epochs = args.epochs,
@@ -144,19 +144,19 @@ def main_worker(rank, ngpus_per_node, models_dict_type, data_path, args):
             lr = args.lr,
             best_loss = best_loss)
 
-    dist.destroy_process_group()
     print('..Done')
+    dist.destroy_process_group()
 
 def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loaders,
-           saving_path, rank, args, n_samples,
-           epochs = 10, save_epochs = 2,
+           saving_path, rank, src_fmri_features, args, n_samples,
+           epochs = 100, save_epochs = 10,
            starting_epoch = 1, lr = 0.0001, best_loss = 10000):
 
     model.train()
     for epoch in range(starting_epoch, epochs + 1):
         mean_loss = 0
-        for id, sample in enumerate (data_loaders):
-            padded = torch.zeros(sample[0].shape[0], sample[0].shape[1], 17910 - sample[0].shape[2])
+        for id, sample in enumerate (data_loaders[-1]):
+            padded = torch.zeros(sample[0].shape[0], sample[0].shape[1], src_fmri_features - sample[0].shape[2])
             sample[0] = torch.cat([sample[0],padded], dim = 2)
             loss = model (sample)
             mean_loss += loss
@@ -166,16 +166,18 @@ def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loader
 
         lr_scheduler.step()
 
+
         if args.distributed:
             dist.barrier()
 
         if epoch % save_epochs == 0:
-            if epoch > 3:
-                test_from_loader (val_loader, model, model_name, args, epoch)
+            # if epoch > 3:
+            test_from_loader (val_loader, model, model_name, src_fmri_features, args, epoch)
             if rank == 0:
                 print ('Loss: ', (mean_loss / n_samples))
                 if (mean_loss / n_samples) < best_loss:
                     best_loss = mean_loss / n_samples
+                    #print (best_loss)
                     print(model_name + "_" + type, epoch, saving_path)
                 if args.distributed:
                     save_checkpoint(model.module, optim, lr_scheduler, epoch, model_name, saving_path, best_loss)
@@ -183,8 +185,7 @@ def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loader
                     save_checkpoint(model, optim, lr_scheduler, epoch, model_name, saving_path, best_loss)
 
 
-
-def test_from_loader (data_loader, model, model_name, args, epoch):
+def test_from_loader (data_loader, model, model_name, src_fmri_features, args, epoch):
 
     model.eval()
     if os.path.exists ("results/%s_%d.json"%(model_name, epoch)):
@@ -195,7 +196,7 @@ def test_from_loader (data_loader, model, model_name, args, epoch):
     for sample in data_loader:
 
         src_fmri, _ = sample[0], sample[2].flatten().tolist()
-        padded = torch.zeros(src_fmri.shape[0], src_fmri.shape[1], 17910 - src_fmri.shape[2])
+        padded = torch.zeros(src_fmri.shape[0], src_fmri.shape[1], src_fmri_features - src_fmri.shape[2])
         src_fmri = torch.cat([src_fmri,padded], dim = 2)
 
         output_text = model.generate (src_fmri)
@@ -212,10 +213,10 @@ def test_from_loader (data_loader, model, model_name, args, epoch):
 
 
 
-def test (data_path, models_dict_type, epoch = ""):
+def test (data_path, models_dict_type, src_fmri_features, epoch = ""):
 
     #torch.cuda.set_device(0)
-    model = models_dict_type[args.type]("cuda", load_in_4bit = args.load_in_4bit, inference_mode=True)
+    model = models_dict_type[args.type](src_fmri_features, "cuda", load_in_4bit = args.load_in_4bit, inference_mode=True)
     model_name = args.saved_checkpoint.split('/')[-1].split('.')[0]
     checkpoint = torch.load(args.saved_checkpoint, map_location="cuda")
 
@@ -239,20 +240,17 @@ def test (data_path, models_dict_type, epoch = ""):
     sample_id = 0
     for sample in data_loader:
         src_fmri, _ = sample[0], sample[2]
-        # 17910 is the maximum number of voxels for all subject; this is to unify the frmi-encoder input for across all subjects
-        padded = torch.zeros(src_fmri.shape[0], src_fmri.shape[1], 17910 - src_fmri.shape[2])
+        padded = torch.zeros(src_fmri.shape[0], src_fmri.shape[1], src_fmri_features - src_fmri.shape[2])
         src_fmri = torch.cat([src_fmri,padded], dim = 2)
-
         output_text = model.generate (src_fmri)
-
         output_text = [a.split('.')[0] + '.' for a in output_text]
+
         for a in  output_text:
             results[sample_id] = a
             sample_id += 1
 
     with open("results/%s.json"%model_name, 'w') as out_file:
         json.dump(results, out_file)
-
 
 
 def save_checkpoint(model, optimizer, lr_scheduler, cur_epoch, model_name, saving_path, loss, is_best=False):
@@ -270,7 +268,7 @@ def save_checkpoint(model, optimizer, lr_scheduler, cur_epoch, model_name, savin
     save_obj = {
         "model": state_dict,
         "optimizer": optimizer.state_dict(),
-        "lr_scheduler": lr_scheduler,
+        "lr_scheduler": lr_scheduler.state_dict(),
         'loss': loss.item(),
         "epoch": cur_epoch}
 
@@ -308,17 +306,17 @@ def load_from_checkpoint(model, optimizer, lr_scheduler, checkpoint_path, starti
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", default = 16, type = int)
-    parser.add_argument("--val_batch_size", default = 32, type = int)
+    parser.add_argument("--val_batch_size", default = 128, type = int)
     parser.add_argument("--seed", default = 42, type=int)
     parser.add_argument("--model_name", "-m", help="Name of the model to train.",
                         choices = ["MllmBrainToText_normal"],
                         default = "MllmBrainToText_normal")
     parser.add_argument('--test', action='store_true', help = "test the model")
     parser.add_argument('--retrain', action='store_true', help = "retrain from existing checkpoint")
-    parser.add_argument("--lr", default = 0.001, type = float)
+    parser.add_argument("--lr", default = 0.0001, type = float)
     parser.add_argument("--starting_epoch", default = 1, type = int)
-    parser.add_argument("--save_epochs", default = 1, type = int)
-    parser.add_argument("--epochs", default = 10, type = int)
+    parser.add_argument("--save_epochs", default = 5, type = int)
+    parser.add_argument("--epochs", default = 8, type = int)
     parser.add_argument("--epochs_max", default = 280, type = int)
     parser.add_argument("--saved_checkpoint", "-s", type = str)
     parser.add_argument("--type", "-t", type = str, choices = ['normal'])
@@ -329,6 +327,7 @@ if __name__ == '__main__':
     parser.add_argument('--dist-backend', default='nccl', type=str, help='')
     parser.add_argument('--world_size', default=1, type=int, help='')
     parser.add_argument('--distributed', action='store_true', default=False)
+
     parser.add_argument('--num_workers', type=int, default=1, help='')
 
     args = parser.parse_args()
@@ -342,19 +341,21 @@ if __name__ == '__main__':
     'normal':MllmBrainToTextV0
     }
 
-    print (args.distributed)
+    voxels_per_subj = {1: 15725, 2: 14280, 5: 13040, 7: 12685}
+    src_fmri_features = voxels_per_subj[args.subj]
+
     args.model_name = "MllmBrainToText_" + args.type
     data_path = configs.DATA_PATH
 
     if args.test:
-        test (data_path, models_dict_type)
+        test (data_path, models_dict_type, src_fmri_features)
     else:
         ngpus_per_node = torch.cuda.device_count()
         args.world_size = ngpus_per_node
 
         if args.distributed:
-            mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, models_dict_type, data_path, args))
+            mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, models_dict_type, data_path, src_fmri_features, args))
         else:
             ngpus_per_node = 1
             args.world_size = 1
-            main_single(ngpus_per_node, models_dict_type, data_path, args)
+            main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, args)

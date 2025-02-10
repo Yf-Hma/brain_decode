@@ -82,17 +82,16 @@ python trainer.py -s subject
 python trainer.py --test -s subject --saving_path trained_model_path
 ```   
 
-
 ##  Brain captioning - BrainHub benchmark on NSD dataset
 This a comparison with brain understanding benchmark ([BrainHub](https://github.com/weihaox/BrainHub)), based on Natural Scenes Dataset [NSD](https://naturalscenesdataset.org/) and [COCO](https://cocodataset.org).
 
-#### Datasets and model's configuration
+#### Experimental setup
 - The processed datasets are available in [here](https://huggingface.co/datasets/pscotti/naturalscenesdataset).
 - Download the datasets using this [script](https://github.com/weihaox/UMBRAE/blob/main/umbrae/download_data.sh).
 - Download COCO annotations from this [link](https://huggingface.co/datasets/pscotti/naturalscenesdataset/blob/main/COCO_73k_annots.npy), and put it in the folder 'tools'
-- Update the configuration file 'src/configs_nsd' to specify the datasets path, llama3.2 path  where the put the trained models, and eventually to modify the hyperparameters.
+- Update the configuration file 'src/configs_nsd' to specify the datasets and llama3.2 paths, and eventually to modify the hyperparameters.
 - To train and evaluate the model, from the folder 'comparison_NSD' execute the following scripts (example for subject 1): ```python main.py --subj 1```.  
-- Trained models are available in this [link](https://drive.google.com/file/d/1oQI5u0pXPS9TMvBMNdj13-_ljJy8F6wL/view?usp=sharing).
+- Trained models are available in this [link](https://drive.google.com/file/d/1bzSz4oQY3YDEq7jh7JfsioZ_mgBceBDU/view?usp=sharing).
 - To get the evaluation scores for each subject based on the generated captions of the test set, refer to the Benchmark [project](https://github.com/weihaox/BrainHub).
 
 #### Results
@@ -106,7 +105,7 @@ Unlike existing methods, we adapted our architecture to work with Llama-3.2-3B-I
 | BrainCap  | S1   | 55.96 | 14.51 | 16.68  | 40.69 | 41.30 | 9.06  | 64.31 | 69.90    |
 | OneLLM    | S1   | 47.04 | 9.51  | 13.55  | 35.05 | 22.99 | 6.26  | 54.80 | 61.28    |
 | SDRecon   | S1   | 36.21 | 3.43  | 10.03  | 25.13 | 13.83 | 5.02  | 61.07 | 66.36    |
-| Ours-S1   | S1   | 60.38 | 19.10 | 18.05  | 43.89 | 51.09 | 9.78  | 62.81 | 69.20    |
+| Ours-S1   | S1   | 59.93 | 20.05 | 18.57  | 43.71 | 55.90 | 10.48 | 63.51 | 69.66    |
 
 | Method    | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | CIDEr | SPICE | CLIPS | RefCLIPS |
 |-----------|------|-------|-------|--------|-------|-------|-------|-------|----------|
@@ -114,7 +113,7 @@ Unlike existing methods, we adapted our architecture to work with Llama-3.2-3B-I
 | UMBRAE-S2 | S2   | 57.18 | 17.18 | 18.11  | 41.85 | 50.62 | 11.50 | 64.87 | 71.06    |
 | BrainCap  | S2   | 53.80 | 13.03 | 15.90  | 39.96 | 35.60 | 8.47  | 62.48 | 68.19    |
 | SDRecon   | S2   | 34.71 | 3.02  | 9.60   | 24.22 | 13.38 | 4.58  | 59.52 | 65.30    |
-| Ours-S2   | S2   | 57.45 | 18.53 | 17.42  | 42.74 | 48.35 | 9.19  | 61.49 | 67.94    |
+| Ours-S2   | S2   | 57.85 | 18.52 | 17.61  | 43.11 | 48.31 | 9.74  | 61.55 | 68.01    |
 
 | Method    | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | CIDEr | SPICE | CLIPS | RefCLIPS |
 |-----------|------|-------|-------|--------|-------|-------|-------|-------|----------|
@@ -122,7 +121,7 @@ Unlike existing methods, we adapted our architecture to work with Llama-3.2-3B-I
 | UMBRAE-S5 | S5   | 58.99 | 18.73 | 19.04  | 43.30 | 57.09 | 12.70 | 66.48 | 72.69    |
 | BrainCap  | S5   | 55.28 | 14.62 | 16.45  | 40.87 | 41.05 | 9.24  | 63.89 | 69.64    |
 | SDRecon   | S5   | 34.96 | 3.49  | 9.93   | 24.77 | 13.85 | 5.19  | 60.83 | 66.30    |
-| Ours-S5   | S5   | 59.80 | 19.88 | 18.61  | 44.22 | 54.62 | 10.52 | 63.60 | 69.79    |
+| Ours-S5   | S5   | 60.52 | 20.19 | 18.82  | 44.69 | 55.67 | 10.53 | 63.22 | 69.57    |
 
 | Method    | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | CIDEr | SPICE | CLIPS | RefCLIPS |
 |-----------|------|-------|-------|--------|-------|-------|-------|-------|----------|
@@ -130,7 +129,7 @@ Unlike existing methods, we adapted our architecture to work with Llama-3.2-3B-I
 | UMBRAE-S7 | S7   | 55.71 | 15.75 | 17.51  | 40.64 | 47.07 | 11.26 | 63.66 | 70.09    |
 | BrainCap  | S7   | 54.25 | 14.00 | 15.94  | 40.02 | 37.49 | 8.57  | 62.52 | 68.48    |
 | SDRecon   | S7   | 34.99 | 3.26  | 9.54   | 24.33 | 13.01 | 4.74  | 58.68 | 64.59    |
-| Ours-S7   | S7   | 56.49 | 17.23 | 17.26  | 41.82 | 45.68 | 8.98  | 60.74 | 67.09    |
+| Ours-S7   | S7   | 56.98 | 17.77 | 17.42  | 42.01 | 45.53 | 9.38  | 60.25 | 67.08    |
 
 
 ## TODO

@@ -7,19 +7,20 @@ import torch.nn as nn
 import random
 from peft import get_peft_config, get_peft_model, LoraConfig, TaskType
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-from src.transformers_src.Transformer import  Transformer
+from src.transformers_src.Transformer import DeconvBipartiteTransformerConv, Transformer
 import src.configs_nsd as configs
-
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
 class MllmBrainToTextV0(nn.Module):
     def __init__(
         self,
+        src_fmri_features,
         device,
         max_txt_len=configs.max_txt_len,
         max_output_txt_len=configs.max_output_txt_len,
@@ -28,7 +29,6 @@ class MllmBrainToTextV0(nn.Module):
     ):
         super().__init__()
 
-        src_fmri_features = configs.src_fmri_features
         time_steps = configs.time_steps
         vocab_len = configs.vocab_len
         max_size = configs.max_size
@@ -47,6 +47,7 @@ class MllmBrainToTextV0(nn.Module):
 
         emb_dim = configs.emb_dim
         d_model = emb_dim
+
         self.frmi_encoder = model.encoder
 
         self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
@@ -72,17 +73,13 @@ class MllmBrainToTextV0(nn.Module):
 
 
         self.llm_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-        self.llm_tokenizer.add_special_tokens({'bos_token': '</s>'})
-        self.llm_tokenizer.add_special_tokens({'eos_token': '</s>'})
-        self.llm_tokenizer.add_special_tokens({'unk_token': '</s>'})
-
         self.llm_model.resize_token_embeddings(len(self.llm_tokenizer))
 
         # LorA configs
         lora_config = LoraConfig(
             task_type="CAUSAL_LM",
-            r=8,
-            lora_alpha=16,
+            r=16,
+            lora_alpha=32,
             target_modules=["k_proj", "v_proj"],
             lora_dropout=0.01,
             inference_mode = inference_mode,
