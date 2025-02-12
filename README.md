@@ -95,7 +95,7 @@ This a comparison with brain understanding benchmark ([BrainHub](https://github.
 - To get the evaluation scores for each subject based on the generated captions of the test set, refer to the Benchmark [project](https://github.com/weihaox/BrainHub).
 
 #### Results
-Unlike existing methods, we adapted our architecture to work with Llama-3.2-3B-Instruct and Lora finetuning (instead of frozen Vicuna-7b) for brain captioning using only brain fMRI signals and text during training, without using VLMs or brain-image alignment. We trained our models for each subject, and the results are promising.  The model achieved very competitive results, yielding, in several cases, to the first or second best scores based on  BLEU1, BLEU4, ROUGE, and METEOR. The generated caption on the test are in the folder "comparison_NSD/results". As future work, we aim to train our model in a cross-subject manner.
+We adapted the previous architecture to work with Llama-3.2-3B-Instruct and Lora finetuning (instead of frozen Vicuna-7b) for brain captioning. Unlike existing methods, the model uses only brain fMRI signals and text during training, without leveraging VLMs or brain-image alignment. We trained our models for each subject, and the results are promising.  The model achieved very competitive results, yielding, in several cases, to the first or second best scores based on  BLEU1, BLEU4, ROUGE, and METEOR. The generated caption on the test are in the folder "comparison_NSD/results". As future work, we aim to train our model in a cross-subject manner.
 
 
 | Method    | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | CIDEr | SPICE | CLIPS | RefCLIPS |
