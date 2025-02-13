@@ -136,7 +136,7 @@ We adapted the previous architecture to work with Llama-3.2-8B-Instruct and Lora
 - [x] Provide pretrained checkpoints.
 - [x] Apply the proposed methodology for NSD datasets - Brain captioning benchmark.
 - [ ] Cross-subject training for NSD dataset.
-- [ ] Test other decoders (LLama3, QwenV2, etc.)
+- [ ] Test other LLM decoders
 
 
 ## Notes
