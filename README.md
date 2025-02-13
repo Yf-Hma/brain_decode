@@ -123,7 +123,7 @@ We adapted the previous architecture to work with Llama-3.2-8B-Instruct and Lora
 | UMBRAE-S5         | S5   | 58.99 | 18.73 | 19.04  | 43.30 | 57.09 | 12.70 | 66.48 | 72.69    |
 | BrainCap          | S5   | 55.28 | 14.62 | 16.45  | 40.87 | 41.05 | 9.24  | 63.89 | 69.64    |
 | SDRecon           | S5   | 34.96 | 3.49  | 9.93   | 24.77 | 13.85 | 5.19  | 60.83 | 66.30    |
-| BrainDEC-S5 (ours)   | S5   | 60.52 | 20.19 | 18.82  | 44.69 | 55.67 | 10.53 | 63.22 | 69.57    |
+| BrainDEC-S5 (ours)| S5   | 60.52 | 20.19 | 18.82  | 44.69 | 55.67 | 10.53 | 63.22 | 69.57    |
 
 
 | Method            | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | CIDEr | SPICE | CLIPS | RefCLIPS |
