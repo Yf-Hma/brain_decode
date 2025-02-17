@@ -201,7 +201,7 @@ def test_from_loader (data_loader, model, model_name, src_fmri_features, args, e
 
         output_text = model.generate (src_fmri)
 
-        output_text = [a.split('.')[0] + '.' for a in output_text]
+        output_text = [a + '.' if a[-1] != '.' else a for a in output_text]
         for a in  output_text:
             results[sample_id] = a
             sample_id += 1
