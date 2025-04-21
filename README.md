@@ -92,7 +92,7 @@ This a comparison with brain understanding benchmark ([BrainHub](https://github.
 - Update the configuration file 'src/configs_nsd' to specify the datasets and llama3.2 paths, and eventually to modify the hyperparameters.
 - To train and evaluate the model, from the folder 'comparison_NSD' execute the following scripts (example for subject 1): ```python main.py --subj 1```.  
 - Trained models are available in this [link](https://drive.google.com/file/d/1bzSz4oQY3YDEq7jh7JfsioZ_mgBceBDU/view?usp=sharing).
-- To get the evaluation scores for each subject based on the generated captions of the test set, refer to the Benchmark [project](https://github.com/weihaox/BrainHub).
+- To get the evaluation scores for each subject based on the generated captions of the test set (after testing, e.g., ```python main.py --subj 1 --test```. ), refer to the Benchmark [project](https://github.com/weihaox/BrainHub).
 
 #### Results
 We adapted the previous architecture to work with Llama-3.2-8B-Instruct and Lora finetuning (instead of frozen Vicuna-7b) for brain captioning. Unlike existing methods, the model uses only brain fMRI signals and text during training, without leveraging VLMs or brain-image alignment. We trained our models for each subject, and the results are promising.  The model achieved very competitive results, yielding, in several cases, to the first or second best scores based on  BLEU1, BLEU4, ROUGE, and METEOR. The generated caption on the test are in the folder "comparison_NSD/results". As future work, we aim to train our model in a cross-subject manner. Let BrainDEC be the abreviation of our method. The following table compares the results obtained with existing methods.

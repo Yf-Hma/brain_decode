@@ -319,7 +319,7 @@ if __name__ == '__main__':
     parser.add_argument("--epochs", default = 8, type = int)
     parser.add_argument("--epochs_max", default = 280, type = int)
     parser.add_argument("--saved_checkpoint", "-s", type = str)
-    parser.add_argument("--type", "-t", type = str, choices = ['normal'])
+    parser.add_argument("--type", "-t", type = str, choices = ['normal'], default="normal")
     parser.add_argument('--load_in_4bit', action='store_true', help = "to load the llm quantized in 4 bits for inference.")
     parser.add_argument('--subj', type=int, default=1, choices=[1, 2, 5, 7])
     parser.add_argument('--gpu', default=None, type=int, help='GPU id to use.')
