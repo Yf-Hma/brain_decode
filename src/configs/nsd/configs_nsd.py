@@ -2,8 +2,7 @@ import os
 
 # Paths
 DATA_PATH="data/NSD/"
-RAW_FMRI_DATA_PATH="data/NSD/"
-PROCESSED_FMRI_DATA_PATH = ""
+RAW_FMRI_DATA_PATH="data/NSD"
 MODELS_TRAIN_DIR =  "trained_models/NSD"
 
 
@@ -40,8 +39,3 @@ repetition_penalty=1.5
 length_penalty=0.9
 num_captions=1
 temperature=0.8
-
-
-
-
-

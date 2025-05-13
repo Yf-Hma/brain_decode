@@ -28,6 +28,10 @@ class bold_projector(nn.Module):
         self.linear_out = nn.Linear(output_size, output_size, device=device)
         self.dropout = nn.Dropout(dropout_rate).to(device)
 
+        for name, param in self.encoder.named_parameters():
+            param.requires_grad = False
+        self.encoder.eval()
+
     def forward(self, x):
         x, _ = self.encoder (x)
         x = x[-1]
@@ -68,14 +72,10 @@ class BrainDEC_V0(nn.Module):
         model.load_state_dict(torch.load(fmri_encoder_path, weights_only=True))
         #self.frmi_encoder = model.encoder
 
-
         llm_hidden_dim = configs.llm_hidden_dim
 
         self.frmi_encoder = bold_projector(model.encoder, d_model, llm_hidden_dim, device=self.device)
 
-        for name, param in self.frmi_encoder.named_parameters():
-            param.requires_grad = False
-        self.frmi_encoder.eval()
 
 
         self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)

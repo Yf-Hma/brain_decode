@@ -6,23 +6,20 @@
  In this paper, we propose and end-to-end multimodal large language model for decoding the spoken text in a human-human or human-robot interactions. The proposed architecture is founded on  ($i$) an encoder derived from a specific transformer with the incorporation of an augmented embedding layer for the encoder and a better-adjusted attention mechanism than that present in the state of the art, and ($ii$) a frozen LLM adapted via instruction tuning to align the embedding of the input modalities to decode the output text. A benchmark in performed on two publicly available datasets where fMRI brain activity and conversational signals are recorded synchronously.
 
 ## Requirements
-
 * python 3.9.19
 * Required packages:  ```python install -r requirement.txt```
-* vicuna-7b-v1.3 from https://huggingface.co/lmsys/vicuna-7b-v1.3 in the folder 'llm' (or other LLMs such as Meta-llama3.2-8b-Instruct)
+* vicuna-7b-v1.3 from https://huggingface.co/lmsys/vicuna-7b-v1.3 in the folder 'llms' (or other LLMs such as Meta-llama3.2-8b-Instruct)
 * CLIP in the main folder: git clone https://github.com/openai/CLIP
-* To use other data storage paths, change the configuration file: src/config.py
-
+* To use other data storage paths, change the configuration file: src/configs/convers/configs.py
 
 ## Experiments
 
 This benchamrk contains three experiments associated to three different tasks and datasets:
-* Spoken text decoding (convers): Multimodal spoken text decoding during conversations (main task of this work).
-* Perceived speech decoding (perceived): Decoding the textual content of listened stories.
-* Brain captioning (nsd): Decoding the captions of viewed images using the NSD datasets.
+* __Spoken text decoding (convers)__: Multimodal spoken text decoding during conversations (main task of this work).
+* __Perceived speech decoding (perceived)__: Decoding the textual content of listened stories.
+* __Brain captioning (nsd)__: Decoding the captions of viewed images using the Natural Scenes Dataset datasets.
 
 In the following, we detail the steps to conduct or reproduce the results of each experiment.
-
 
 ### Spoken text decoding
 #### Configuration
@@ -44,10 +41,7 @@ https://www.ortolang.fr/market/corpora/convers/v2
 python exps/convers/process_raw_bold_signal.py --n_rois 200 # Parcellation using 200 ROIs
 python exps/convers/data_builder_tools/split_bold_files.py  # Processing raw 4D voxel BOLD signals and segmenting them into fixed-duration chunks
 python exps/convers/data_builder_tools/textgrid_to_text.py # Processing transcription files (conversations) and segmenting them into fixed-duration text sequences
-```
 
-#### Building training and test data
-```bash
 python exps/convers/data_builder_tools/build_data.py # Using json files to save paths of bold chunks and the [input, output] text for instruction tuning
 python exps/convers/data_builder_tools/build_tokenizer.py # Building the tokenizer for the first stage of training
 ```
@@ -112,7 +106,7 @@ We adapted the previous architecture to work with Llama-3.2-8B-Instruct and Lora
 | OneLLM            | S1   | 47.04 | 9.51  | 13.55  | 35.05 |  61.28    |
 | SDRecon           | S1   | 36.21 | 3.43  | 10.03  | 25.13  | 66.36    |
 | BrainDEC-llama3-8b (ours) | S1   | __59.93__ | __20.05__ | 18.57  | __43.71__ |  69.66    |
-| BrainDEC-mistral-8b (ours)| S1   | 58.92 | 18.25 | 42.61  | 43.71 |  68.20    |
+| BrainDEC-mistral-8b (ours)| S1   | 58.92 | 18.25 | 42.61  | __43.71__ |  68.20    |
 
 | Method            | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | RefCLIPS |
 |-------------------|------|-------|-------|--------|-------|----------|

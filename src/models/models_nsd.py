@@ -28,20 +28,13 @@ class bold_projector(nn.Module):
         self.dropout = nn.Dropout(dropout_rate).to(device)
 
     def forward(self, x):
-        # x shape: (batch, T, N1)
         x, _ = self.encoder (x)
         x = x[-1]
         batch_size, T, N1 = x.shape
-        # Flatten the time dimension with batch
-        #x = x.view(-1, N1)  # shape: (batch*T, N1)
-        #x = self.dropout(x)
         x = self.linear(x)
-        # x = self.dropout(x)
-        # x = self.linear_out(x)
         return x
-        # Reshape back to (batch, T, N2)
-        #return x.view(batch_size, T, -1)
-    
+
+
 
 class BrainDEC_V0(nn.Module):
     def __init__(
@@ -63,7 +56,7 @@ class BrainDEC_V0(nn.Module):
         heads = configs.heads
         d_ff = configs.d_ff
         N = configs.N
-        
+
         self.coco_captions = np.load(configs.coco_annotation_file_path)
 
         model_name_or_path = configs.LLM_DIR
@@ -72,8 +65,7 @@ class BrainDEC_V0(nn.Module):
         model = Transformer(time_steps, src_fmri_features, max_size,\
                                                vocab_len, d_model, d_ff, N, heads, self.device)\
                                                .to(self.device)
-        
-        #encoder_path = os.path.join (configs.MODELS_TRAIN_DIR, "Transformer_%d_%s.pt"%(src_fmri_features, configs.type))
+
 
         emb_dim = configs.emb_dim
         d_model = emb_dim
@@ -98,7 +90,7 @@ class BrainDEC_V0(nn.Module):
                                                                   local_files_only=True)
         else:
             if configs.LLM_name == "gemma9b":
-            
+
                 self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
                                                                     device_map=self.device,
                                                                     trust_remote_code=True,
@@ -112,10 +104,7 @@ class BrainDEC_V0(nn.Module):
                                                                     #torch_dtype=torch.bfloat16,
                                                                     local_files_only=True)
 
-            # self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
-            #                                                       device_map=self.device,
-            #                                                       torch_dtype=torch.bfloat16)
-            
+
         self.llm_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
         self.llm_model.resize_token_embeddings(len(self.llm_tokenizer))
 
@@ -136,8 +125,6 @@ class BrainDEC_V0(nn.Module):
                 param.requires_grad = False
             self.llm_model.eval()
 
-        
-        #self.llm_proj = nn.Linear(d_model, llm_hidden_dim).to(self.device)
 
         self.max_txt_len = max_txt_len
         self.max_output_txt_len = max_output_txt_len
@@ -272,7 +259,7 @@ class BrainDEC_V0(nn.Module):
 
 
         inputs_llm_bold = self.frmi_encoder (src_bold_signal)#.to(device))
-        
+
         #inputs_llm_bold = self.llm_proj (bold_embeddings)
 
         atts_llm_bold = torch.ones(inputs_llm_bold.size()[:-1], dtype=torch.long).to(self.device)
@@ -331,7 +318,7 @@ class MllmBrainToTextVIT(nn.Module):
         heads = configs.heads
         d_ff = configs.d_ff
         N = configs.N
-        
+
         self.coco_captions = np.load('../tools/COCO_73k_annots.npy')
 
         model_name_or_path = configs.LLM_DIR
@@ -348,7 +335,7 @@ class MllmBrainToTextVIT(nn.Module):
         n_channels = configs.n_channels
         vit_width = configs.vit_width
         vit_layers = configs.vit_layers
-        vit_heads = configs.vit_heads   
+        vit_heads = configs.vit_heads
         d_model = emb_dim
 
         #model.load_state_dict(torch.load(encoder_path, weights_only=True))
@@ -603,7 +590,7 @@ class MllmBrainToText_Deconv(nn.Module):
         heads = configs.heads
         d_ff = configs.d_ff
         N = configs.N
-        
+
         self.coco_captions = np.load('../tools/COCO_73k_annots.npy')
 
         model_name_or_path = configs.LLM_DIR
@@ -632,7 +619,7 @@ class MllmBrainToText_Deconv(nn.Module):
 
         #model = model.float()
         #model.load_state_dict(torch.load(encoder_path, weights_only=True))
-    
+
         self.frmi_encoder = model.encoder
 
         # self.frmi_encoder.train()
@@ -888,7 +875,7 @@ class MllmBrainToTextV0_clip(nn.Module):
         heads = configs.heads
         d_ff = configs.d_ff
         N = configs.N
-        
+
         self.coco_captions = np.load('../tools/COCO_73k_annots.npy')
 
         model_name_or_path = configs.LLM_DIR
@@ -901,12 +888,12 @@ class MllmBrainToTextV0_clip(nn.Module):
         emb_dim = configs.emb_dim
         vocab_size = configs.vocab_size
         #img_size = configs.img_size
-        
+
         patch_size = configs.patch_size
         n_channels = configs.n_channels
         vit_width = configs.vit_width
         vit_layers = configs.vit_layers
-        vit_heads = configs.vit_heads   
+        vit_heads = configs.vit_heads
         d_model = emb_dim
 
         img_size = (time_steps, src_fmri_features)
@@ -1176,7 +1163,7 @@ class MllmBrainToText_Deconv_clip(nn.Module):
         heads = configs.heads
         d_ff = configs.d_ff
         N = configs.N
-        
+
         self.coco_captions = np.load('../tools/COCO_73k_annots.npy')
 
         model_name_or_path = configs.LLM_DIR
@@ -1185,7 +1172,7 @@ class MllmBrainToText_Deconv_clip(nn.Module):
         model = DeconvBipartiteTransformerConv(time_steps, src_fmri_features, max_size,\
                                                vocab_len, d_model, d_ff, N, heads, self.device)\
                                                .to(self.device)
-        
+
         encoder_path = os.path.join (configs.MODELS_TRAIN_DIR, "brain_clip_deconv_200.pth")
 
         n_heads = configs.n_heads
@@ -1199,7 +1186,7 @@ class MllmBrainToText_Deconv_clip(nn.Module):
         n_channels = configs.n_channels
         vit_width = configs.vit_width
         vit_layers = configs.vit_layers
-        vit_heads = configs.vit_heads   
+        vit_heads = configs.vit_heads
         d_model = emb_dim
 
         model = BrainCLIP(emb_dim, vit_width, img_size, patch_size,
@@ -1430,4 +1417,3 @@ class MllmBrainToText_Deconv_clip(nn.Module):
         output_text = [text.strip() for text in output_text]
 
         return output_text
-

@@ -819,12 +819,7 @@ class BrainDEC_V2(nn.Module):
                 num_return_sequences=num_captions,
             )
 
-        #outputs[outputs == 0] = 2 # convert output id 0 to 2 (eos_token_id)
         output_text = self.llm_tokenizer.batch_decode(outputs, skip_special_tokens=True)
         output_text = [text.strip() for text in output_text]
 
         return output_text
-
-
-
-

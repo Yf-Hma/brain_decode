@@ -1,5 +1,5 @@
 # set the destination
-destination="nsd"
+destination="data/NSD"
 
 subdirs=("train" "test" "val")
 
