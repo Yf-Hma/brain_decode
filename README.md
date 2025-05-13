@@ -25,7 +25,7 @@ In the following, we detail the steps to conduct or reproduce the results of eac
 
 
 ### Spoken text decoding
-#### Congiguration
+#### Configuration
 - Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths:
     * DATA_PATH (ex. data/convers)
     * RAW_FMRI_DATA_PATH (ex. data/fmri_convers)
@@ -61,7 +61,7 @@ python exps/convers/evaluation.py  # Evaluate the results of the test set and re
 
 
 ### Perceived speech decoding
-#### Congiguration
+#### Configuration
 - Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths:
 
     * RAW_FMRI_DATA_PATH (ex. data/perceived)
