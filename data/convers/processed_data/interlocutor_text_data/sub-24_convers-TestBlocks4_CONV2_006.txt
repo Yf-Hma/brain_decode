@@ -1,0 +1,5 @@
+salut   tu as une idée du message
+salut   tu as une idée du message   # oui
+salut   tu as une idée du message   # oui   # oui tu as raison   et si c'était une campagne contre les pesticides
+salut   tu as une idée du message   # oui   # oui tu as raison   et si c'était une campagne contre les pesticides   # je ne sais pas
+salut   tu as une idée du message   # oui   # oui tu as raison   et si c'était une campagne contre les pesticides   # je ne sais pas   # hum

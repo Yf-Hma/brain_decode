@@ -1,0 +1,4 @@
+oui   oui en effet   c'est une poire moche
+oui   oui en effet   c'est une poire moche   # la poire est un peu abîmée   je suis d'accord
+oui   oui en effet   c'est une poire moche   # la poire est un peu abîmée   je suis d'accord   # les yeux sont pas de la même taille   les yeux sont pas de la même taille
+oui   oui en effet   c'est une poire moche   # la poire est un peu abîmée   je suis d'accord   # les yeux sont pas de la même taille   les yeux sont pas de la même taille   # je ne sais pas   qu'est ce que t'en penses

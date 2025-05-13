@@ -1,0 +1,5 @@
+*   bonjour   comment ça va
+*   bonjour   comment ça va   # ouais   oui   je ne sais pas
+*   bonjour   comment ça va   # ouais   oui   je ne sais pas #   c'est une pomme
+*   bonjour   comment ça va   # ouais   oui   je ne sais pas #   c'est une pomme   # oui   tu as raison   ses yeux ressemblent à ceux d'un super héros
+*   bonjour   comment ça va   # ouais   oui   je ne sais pas #   c'est une pomme   # oui   tu as raison   ses yeux ressemblent à ceux d'un super héros   # cette pomme est à l'envers   qu'est ce que t'en penses

@@ -50,13 +50,6 @@ def train_model(out_path, model, train_dataset, batch_size, optimizer, num_epoch
         total_jaccard_train = 0
         total_samples_training = 0
 
-        total_loss_val = 0.0
-        total_bleu_val = 0
-        total_word_overlap_val = 0
-        total_lpips_val = 0
-        total_jaccard_val = 0
-        total_samples_val = 0
-
         # Iterate over batches
         for batch in train_dataset:
             src, trg_sentences = batch["bold_signal"], batch["text_output"]
@@ -64,8 +57,6 @@ def train_model(out_path, model, train_dataset, batch_size, optimizer, num_epoch
             trg = []
             for a in trg_sentences:
                 trg.append(tokenizer.encode(a, add_special_tokens=False).ids)
-
-            #trg = add_filling_tokens_convert_to_tensor(trg, sos_token_id, eos_token_id, pad_token_id, max_seq_len)
 
             input_decoder = [a[:-1] for a in trg]
             input_decoder = add_filling_tokens_convert_to_tensor(input_decoder, sos_token_id, eos_token_id, pad_token_id, max_seq_len - 1)
@@ -79,7 +70,7 @@ def train_model(out_path, model, train_dataset, batch_size, optimizer, num_epoch
             # Forward pass
             output, softmax_output = model(src.float(),input_decoder.float())
 
-            # print (output.shape, label_decoder.shape)
+  
             # Compute loss
             loss = criterion(output.reshape(-1, output.size(-1)), label_decoder.reshape(-1))
 
@@ -92,44 +83,44 @@ def train_model(out_path, model, train_dataset, batch_size, optimizer, num_epoch
             total_loss_train += loss.item() * label_decoder.size(0)  # Accumulate loss
             total_samples_training += label_decoder.size(0)  # Accumulate number of samples
 
-            # Add references and hypotheses for BLEU calculation
+            # # Add references and hypotheses for BLEU calculation
+            # for i in range(label_decoder.size(0)):
+            #     # Get the reference sentence
+            #     ref = label_decoder[i].tolist()
+            #     ref_sentence = tokenizer.decode(ref, skip_special_tokens = True)
 
-            for i in range(label_decoder.size(0)):
-                # Get the reference sentence
-                ref = label_decoder[i].tolist()
-                ref_sentence = tokenizer.decode(ref, skip_special_tokens = True)
+            #     # Get the hypothesis
+            #     hyp = softmax_output.argmax(dim=-1)[i].tolist()
+            #     hyp_sentence = tokenizer.decode(hyp, skip_special_tokens = True)
 
-                # Get the hypothesis
-                hyp = softmax_output.argmax(dim=-1)[i].tolist()
-                hyp_sentence = tokenizer.decode(hyp, skip_special_tokens = True)
+            #     # Calculate BLEU score for this sentence pair
+            #     bleu_score = sentence_bleu([ref_sentence.split()], hyp_sentence.split(), smoothing_function=smoothie)
+            #     total_bleu_train += bleu_score
 
-                # Calculate BLEU score for this sentence pair
-                bleu_score = sentence_bleu([ref_sentence.split()], hyp_sentence.split(), smoothing_function=smoothie)
-                total_bleu_train += bleu_score
+            #     # Calculate word overlap
+            #     overlap_score = word_overlap_percentage(ref_sentence, hyp_sentence)
+            #     total_word_overlap_train += overlap_score
 
-                # Calculate word overlap
-                overlap_score = word_overlap_percentage(ref_sentence, hyp_sentence)
-                total_word_overlap_train += overlap_score
+            #     # Calculate LPIPS distance (assuming you have the function nlp_lpips.distance)
+            #     lpips_dist = nlp_lpips.distance(ref_sentence, hyp_sentence)
+            #     total_lpips_train += lpips_dist.item()
 
-                # Calculate LPIPS distance (assuming you have the function nlp_lpips.distance)
-                lpips_dist = nlp_lpips.distance(ref_sentence, hyp_sentence)
-                total_lpips_train += lpips_dist.item()
-
-                # Calculate Jaccard similarity
-                jaccard_score = jaccard_similarity(ref_sentence, hyp_sentence)
-                total_jaccard_train += jaccard_score
+            #     # Calculate Jaccard similarity
+            #     jaccard_score = jaccard_similarity(ref_sentence, hyp_sentence)
+            #     total_jaccard_train += jaccard_score
 
         epoch_loss = total_loss_train / total_samples_training
-        epoch_bleu = total_bleu_train / total_samples_training
-        epoch_word_overlap = total_word_overlap_train / total_samples_training
-        epoch_lpips = total_lpips_train / total_samples_training
-        epoch_jaccard = total_jaccard_train / total_samples_training
+        # epoch_bleu = total_bleu_train / total_samples_training
+        # epoch_word_overlap = total_word_overlap_train / total_samples_training
+        # epoch_lpips = total_lpips_train / total_samples_training
+        # epoch_jaccard = total_jaccard_train / total_samples_training
 
-        print(f"Epoch {epoch + 1}/{num_epochs} Loss: {epoch_loss:.4f} BLEU: {epoch_bleu:.4f} Word Overlap: {epoch_word_overlap:.4f}% Jaccard Similarity: {epoch_jaccard:.4f} Train LPIPS: {epoch_lpips:.4f}")
+        print(f"Epoch {epoch + 1}/{num_epochs} Loss: {epoch_loss:.4f}")
+        #print(f"Epoch {epoch + 1}/{num_epochs} Loss: {epoch_loss:.4f} BLEU: {epoch_bleu:.4f} Word Overlap: {epoch_word_overlap:.4f}% Jaccard Similarity: {epoch_jaccard:.4f} Train LPIPS: {epoch_lpips:.4f}")
 
         if (epoch + 1) % 10 == 0:
-            torch.save(model, '%s_%d.pt'%(out_path, epoch))
-            torch.save(model, '%s.pt'%(out_path))
+            torch.save(model.state_dict(), '%s_%d.pt'%(out_path, epoch))
+            torch.save(model.state_dict(), '%s.pt'%(out_path))
             if epoch > 10:
                 os.system ("rm %s_%d.pt"%(out_path, epoch - 10))
 

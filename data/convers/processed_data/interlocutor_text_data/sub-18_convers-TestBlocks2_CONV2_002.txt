@@ -1,0 +1,5 @@
+ouais   ah oui   elle a des jambes
+ouais   ah oui   elle a des jambes   # oui   tu as raison   les yeux sont pas de la même taille   oui
+ouais   ah oui   elle a des jambes   # oui   tu as raison   les yeux sont pas de la même taille   oui   # ah oui   la poire semble triste
+ouais   ah oui   elle a des jambes   # oui   tu as raison   les yeux sont pas de la même taille   oui   # ah oui   la poire semble triste   # ouais   la poire a l'air malade   qu'est ce que t'en penses
+ouais   ah oui   elle a des jambes   # oui   tu as raison   les yeux sont pas de la même taille   oui   # ah oui   la poire semble triste   # ouais   la poire a l'air malade   qu'est ce que t'en penses #

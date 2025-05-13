@@ -1,0 +1,5 @@
+salut   c'est une framboise rouge
+salut   c'est une framboise rouge   # elle a des genoux courbés   elle a des yeux marron
+salut   c'est une framboise rouge   # elle a des genoux courbés   elle a des yeux marron   # qu'est ce que t'en penses   oui en effet
+salut   c'est une framboise rouge   # elle a des genoux courbés   elle a des yeux marron   # qu'est ce que t'en penses   oui en effet #   c'est une framboise moche   elle a un visage
+salut   c'est une framboise rouge   # elle a des genoux courbés   elle a des yeux marron   # qu'est ce que t'en penses   oui en effet #   c'est une framboise moche   elle a un visage   # comme la poire

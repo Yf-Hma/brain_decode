@@ -1,0 +1,5 @@
+bonjour   c'est une poire
+bonjour   c'est une poire   # elle est pourrie parce qu'elle vient de loin
+bonjour   c'est une poire   # elle est pourrie parce qu'elle vient de loin   # oui bien sûr oui   je crois aussi   c'est une campagne pour les fruits locaux qui ne viennent pas de loin
+bonjour   c'est une poire   # elle est pourrie parce qu'elle vient de loin   # oui bien sûr oui   je crois aussi   c'est une campagne pour les fruits locaux qui ne viennent pas de loin #   oui   exactement
+bonjour   c'est une poire   # elle est pourrie parce qu'elle vient de loin   # oui bien sûr oui   je crois aussi   c'est une campagne pour les fruits locaux qui ne viennent pas de loin #   oui   exactement   # je crois   je crois   n'est ce pas une campagne pour les producteurs de fruits

@@ -1,0 +1,5 @@
+salut   c'est une fraise triste
+salut   c'est une fraise triste   # ouais   cette fraise est plutôt malheureuse
+salut   c'est une fraise triste   # ouais   cette fraise est plutôt malheureuse   # ah oui   oui c'est possible   peut-être que quelqu'un l'a frappé
+salut   c'est une fraise triste   # ouais   cette fraise est plutôt malheureuse   # ah oui   oui c'est possible   peut-être que quelqu'un l'a frappé #   je ne sais pas   qu'est ce que t'en penses
+salut   c'est une fraise triste   # ouais   cette fraise est plutôt malheureuse   # ah oui   oui c'est possible   peut-être que quelqu'un l'a frappé #   je ne sais pas   qu'est ce que t'en penses   # oui en effet

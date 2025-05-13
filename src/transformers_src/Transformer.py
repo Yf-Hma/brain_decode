@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from .Encoders import Encoder, CNNEncoder, AlternatingEncoder, ConvAlternatingEncoder, FlowAlternatingEncoder, AlternatingEncoderConv, AlternatingEncoderConv2, DuplexEncoderConv, SimplexEncoderConv, DeconvAlternatingEncoderConv
 from .Decoders import Decoder, CNNDecoder, FasttextCNNDecoder, AlternatingDecoder, CNNAlternatingDecoder, ConvAlternatingDecoder, ConvAlternatingDecoder2, AlternatingDecoderFasttext, DuplexDecoderConv, SimplexDecoderConv
 
+
 # Classic Transformer
 class Transformer(nn.Module):
     def __init__(self, time_steps, src_fmri_features, max_seq_length, trg_vocab, d_model, d_ff, N, heads, device):

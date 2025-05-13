@@ -1,0 +1,5 @@
+c'est une poire   oui   tu as raison   c'est une poire jaune
+c'est une poire   oui   tu as raison   c'est une poire jaune   # elle est déformée   tu ne penses pas
+c'est une poire   oui   tu as raison   c'est une poire jaune   # elle est déformée   tu ne penses pas   # elle a un visage   les yeux sont pas de la même taille
+c'est une poire   oui   tu as raison   c'est une poire jaune   # elle est déformée   tu ne penses pas   # elle a un visage   les yeux sont pas de la même taille #   je pense   ses bras pendent
+c'est une poire   oui   tu as raison   c'est une poire jaune   # elle est déformée   tu ne penses pas   # elle a un visage   les yeux sont pas de la même taille #   je pense   ses bras pendent   # oui je crois aussi   la poire semble triste

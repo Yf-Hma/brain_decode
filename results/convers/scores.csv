@@ -1,0 +1,2 @@
+Model ; BLUE score ; meteor score ; jaccard similarity ; word overlap ;  LPIPS
+results/MllmBrainToTextV0_200_spoken ; 2.64 ; 13.85 ; 14.35 ; 0.2586 ; 0.4951

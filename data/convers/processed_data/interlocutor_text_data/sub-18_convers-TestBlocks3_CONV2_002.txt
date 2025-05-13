@@ -1,0 +1,5 @@
+oui   cette pomme a des grands yeux
+oui   cette pomme a des grands yeux   # je suis d'accord
+oui   cette pomme a des grands yeux   # je suis d'accord   # je ne suis pas sûre   on dirait * cette pomme
+oui   cette pomme a des grands yeux   # je suis d'accord   # je ne suis pas sûre   on dirait * cette pomme   # ah oui
+oui   cette pomme a des grands yeux   # je suis d'accord   # je ne suis pas sûre   on dirait * cette pomme   # ah oui   # je ne sais pas   elle semble être en colère

@@ -1,0 +1,5 @@
+oui   ah oui   c'est un demi-citron
+oui   ah oui   c'est un demi-citron   # c'est un drôle de citron   c'est un drôle de citron   c'est un drôle de citron
+oui   ah oui   c'est un demi-citron   # c'est un drôle de citron   c'est un drôle de citron   c'est un drôle de citron   # il n'est pas méchant comme les deux autres
+oui   ah oui   c'est un demi-citron   # c'est un drôle de citron   c'est un drôle de citron   c'est un drôle de citron   # il n'est pas méchant comme les deux autres   # il n'est pas méchant comme les deux autres   qu'est ce que t'en penses
+oui   ah oui   c'est un demi-citron   # c'est un drôle de citron   c'est un drôle de citron   c'est un drôle de citron   # il n'est pas méchant comme les deux autres   # il n'est pas méchant comme les deux autres   qu'est ce que t'en penses   # tu as une idée du message   ça peut être une pub pour manger des fruits locaux

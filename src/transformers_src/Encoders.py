@@ -3,13 +3,8 @@ import torch
 import copy
 
 from .layers import *
-
-# from .CNNEmbedding import CNNEmbedding
-# from .Scaled_Positional_encoding import ScaledPositionalEncoding, PositionalEncoding
 from .EncoderLayer import EncoderLayer, EncoderLayerConv, AlternatingEncoderLayer, AlternatingEncoderLayerConv, AlternatingEncoderLayerConv2, DuplexEncoderLayerConv, SimplexEncoderLayerConv
-# from .AddNorm import Norm
-# from .FlowBasedEmbedding import RecurrentFlowEmbedding
-# from .InceptionTranspose import InceptionTranspose
+
 
 
 def get_clones(module, N):
@@ -104,7 +99,7 @@ class ConvAlternatingEncoder(nn.Module):
     def __init__(self, time_steps, feature_number, d_model, d_ff, N, heads, device):
         super().__init__()
         self.N = N
-        self.embed = CNNEmbedding(feature_number, d_model, kernel_size=3, stride=1)
+        self.embed = CNNEmbedding(feature_number, d_model, kernel_size=3, stride=2)
         self.pe = ScaledPositionalEncoding(d_model, feature_number)
         self.layers = get_clones(AlternatingEncoderLayerConv(d_model, d_ff, heads), N)
         self.norm = Norm(d_model)
@@ -242,8 +237,10 @@ class DeconvAlternatingEncoderConv(nn.Module):
         super().__init__()
         self.N = N
         self.embed = InceptionTranspose(feature_number, d_model)
+        #self.embed = CNNEmbedding(feature_number, d_model, kernel_size=3, stride=1)
         self.pe = ScaledPositionalEncoding(d_model, feature_number)
         self.layers = get_clones(AlternatingEncoderLayerConv(d_model, d_ff, heads), N)
+        #self.layers = get_clones(ConvAlternatingEncoder(d_model, d_ff, heads), N)
         self.norm = Norm(d_model)
         self.y = nn.Parameter(torch.randn(time_steps, d_model))
         self.device = device
@@ -255,8 +252,10 @@ class DeconvAlternatingEncoderConv(nn.Module):
     def forward(self, src):
         y = self.y.expand(src.size(0), -1, -1)
         x = self.embed(src)
+
         src_mask = self.create_src_mask(x)
         x = self.pe(x, 'e')
+
         H = []
         for i in range(self.N):
             x, y = self.layers[i](x, y)

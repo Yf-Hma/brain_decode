@@ -1,0 +1,4 @@
+*   bonjour   je pense
+*   bonjour   je pense   # ouais   cette pomme est à l'envers
+*   bonjour   je pense   # ouais   cette pomme est à l'envers   # oui   tu as raison   quelqu'un a découpé un visage dans la pomme
+*   bonjour   je pense   # ouais   cette pomme est à l'envers   # oui   tu as raison   quelqu'un a découpé un visage dans la pomme   # elle est appêtissante   cette pomme   qu'est ce que t'en penses

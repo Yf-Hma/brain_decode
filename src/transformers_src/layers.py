@@ -456,15 +456,16 @@ class InceptionTranspose(nn.Module):
             nn.ReLU(),
         )
         self.branch3 = nn.Sequential(
-            nn.ConvTranspose1d(in_channels, d_model, kernel_size=5, padding=2),
+            nn.ConvTranspose1d(in_channels, d_model, kernel_size=5, padding=1),
             nn.ReLU(),
         )
+
         #self.out = nn.Linear(in_channels, d_model)
 
     def forward(self, x):
         x = x.transpose(1, 2)
         branch1 = self.branch1(x)
-        branch2 = self.branch2(x)
+        branch2 = self.branch2(x) 
         branch3 = self.branch3(x)
 
         # Concatenate along time dimension

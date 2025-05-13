@@ -1,0 +1,5 @@
+tu m'entends   bon   moi   je crois que c'est un citron
+tu m'entends   bon   moi   je crois que c'est un citron   # oui   tu as raison il ressemble à un ninja
+tu m'entends   bon   moi   je crois que c'est un citron   # oui   tu as raison il ressemble à un ninja   # non   je pense que tu as tort   qu'est ce que t'en penses   oui
+tu m'entends   bon   moi   je crois que c'est un citron   # oui   tu as raison il ressemble à un ninja   # non   je pense que tu as tort   qu'est ce que t'en penses   oui   # je pense   c'est une campagne de pub ciblant les enfants
+tu m'entends   bon   moi   je crois que c'est un citron   # oui   tu as raison il ressemble à un ninja   # non   je pense que tu as tort   qu'est ce que t'en penses   oui   # je pense   c'est une campagne de pub ciblant les enfants   # hum   peut-être   je ne suis pas sûr

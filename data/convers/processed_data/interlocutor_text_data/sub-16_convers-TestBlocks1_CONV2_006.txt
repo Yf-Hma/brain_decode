@@ -1,0 +1,5 @@
+salut   c'est un citron
+salut   c'est un citron   # oui   ça se pourrait   oui c'est possible
+salut   c'est un citron   # oui   ça se pourrait   oui c'est possible   # je crois
+salut   c'est un citron   # oui   ça se pourrait   oui c'est possible   # je crois   # je suis d'accord
+salut   c'est un citron   # oui   ça se pourrait   oui c'est possible   # je crois   # je suis d'accord   # peut-être

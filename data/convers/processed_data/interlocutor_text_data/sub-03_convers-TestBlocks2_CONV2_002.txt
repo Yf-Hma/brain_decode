@@ -1,0 +1,5 @@
+salut   c'est une poire   c'est une poire pourrie   c'est une poire pourrie
+salut   c'est une poire   c'est une poire pourrie   c'est une poire pourrie   # la poire semble triste   la poire a l'air malade
+salut   c'est une poire   c'est une poire pourrie   c'est une poire pourrie   # la poire semble triste   la poire a l'air malade   # elle est peut-être triste car elle est pourrie
+salut   c'est une poire   c'est une poire pourrie   c'est une poire pourrie   # la poire semble triste   la poire a l'air malade   # elle est peut-être triste car elle est pourrie   # qu'est ce que tu en dis   elle est pourrie parce qu'elle vient de loin
+salut   c'est une poire   c'est une poire pourrie   c'est une poire pourrie   # la poire semble triste   la poire a l'air malade   # elle est peut-être triste car elle est pourrie   # qu'est ce que tu en dis   elle est pourrie parce qu'elle vient de loin #   qu'est ce que tu en dis

@@ -1,0 +1,5 @@
+salut
+salut   # ah oui   elle n'a pas l'air contente
+salut   # ah oui   elle n'a pas l'air contente   # ouais
+salut   # ah oui   elle n'a pas l'air contente   # ouais   # elle est moche parce qu'elle vient de loin   tu ne penses pas
+salut   # ah oui   elle n'a pas l'air contente   # ouais   # elle est moche parce qu'elle vient de loin   tu ne penses pas   # oui c'est possible

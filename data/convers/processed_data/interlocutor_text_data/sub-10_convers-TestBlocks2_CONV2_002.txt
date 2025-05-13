@@ -1,0 +1,5 @@
+bonjour
+bonjour   # oui   c'est une poire c'est une poire jaune   elle est déformée
+bonjour   # oui   c'est une poire c'est une poire jaune   elle est déformée   # ah oui   c'est une poire pourrie   elle n'a pas l'air contente
+bonjour   # oui   c'est une poire c'est une poire jaune   elle est déformée   # ah oui   c'est une poire pourrie   elle n'a pas l'air contente   # elle est peut-être triste car elle est pourrie   oui exactement   oui bien sûr
+bonjour   # oui   c'est une poire c'est une poire jaune   elle est déformée   # ah oui   c'est une poire pourrie   elle n'a pas l'air contente   # elle est peut-être triste car elle est pourrie   oui exactement   oui bien sûr   # c'est une campagne pour les fruits locaux qui ne viennent pas de loin   tu ne crois pas   n'est ce pas une
