@@ -73,7 +73,7 @@ python exps/convers/evaluation.py  # Evaluate the results of the test set and re
 * In the folders "DATA_TRAIN_DIR" and "DATA_TEST_DIR" (see the config file), download the training and test datasets as outlined in the project [semantic-decoding](https://github.com/HuthLab/semantic-decoding).
 
 #### Training and evaluation
-* To run the experiments on this dataset, run the following commands from "comparison_semantic_perceived_GPT_2023" folder:
+* To reproduce the results of this experiment:
 ```bash
 python exps/perceived/prepare_Tang2023_datasets.py -s $subject (choices=['S1', 'S2', 'S3'])
 python exps/perceived/build_tokenizer.py
@@ -90,9 +90,9 @@ This a comparison with brain understanding benchmark ([BrainHub](https://github.
 - Download the datasets using this [script](https://github.com/weihaox/UMBRAE/blob/main/umbrae/download_data.sh).
 - Download COCO annotations from this [link](https://huggingface.co/datasets/pscotti/naturalscenesdataset/blob/main/COCO_73k_annots.npy), and put it in the folder 'tools'
 - Update the configuration file 'src/configs.nsd/configs_nsd.py' to specify the paths, and eventually to modify the hyperparameters.
-- To train and evaluate the model, from the folder 'comparison_NSD' execute the following scripts (example for subject 1):
+- To train and evaluate the model:
 ```bash
-python exps/nsd/main.py --epochs 7 --save_epochs 1 --batch_size 32 -s $subject (choices=[1, 2, 5, 7])
+python exps/nsd/main.py --epochs 6 --save_epochs 1 --batch_size 32 -s $subject (choices=[1, 2, 5, 7])
 ```   
 - To get the evaluation scores for each subject based on the generated files of the test set, refer to the Benchmark [project](https://github.com/weihaox/BrainHub).
 - Please be aware that the training process involves non-deterministic algorithms even with fixed seed, which can lead to slightly different results on each run.
@@ -101,7 +101,7 @@ In our case, we ran the training procedure 5 times for 6 epochs each, and select
 
 
 #### Results
-We adapted the previous architecture to work with Llama-3.2-8B-Instruct and Lora finetuning for brain captioning. Unlike existing methods, the model uses only brain fMRI signals and text during training, without leveraging VLMs or brain-image alignment. We trained our models for each subject, and the results are promising.  The model achieved very competitive results, yielding, in several cases, to the first or second best scores based on  BLEU1, BLEU4, ROUGE, and METEOR. The generated caption on the test are in the folder "results/nsd". As future work, we aim to train our model in a cross-subject manner. Let BrainDEC be the abreviation of our method. The following table compares the results obtained with existing methods.
+We adapted the previous architecture to work with Llama-3.2-8B-Instruct and Lora finetuning for brain captioning. We also added Mistral-8b-Instruct for comparison. Unlike existing methods, our model uses only brain fMRI signals and text during training, without leveraging VLMs or brain-image alignment. We trained our models for each subject, and the results are promising.  The model achieved very competitive results, yielding, in several cases, to the first or second best scores based on  BLEU1, BLEU4, ROUGE, and METEOR. The generated caption on the test are in the folder "results/nsd". As future work, we aim to train our model in a cross-subject manner. Let BrainDEC be the abreviation of our method. The following table compares the results obtained with existing methods.
 
 
 | Method            | Eval | BLEU1 | BLEU4 | METEOR | ROUGE |  RefCLIPS |
