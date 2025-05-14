@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     if not os.path.isdir(model_dir_results):
       continue
-    
+
     model_name = model_dir_results.split ('/')[-1]
 
     filenames = sorted (glob.glob (f"results/convers/{model_name}/*"))
@@ -93,7 +93,7 @@ if __name__ == "__main__":
 
       if filename.split ('_')[-1].split ('.')[0] not in [str (i) for i in range (1, 11, 1)]:
         continue
-      
+
       predictions = []
       target = []
       # Open the file

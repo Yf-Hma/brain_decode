@@ -1,27 +1,13 @@
 import glob
-#import torch
-# from transformers import FlaubertModel, FlaubertTokenizer
-# from nltk.translate.bleu_score import sentence_bleu
-# from nltk.translate.bleu_score import SmoothingFunction
-
-# from nltk.translate import meteor
-# from nltk import word_tokenize
-
 from utils.utils_eval import WER, BLEU, METEOR, BERTSCORE
-# from jiwer import wer
-
 import pandas as pd
-
 import sys
-
-# from bert_score import BERTScorer
-# BERTSCORE_metric = BERTScorer(model_type='bert-base-uncased')
 
 
 WER_metric = WER()
-BLEU_metric = BLEU()
+BLEU_metric = BLEU(n=1)
 METEOR_metric = METEOR()
-BERTSCORE_metric = BERTSCORE()
+BERTSCORE_metric = BERTSCORE(rescale = False, score = "recall")
 
 def calculate_wer(ref_words, hyp_words):
 	# Counting the number of substitutions, deletions, and insertions
@@ -69,43 +55,44 @@ if __name__ == "__main__":
 
   for filename in filenames:
 
-    content = pd.read_csv(filename, sep=";###;", header=0)
+    content = pd.read_csv(filename, sep=";###;", header=0, engine='python')
     content.sort_values(by=['chunk_number'], inplace=True)
 
     predictions = content["predicted"].values.tolist()
-    target = content["target"].values.tolist()
-    
-    N = len (predictions)
+    targets = content["target"].values.tolist()
+
+    CHUNKLEN = 10
+    WINDOW = 20
+
+    N = WINDOW // CHUNKLEN
     temp = '{} ' * N
     print (len (predictions))
     predictions = [temp.format(*ele) for ele in zip(*[iter(predictions)] * N)]
-    target = [temp.format(*ele) for ele in zip(*[iter(target)] * N)]
+    targets = [temp.format(*ele) for ele in zip(*[iter(targets)] * N)]
+
 
     total_bleu = 0
     total_meteor = 0
     total_bert_score = 0
     total_word_erro_rate = 0
 
-    for pred, targ in zip(predictions, target):
+    for pred, targ in zip(predictions, targets):
       pred = str (pred).replace('\_', '').replace('\n', ' ').strip()
       targ = targ.strip()
       bleu_score = BLEU_metric.score([targ.split()], [pred.split()])[0]
       meteor_score = METEOR_metric.score([targ.split()], [pred.split()])[0]
       bert_score = BERTSCORE_metric.score([pred], [targ])[0]
-      
+
       word_erro_rate = calculate_wer(targ.split(), pred.split())
       total_bleu += bleu_score
       total_meteor += meteor_score
       total_bert_score += bert_score
       total_word_erro_rate += word_erro_rate
-    final_bleu = total_bleu / len(predictions)
-    final_meteor = total_meteor / len(predictions)
-
 
     f_stories.write ("%s ; %s ; %s ; %s ; %s\n"%(filename.split('.txt')[0], round(total_bleu / len(predictions), 4),
-                                                                         round(total_meteor / len(predictions), 4), 
-                                                                         round(total_bert_score / len(predictions), 4), 
-                                                                         round(total_word_erro_rate / len(predictions), 4), 
+                                                                         round(total_meteor / len(predictions), 4),
+                                                                         round(total_bert_score / len(predictions), 4),
+                                                                         round(total_word_erro_rate / len(predictions), 4),
                                               ))
 
   f_stories.close()
