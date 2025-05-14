@@ -30,8 +30,7 @@ def save_checkpoint(model, model_name, saving_path, cur_epoch, is_best=False):
 
     save_obj = {"model": state_dict,"epoch": cur_epoch}
 
-    os.system ("rm %s/%s*"%(saving_path,model_name))
-    save_to = "%s/%s_%s.pth"%(configs.TRAINED_MODELS_PATH, model_name, ("best" if is_best else str (cur_epoch)))
+    save_to = "%s/%s_%s.pth"%(configs.TRAINED_MODELS_PATH, model_name, str (cur_epoch))
     print("Saving checkpoint at epoch {} to {}.".format(cur_epoch, save_to))
     torch.save(save_obj, save_to)
 
@@ -64,7 +63,7 @@ def train (model, model_name, data_loader, saving_path, epochs = 10, save_epochs
 			optim.zero_grad()
 			loss.backward()
 			optim.step()
-               
+
 		lr_scheduler.step()
 
 		print (mean_loss / len (data_loader))
@@ -72,8 +71,8 @@ def train (model, model_name, data_loader, saving_path, epochs = 10, save_epochs
 			best_loss = mean_loss
 			save_checkpoint(model, model_name, saving_path, epoch)
 			test (model, model_name, epoch)
-     
-		
+
+
 
 
 @torch.no_grad()
