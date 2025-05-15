@@ -303,9 +303,7 @@ if __name__ == '__main__':
     parser.add_argument("--batch_size", default = 32, type = int)
     parser.add_argument("--val_batch_size", default = 128, type = int)
     parser.add_argument("--seed", default = 42, type=int)
-    parser.add_argument("--model_name", "-m", help="Name of the model to train.",
-                        choices = ["MllmBrainToText_normal", "MllmBrainToText_deconv", "MllmBrainToText_clip_normal", "MllmBrainToText_clip_deconv"],
-                        default = "MllmBrainToText_normal")
+    parser.add_argument("--model_name", "-m", help="Name of the model to train.", default = "BrainDEC_V0")
     parser.add_argument('--test', action='store_true', help = "test the model")
     parser.add_argument('--retrain', action='store_true', help = "retrain from existing checkpoint")
     parser.add_argument("--lr", default = 0.0001, type = float)
