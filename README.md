@@ -56,11 +56,7 @@ python exps/convers/evaluation.py  # Evaluate the results of the test set and re
 
 ### Perceived speech decoding
 #### Configuration
-- Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths:
-
-    * RAW_FMRI_DATA_PATH (ex. data/perceived)
-    * MODELS_TRAIN_DIR (ex. trained_models/perceived)
-    * LLM_DIR (ex. LLMs/Meta-llama3.2-8b-Instruct)
+- Update the configuration files "srs/configs/perceived/configs.py" by specifying the  paths:
 
 
 ####  Data preparation
@@ -71,9 +67,9 @@ python exps/convers/evaluation.py  # Evaluate the results of the test set and re
 ```bash
 python exps/perceived/prepare_Tang2023_datasets.py -s $subject (choices=['S1', 'S2', 'S3'])
 python exps/perceived/build_tokenizer.py
-python exps/perceived/train_stage1.py --batch_size 128 -s $subject (choices=['S1', 'S2', 'S3'])
-python exps/perceived/train_stage2.py --batch_size 32 --epochs 100 --save-epoch 20 -s $subject (choices=['S1', 'S2', 'S3'])
-python exps/perceived/evaluation.py $subject (choices=['S1', 'S2', 'S3'])
+python exps/perceived/train_stage1.py -s $subject --batch_size 128 --epochs 20 # Stage1: Cross-subject training
+python exps/perceived/train_stage2.py --batch_size 32 --epochs 100 --save_epoch 20 -s $subject (choices=['S1', 'S2', 'S3']) # Stage2: Train the model for each subject
+python exps/perceived/evaluation.py $subject (choices=['S1', 'S2', 'S3']) # Evaluate the generated text of test set for each subject
 ```   
 
 ##  Brain captioning - BrainHub benchmark on NSD dataset

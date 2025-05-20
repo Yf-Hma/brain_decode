@@ -21,18 +21,24 @@ import src.configs.perceived.configs as configs
 
 
 class bold_projector(nn.Module):
-    def __init__(self, encoder, input_size, output_size, dropout_rate=0.01, device="cuda"):
+    def __init__(self, encoder, input_size, output_size, src_fmri_features_max, dropout_rate=0.01, device="cuda"):
         super(bold_projector, self).__init__()
         self.encoder = encoder
         self.linear = nn.Linear(input_size, output_size, device=device)
         self.linear_out = nn.Linear(output_size, output_size, device=device)
         self.dropout = nn.Dropout(dropout_rate).to(device)
 
+        self.src_fmri_features_max = src_fmri_features_max
+
         for name, param in self.encoder.named_parameters():
             param.requires_grad = False
         self.encoder.eval()
 
     def forward(self, x):
+        if x.shape[2] != self.src_fmri_features_max:
+            padded = torch.zeros(x.shape[0], x.shape[1], self.src_fmri_features_max - x.shape[2])
+            x = torch.cat([x,padded], dim = 2)
+
         x, _ = self.encoder (x)
         x = x[-1]
         x = self.dropout(x)
@@ -66,16 +72,13 @@ class BrainDEC_V0(nn.Module):
         model_name_or_path = configs.LLM_DIR
         self.device = "cuda"
 
-        model = DeconvBipartiteTransformerConv(time_steps, src_fmri_features, max_size, vocab_len, d_model, d_ff, N, heads, self.device).to(self.device)
-        #model = Transformer(time_steps, src_fmri_features, max_size, vocab_len, d_model, d_ff, N, heads, self.device).to(self.device)
+        model = DeconvBipartiteTransformerConv(time_steps, configs.src_fmri_features_max, max_size, vocab_len, d_model, d_ff, N, heads, self.device).to(self.device)
         model = model.float()
         model.load_state_dict(torch.load(fmri_encoder_path, weights_only=True))
-        #self.frmi_encoder = model.encoder
 
         llm_hidden_dim = configs.llm_hidden_dim
 
-        self.frmi_encoder = bold_projector(model.encoder, d_model, llm_hidden_dim, device=self.device)
-
+        self.frmi_encoder = bold_projector(model.encoder, d_model, llm_hidden_dim,  configs.src_fmri_features_max, device=self.device)
 
 
         self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
