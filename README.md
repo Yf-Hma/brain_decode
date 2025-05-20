@@ -23,15 +23,9 @@ In the following, we detail the steps to conduct or reproduce the results of eac
 
 ### Spoken text decoding
 #### Configuration
-- Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths:
-    * DATA_PATH (ex. data/convers)
-    * RAW_FMRI_DATA_PATH (ex. data/fmri_convers)
-    * MODELS_TRAIN_DIR (ex. trained_models/convers)
-    * LLM_DIR (ex. LLMs/Meta-llama3.2-8b-Instruct)
-
+- Update the configuration files "srs/configs/perceived/configs.py" by specifying the paths.
 - Download the version 2.2.0 of the Convers datasets from the OpenNeuro platform (https://openneuro.org/datasets/ds001740/versions/2.2.0)
  in the path 'RAW_FMRI_DATA_PATH' specified in the config file.
-
 - Create a folder named $DATA_PATH/raw_data/transcriptions" and upload  the raw Transcriptions from the Ortolang platform into it:
 https://www.ortolang.fr/market/corpora/convers/v2
 
