@@ -96,7 +96,7 @@ We adapted the previous architecture to work with Llama-3.2-8B-Instruct and Lora
 | OneLLM            | S1   | 47.04 | 9.51  | 13.55  | 35.05 |  61.28    |
 | SDRecon           | S1   | 36.21 | 3.43  | 10.03  | 25.13  | 66.36    |
 | BrainDEC-llama3-8b (ours) | S1   | __59.93__ | __20.05__ | 18.57  | __43.71__ |  69.66    |
-| BrainDEC-mistral-8b (ours)| S1   | 58.92 | 18.25 | 42.61  | __43.71__ |  68.20    |
+| BrainDEC-mistral-8b (ours)| S1   | 58.92 | 18.25 | 17.22  | 42.61 |  68.20    |
 
 | Method            | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | RefCLIPS |
 |-------------------|------|-------|-------|--------|-------|----------|
