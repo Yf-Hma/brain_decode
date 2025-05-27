@@ -41,9 +41,9 @@ class BrainDEC_V0(nn.Module):
         tokenizer = Tokenizer.from_file("./tools/tokenizer-convers.json")
         vocab_len = tokenizer.get_vocab_size()
 
-        model_name_or_path = configs.LLM_DIR
+        model_name_or_path = configs.LLM_PATH
         self.device = "cuda"
-        encoder_path = os.path.join (configs.MODELS_TRAIN_DIR, "DeconvBipartiteTransformerConv_%d_%s.pt"%(src_fmri_features, configs.type))
+        encoder_path = os.path.join (configs.MODELS_TRAIN_PATH, "DeconvBipartiteTransformerConv_%d_%s.pt"%(src_fmri_features, configs.type))
 
         model = DeconvBipartiteTransformerConv(time_steps, src_fmri_features, max_size,\
                                                vocab_len, d_model, d_ff, N, heads, self.device)\
@@ -297,11 +297,11 @@ class BrainDEC_V1(nn.Module):
         tokenizer = Tokenizer.from_file("./tools/tokenizer-convers.json")
         vocab_len = tokenizer.get_vocab_size()
 
-        model_name_or_path = configs.LLM_DIR
+        model_name_or_path = configs.LLM_PATH
         self.device = "cuda"
 
         # self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
-        encoder_path = os.path.join (configs.MODELS_TRAIN_DIR, "DeconvBipartiteTransformerConv_%d_%s.pt"%(src_fmri_features, configs.type))
+        encoder_path = os.path.join (configs.MODELS_TRAIN_PATH, "DeconvBipartiteTransformerConv_%d_%s.pt"%(src_fmri_features, configs.type))
         model = DeconvBipartiteTransformerConv(time_steps, src_fmri_features, max_size, vocab_len, d_model, d_ff, N, heads, self.device).to(self.device)
         # self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
 
@@ -548,7 +548,7 @@ class BrainDEC_V2(nn.Module):
         inference_mode = False):
         super().__init__()
 
-        model_name_or_path = configs.LLM_DIR
+        model_name_or_path = configs.LLM_PATH
 
         self.device = "cuda"
 
@@ -572,11 +572,11 @@ class BrainDEC_V2(nn.Module):
         tokenizer = Tokenizer.from_file("./tools/tokenizer-convers.json")
         vocab_len = tokenizer.get_vocab_size()
 
-        model_name_or_path = configs.LLM_DIR
+        model_name_or_path = configs.LLM_PATH
         self.device = "cuda"
 
         # self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
-        encoder_path = os.path.join (configs.MODELS_TRAIN_DIR, "DeconvBipartiteTransformerConv_%d_%s.pt"%(src_fmri_features, configs.type))
+        encoder_path = os.path.join (configs.MODELS_TRAIN_PATH, "DeconvBipartiteTransformerConv_%d_%s.pt"%(src_fmri_features, configs.type))
         model = DeconvBipartiteTransformerConv(time_steps, src_fmri_features, max_size, vocab_len, d_model, d_ff, N, heads, self.device).to(self.device)
         # self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
         model = model.float()
@@ -819,7 +819,12 @@ class BrainDEC_V2(nn.Module):
                 num_return_sequences=num_captions,
             )
 
+        #outputs[outputs == 0] = 2 # convert output id 0 to 2 (eos_token_id)
         output_text = self.llm_tokenizer.batch_decode(outputs, skip_special_tokens=True)
         output_text = [text.strip() for text in output_text]
 
         return output_text
+
+
+
+

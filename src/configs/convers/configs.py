@@ -1,17 +1,27 @@
 import os
 
-# Paths
+RAW_FMRI_DATA_PATH="data/convers/raw_data/fmri"
 DATA_PATH="data/convers"
-RAW_FMRI_DATA_PATH="data/convers/"
-PROCESSED_FMRI_DATA_PATH = os.path.join (DATA_PATH, "raw_data/fmri_bold")
-MODELS_TRAIN_DIR =  "trained_models/convers"
+MODELS_TRAIN_PATH = "trained_models/convers"
+
+if not os.path.exists (MODELS_TRAIN_PATH):
+    os.mkdir(MODELS_TRAIN_PATH)
+
+PROCESSED_FMRI_DATA_PATH = os.path.join (DATA_PATH, "preprocessed_fmri_data")
+
+LLM_PATH = "llms/llama3"
+LLM_name = "llama3"
+
+
+# check if paths exist
+assert os.path.exists(RAW_FMRI_DATA_PATH), "RAW_FMRI_DATA_PATH does not exist."
+assert os.path.exists(LLM_PATH), "LLM_PATH does not exist."
 
 
 # DATA parameters
 fmri_timestep=1.2 # fMRI scans are recorded with a timestep of 1.2 s
-time_steps=10 # 10 time steps are considered (this is a fixe parameter in this experiment )
+time_steps=10 # 10 time steps are considered (this is a fixe parameter in this experiment)
 interval_length=12 # 10 time steps, equivalent to 12s
-
 
 # Transformers configs
 d_model = 256
@@ -22,15 +32,11 @@ src_fmri_features = 200
 max_size = 100
 type = 'spoken'
 
-
 # MLLM configs
-LLM_DIR = "llms/vicuna-7b-v1.3"
-LLM_name = "vicuna7b"
-fixed_instruction="En se basant sur ce contenu, réponds en Français à la phrase suivante: "
+llm_hidden_size = 4096 # 3072 for llama3b
 
-llm_hidden_dim = 4096
 max_txt_len=128
-max_output_txt_len=256
+max_output_txt_len=128
 use_nucleus_sampling=False
 num_beams=3
 max_new_tokens = 100
@@ -40,3 +46,4 @@ repetition_penalty=1.5
 length_penalty=0.9
 num_captions=1
 temperature=1
+fixed_instruction="En se basant sur ce contenu, réponds en Français à la phrase suivante: "

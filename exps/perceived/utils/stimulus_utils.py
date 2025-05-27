@@ -19,7 +19,7 @@ BAD_WORDS_OTHER_TASKS = frozenset(["", "sp", "uh"])
 def load_transcript(experiment, task, config):
     if experiment in ["perceived_speech", "perceived_multispeaker"]: skip_words = BAD_WORDS_PERCEIVED_SPEECH
     else: skip_words = BAD_WORDS_OTHER_TASKS
-    grid_path = os.path.join(config.DATA_TEST_DIR, "test_stimulus", experiment, task.split("_")[0] + ".TextGrid")
+    grid_path = os.path.join(config.DATA_TEST_PATH, "test_stimulus", experiment, task.split("_")[0] + ".TextGrid")
     transcript_data = {}
     with open(grid_path) as f: 
         grid = TextGrid(f.read())
@@ -51,7 +51,7 @@ def make_word_ds(grids, trfiles, bad_words=DEFAULT_BAD_WORDS):
 def get_resp(subject, stories, config, stack = True, vox = None):
     """loads response data
     """
-    subject_dir = os.path.join(config.DATA_TRAIN_DIR, "train_response", subject)
+    subject_dir = os.path.join(config.DATA_TRAIN_PATH, "train_response", subject)
     resp = {}
     for story in stories:
         resp_path = os.path.join(subject_dir, "%s.hf5" % story)
@@ -66,8 +66,8 @@ def get_resp(subject, stories, config, stack = True, vox = None):
 def get_story_wordseqs(stories, config):
     """loads words and word times of stimulus stories
     """
-    grids = load_textgrids(stories, config.DATA_TRAIN_DIR)
-    with open(os.path.join(config.DATA_TRAIN_DIR, "respdict.json"), "r") as f:
+    grids = load_textgrids(stories, config.DATA_TRAIN_PATH)
+    with open(os.path.join(config.DATA_TRAIN_PATH, "respdict.json"), "r") as f:
         respdict = json.load(f)
     trfiles = load_simulated_trfiles(respdict)
     wordseqs = make_word_ds(grids, trfiles)

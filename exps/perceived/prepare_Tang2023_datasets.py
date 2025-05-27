@@ -5,7 +5,6 @@ import json
 import argparse
 import h5py
 from glob import glob
-import torch
 
 
 current = os.path.dirname(os.path.realpath(__file__))
@@ -139,7 +138,7 @@ def build_train_dict (args):
 
     # training stories
     stories = []
-    with open(os.path.join(configs.DATA_TRAIN_DIR, "sess_to_story.json"), "r") as f:
+    with open(os.path.join(configs.DATA_TRAIN_PATH, "sess_to_story.json"), "r") as f:
         sess_to_story = json.load(f)
     for sess in args.sessions:
         stories.extend(sess_to_story[str(sess)])
@@ -193,17 +192,17 @@ def build_train_dict (args):
 
 def build_test_data (args):
 
-    with open(os.path.join(configs.DATA_TEST_DIR, "eval_segments.json"), "r") as f:
+    with open(os.path.join(configs.DATA_TEST_PATH, "eval_segments.json"), "r") as f:
         eval_segments = json.load(f)
 
     test_dict_data = []
 
-    experiments = glob(os.path.join(args.data_path, configs.DATA_TEST_DIR, "test_stimulus/*"))
+    experiments = glob(os.path.join(args.data_path, configs.DATA_TEST_PATH, "test_stimulus/*"))
     experiments = [os.path.basename(x) for x in experiments]
 
 
     for experiment in experiments:
-        tasks = glob(os.path.join(configs.DATA_TEST_DIR, "test_response", args.subject, experiment, "*"))
+        tasks = glob(os.path.join(configs.DATA_TEST_PATH, "test_response", args.subject, experiment, "*"))
         tasks = [os.path.basename(x).split ('.')[0] for x in tasks]
 
 
@@ -220,7 +219,7 @@ def build_test_data (args):
             continue
 
           # load test responses
-          hf = h5py.File(os.path.join(configs.DATA_TEST_DIR, "test_response", args.subject, experiment, task + ".hf5"), "r")
+          hf = h5py.File(os.path.join(configs.DATA_TEST_PATH, "test_response", args.subject, experiment, task + ".hf5"), "r")
           rresp = np.nan_to_num(hf["data"][:])
           n_chunks = len (rresp) // configs.CHUNKLEN
           rest_chunk = len (rresp) % configs.CHUNKLEN

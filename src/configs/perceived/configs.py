@@ -2,13 +2,22 @@ import os
 import numpy as np
 
 # paths
-RAW_DATA_PATH = "data/semantic_decoding"
+RAW_DATA_PATH = "data/perceived"
 TRAINED_MODELS_PATH = "trained_models/perceived"
 
+assert os.path.exists(RAW_DATA_PATH), "RAW_DATA_PATH does not exist."
 
-DATA_TRAIN_DIR = os.path.join(RAW_DATA_PATH, "data_train")
-DATA_TEST_DIR = os.path.join(RAW_DATA_PATH, "data_test")
+if not os.path.exists(TRAINED_MODELS_PATH):
+    os.mkdir(TRAINED_MODELS_PATH)
+
+DATA_TRAIN_PATH = os.path.join(RAW_DATA_PATH, "data_train")
+DATA_TEST_PATH = os.path.join(RAW_DATA_PATH, "data_test")
 PROCESSED_DATA_PATH = os.path.join(RAW_DATA_PATH, "processed")
+
+
+LLM_PATH = "llms/llama3"
+LLM_name = "llama"
+llm_hidden_dim = 4096
 
 
 if not os.path.exists(PROCESSED_DATA_PATH):
@@ -17,10 +26,10 @@ if not os.path.exists(PROCESSED_DATA_PATH):
 if not os.path.exists(TRAINED_MODELS_PATH):
     os.mkdir(TRAINED_MODELS_PATH)
 
-RESULT_DIR = "results/perceived"
+RESULT_PATH = "results/perceived"
 
-if not os.path.exists(RESULT_DIR):
-    os.mkdir(RESULT_DIR)
+if not os.path.exists(RESULT_PATH):
+    os.mkdir(RESULT_PATH)
 
 
 # Chunking parameters
@@ -42,26 +51,24 @@ N = 4
 src_fmri_features_S1 = 81126
 src_fmri_features_S2 = 94251
 src_fmri_features_S3 = 95556
+
+src_fmri_features_max = 95556
+
 time_steps = 10
 wandb_log = False
 max_size = 200
 
 
 # MLLM configs
-LLM_DIR = "llms/vicuna-7b-v1.3"
-LLM_name = "vicuna7b"
-llm_hidden_dim = 4096
-
-
 max_txt_len=32
 max_output_txt_len=256
 use_nucleus_sampling=False
-num_beams=3
+num_beams=5
 max_new_tokens = 200
 min_length=1
 top_p=0.9
 repetition_penalty=1.5
-length_penalty=0.9
+length_penalty=0.5
 num_captions=1
 temperature=0.8
 fixed_instruction=""

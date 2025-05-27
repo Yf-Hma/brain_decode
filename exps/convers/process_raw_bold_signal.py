@@ -12,9 +12,7 @@ parent = os.path.dirname(current)
 main = os.path.dirname(parent)
 sys.path.append(main)
 
-
 import src.configs.convers.configs as configs
-
 
 #============================================================
 def normalize_vect (x):

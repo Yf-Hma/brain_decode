@@ -5,9 +5,14 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
-from torchvision import transforms
-from CLIP import clip
+#from torchvision import transforms
 
+import sys, os
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
+from CLIP import clip
 import src.configs.convers.configs as configs
 
 class BoldCaptioningDataset(Dataset):
@@ -46,9 +51,13 @@ class BoldCaptioningDataset(Dataset):
 
 
     def __getitem__(self, idx):
-        item = self.dataset[idx]
+        #item = self.dataset[idx]
         bold_path = numpy.load (self.dataset[idx]["bold_signal"])
         bold_signal = torch.Tensor (bold_path)#.unsqueeze (0)
+
+        assert bold_signal.shape[0] == configs.time_steps
+        assert bold_signal.shape[1] == configs.src_fmri_features
+
         caption = self.prompt + self.pre_caption(self.dataset[idx]["text-output"])
         query = self.pre_caption(self.dataset[idx]["text-input"])
 
@@ -97,3 +106,9 @@ def data_builder_v0 (batch_size=32):
         test_dataset = BoldCaptioningDataset (json.load(json_file))
 
     return train_dataset, test_dataset
+
+
+if __name__ == '__main__':
+    data_loader = data_builder(batch_size=32)
+    for batch in data_loader["train"]:
+        src, trg_sentences = batch["bold_signal"], batch["text_output"]

@@ -27,7 +27,7 @@ class bold_projector(nn.Module):
         self.linear = nn.Linear(input_size, output_size, device=device)
         self.linear_out = nn.Linear(output_size, output_size, device=device)
         self.dropout = nn.Dropout(dropout_rate).to(device)
-
+        self.device = device
         self.src_fmri_features_max = src_fmri_features_max
 
         for name, param in self.encoder.named_parameters():
@@ -36,7 +36,7 @@ class bold_projector(nn.Module):
 
     def forward(self, x):
         if x.shape[2] != self.src_fmri_features_max:
-            padded = torch.zeros(x.shape[0], x.shape[1], self.src_fmri_features_max - x.shape[2])
+            padded = torch.zeros(x.shape[0], x.shape[1], self.src_fmri_features_max - x.shape[2]).to(self.device)
             x = torch.cat([x,padded], dim = 2)
 
         x, _ = self.encoder (x)
@@ -47,9 +47,7 @@ class bold_projector(nn.Module):
 
 
 
-
 class BrainDEC_V0(nn.Module):
-
     def __init__(
         self,
         fmri_encoder_path,
@@ -59,7 +57,6 @@ class BrainDEC_V0(nn.Module):
         max_output_txt_len=512,
     ):
         super().__init__()
-
         d_model = configs.d_model
         d_ff = configs.d_ff
         heads = configs.heads
@@ -69,7 +66,7 @@ class BrainDEC_V0(nn.Module):
 
         tokenizer = Tokenizer.from_file("./tools/tokenizer-perceived.json")
         vocab_len = tokenizer.get_vocab_size()
-        model_name_or_path = configs.LLM_DIR
+        model_name_or_path = configs.LLM_PATH
         self.device = "cuda"
 
         model = DeconvBipartiteTransformerConv(time_steps, configs.src_fmri_features_max, max_size, vocab_len, d_model, d_ff, N, heads, self.device).to(self.device)
@@ -80,7 +77,6 @@ class BrainDEC_V0(nn.Module):
 
         self.frmi_encoder = bold_projector(model.encoder, d_model, llm_hidden_dim,  configs.src_fmri_features_max, device=self.device)
 
-
         self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
         self.llm_model = AutoModelForCausalLM.from_pretrained(model_name_or_path,
                                                               device_map=self.device,
@@ -90,7 +86,6 @@ class BrainDEC_V0(nn.Module):
 
         self.llm_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
         self.llm_model.resize_token_embeddings(len(self.llm_tokenizer))
-
 
         if lora:
             # LorA configs

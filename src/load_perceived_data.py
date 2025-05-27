@@ -81,6 +81,9 @@ def data_builder (subject, batch_size=32):
     with open("%s/%s/train.json"%(configs.PROCESSED_DATA_PATH,subject)) as json_file:
         train_dataset = Tan2023CaptioningDataset (json.load(json_file))
 
+    #with open("data/%s/test.json"%subject) as json_file:
+        #test_dataset = Tan2023CaptioningDataset (json.load(json_file))
+
     data_loaders = {}
 
     data_loaders["train"] = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
@@ -100,12 +103,12 @@ def data_builder_v0 (batch_size=32):
 def data_builder_from_file (filename, batch_size=32):
     with open(filename) as json_file:
         dataset = Tan2023CaptioningDataset (json.load(json_file))
-    data_loaders = DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+    data_loaders = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     return data_loaders
 
 
 if __name__ == '__main__':
-    data_loaders = data_builder (batch_size=32)
+    data_loaders = data_builder ("S1", batch_size=32)
 
     print (len (data_loaders['train']))
     for element in data_loaders['train']:

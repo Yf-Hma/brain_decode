@@ -1,8 +1,14 @@
-import glob
+import os, glob
 from utils.utils_eval import WER, BLEU, METEOR, BERTSCORE
 import pandas as pd
 import sys
 
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+main = os.path.dirname(parent)
+sys.path.append(main)
+
+import src.configs.perceived.configs as configs
 
 WER_metric = WER()
 BLEU_metric = BLEU(n=1)
@@ -52,6 +58,8 @@ if __name__ == "__main__":
   f_stories = open("results/perceived/final_results_%s.csv"%sys.argv[1], "w")
   f_stories.write ("Model ; BLUE score ; METEOR score ; BertScore, WER\n")
 
+  CHUNKLEN = configs.CHUNKLEN
+  WINDOW = configs.WINDOW
 
   for filename in filenames:
 
@@ -59,16 +67,41 @@ if __name__ == "__main__":
     content.sort_values(by=['chunk_number'], inplace=True)
 
     predictions = content["predicted"].values.tolist()
-    targets = content["target"].values.tolist()
+    reals = content["target"].values.tolist()
+    
 
-    CHUNKLEN = 10
-    WINDOW = 20
+    # print (predictions[0])
+    
 
     N = WINDOW // CHUNKLEN
-    temp = '{} ' * N
-    print (len (predictions))
-    predictions = [temp.format(*ele) for ele in zip(*[iter(predictions)] * N)]
-    targets = [temp.format(*ele) for ele in zip(*[iter(targets)] * N)]
+    #N = 1
+    # temp = '{} ' * N
+    # segmented_sentences_pred = [temp.format(*ele) for ele in zip(*[iter(predictions)] * N)]
+    # segmented_sentences_real = [temp.format(*ele) for ele in zip(*[iter(reals)] * N)]
+
+    segmented_sentences_pred = []
+    segmented_sentences_real = []
+    for i in range (0, len (predictions), N):
+        segment_pred = ""
+        segment_real = ""
+        for j in range (i, min (i + N, len (predictions))):
+            segment_pred += predictions[j] + " "
+            segment_real += reals[j] + " "
+            
+        segmented_sentences_pred.append (segment_pred)
+        segmented_sentences_real.append (segment_real)
+
+    #print (segmented_sentences_pred[0])
+
+    #exit ()
+    # temp = '{} ' * N
+    # print (len (predictions))
+    # predictions = [temp.format(*ele) for ele in zip(*[iter(predictions)] * N)]
+    # targets = [temp.format(*ele) for ele in zip(*[iter(targets)] * N)]
+
+
+    # print (len (segmented_list))
+    # exit ()
 
 
     total_bleu = 0
@@ -76,23 +109,24 @@ if __name__ == "__main__":
     total_bert_score = 0
     total_word_erro_rate = 0
 
-    for pred, targ in zip(predictions, targets):
+    for pred, targ in zip(segmented_sentences_pred, segmented_sentences_real):
       pred = str (pred).replace('\_', '').replace('\n', ' ').strip()
       targ = targ.strip()
       bleu_score = BLEU_metric.score([targ.split()], [pred.split()])[0]
       meteor_score = METEOR_metric.score([targ.split()], [pred.split()])[0]
       bert_score = BERTSCORE_metric.score([pred], [targ])[0]
-
+      
       word_erro_rate = calculate_wer(targ.split(), pred.split())
       total_bleu += bleu_score
       total_meteor += meteor_score
       total_bert_score += bert_score
       total_word_erro_rate += word_erro_rate
 
-    f_stories.write ("%s ; %s ; %s ; %s ; %s\n"%(filename.split('.txt')[0], round(total_bleu / len(predictions), 4),
-                                                                         round(total_meteor / len(predictions), 4),
-                                                                         round(total_bert_score / len(predictions), 4),
-                                                                         round(total_word_erro_rate / len(predictions), 4),
+
+    f_stories.write ("%s ; %s ; %s ; %s ; %s\n"%(filename.split('.txt')[0], round(total_bleu / len(segmented_sentences_pred), 4),
+                                                                         round(total_meteor / len(segmented_sentences_pred), 4), 
+                                                                         round(total_bert_score / len(segmented_sentences_pred), 4), 
+                                                                         round(total_word_erro_rate / len(segmented_sentences_pred), 4), 
                                               ))
 
   f_stories.close()

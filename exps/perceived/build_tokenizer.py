@@ -20,7 +20,7 @@ main = os.path.dirname(parent)
 sys.path.append(main)
 
 import src.configs.perceived.configs as configs
-from tasks.semantic_perceived.utils.stimulus_utils import get_story_wordseqs, load_transcript
+from exps.perceived.utils.stimulus_utils import get_story_wordseqs, load_transcript
 
 
 unk_token = "<UNK>"  # token for unknown words
@@ -88,7 +88,7 @@ def gather_all_text_train (args):
 
     # training stories
     stories = []
-    with open(os.path.join(configs.DATA_TRAIN_DIR, "sess_to_story.json"), "r") as f:
+    with open(os.path.join(configs.DATA_TRAIN_PATH, "sess_to_story.json"), "r") as f:
         sess_to_story = json.load(f) 
     for sess in args.sessions:
         stories.extend(sess_to_story[str(sess)])
@@ -102,19 +102,19 @@ def gather_all_text_train (args):
 
 def gather_all_text_test (args):
 
-    with open(os.path.join(configs.DATA_TEST_DIR, "eval_segments.json"), "r") as f:
+    with open(os.path.join(configs.DATA_TEST_PATH, "eval_segments.json"), "r") as f:
         eval_segments = json.load(f)
 
     test_dict_data = []
 
-    experiments = glob(os.path.join(configs.DATA_TEST_DIR, "test_stimulus/*"))
+    experiments = glob(os.path.join(configs.DATA_TEST_PATH, "test_stimulus/*"))
     experiments = [os.path.basename(x) for x in experiments]
     #print ([os.path.basename(x) for x in experiments])
 
     all_words = []
     for experiment in experiments:
-        tasks = glob(os.path.join(configs.DATA_TEST_DIR, "test_stimulus", experiment, "*"))
-        # print (os.path.join(args.data_path, configs.DATA_TEST_DIR, "test_stimulus", experiment, "*"))
+        tasks = glob(os.path.join(configs.DATA_TEST_PATH, "test_stimulus", experiment, "*"))
+        # print (os.path.join(args.data_path, configs.DATA_TEST_PATH, "test_stimulus", experiment, "*"))
         # exit ()
 
         tasks = [os.path.basename(x).split ('.')[0] for x in tasks]

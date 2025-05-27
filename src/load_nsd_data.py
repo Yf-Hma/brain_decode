@@ -3,31 +3,26 @@
 
 # This is an adapted file from utils.py: https://github.com/weihaox/UMBRAE"
 
-import os
-import argparse
-# from pathlib import Path
-import braceexpand
 
-#import utils
+import braceexpand
 import random
 import numpy as np
 import torch
 import math
 import json
 
-
 import webdataset as wds
 import torch
 import torch.nn.functional as F
-from torch.utils.data import DataLoader, Dataset
-from transformers import set_seed
+from torch.utils.data import DataLoader
+
 
 # import warnings
 # warnings.filterwarnings('ignore')
 
 # tf32 data type is faster than standard float32
 
-np.random.seed(42)
+#np.random.seed(42)
 
 def get_dataloaders(
     batch_size,

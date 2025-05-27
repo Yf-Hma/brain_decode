@@ -2,6 +2,7 @@ import os
 import argparse
 import torch
 import sys
+import json
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -72,17 +73,15 @@ def test (model, data_loader, model_name):
     if not os.path.exists (f"results/convers/{configs.LLM_name}"):
          os.mkdir(f"results/convers/{configs.LLM_name}")
 
-    f = open(f"results/convers/{configs.LLM_name}/{model_name}.txt", "w")
-
+    results = []
     for sample in data_loader:
-        output_text = model.generate (sample)
-        for predicted, target in zip (output_text, sample["text_output"]):
-            f.write("The predicted Conversation :")
-            f.write(predicted + "\n")
-            f.write("The target Conversation :")
-            f.write(target + "\n")
+         output_text = model.generate (sample)
+         for predicted, target in zip (output_text, sample["text_output"]):
+              results.append({"Generated": predicted, "Real": target})
 
-    f.close()
+    with open(f"results/convers/{configs.LLM_name}/{model_name}.json", 'w') as out_file:
+        json.dump(results, out_file)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -93,16 +92,15 @@ if __name__ == '__main__':
     parser.add_argument('--retrain', action='store_true', help = "To retrain the model from an existing checkpoint")
     parser.add_argument("--lr", default = 0.0001, type = float)
     parser.add_argument("--starting_epoch", default = 1, type = int)
-    parser.add_argument("--save_epochs", default = 1, type = int)
-    parser.add_argument("--epochs", default = 10, type = int)
+    parser.add_argument("--save_epochs", default = 5, type = int)
+    parser.add_argument("--epochs", default = 20, type = int)
     parser.add_argument("--saved_checkpoint", "-s", type = str)
     parser.add_argument("--type", "-t", type = str, default = 'spoken')
     parser.add_argument('--use_lora', action='store_true', help = "To use LoRA on the decoder LLM.")
     parser.add_argument('--load_in_4bit', action='store_true', help = "To load the llm quantized in 4 bits for inference.")
 
-
     args = parser.parse_args()
-    args.saving_path = configs.MODELS_TRAIN_DIR
+    args.saving_path = configs.MODELS_TRAIN_PATH
 
     models_dict = {
     'BrainDEC_V0':BrainDEC_V0,
@@ -116,7 +114,10 @@ if __name__ == '__main__':
          
     llm = models_dict[args.model_name](load_in_4bit = args.load_in_4bit, lora = args.use_lora, inference_mode = args.test)
 
-    name = f"{args.model_name}_{str(configs.src_fmri_features)}_{args.type}_{configs.LLM_name}"
+    if args.use_lora:
+        name = f"{args.model_name}_{str(configs.src_fmri_features)}_{args.type}_{configs.LLM_name}_lora"
+    else:
+        name = f"{args.model_name}_{str(configs.src_fmri_features)}_{args.type}_{configs.LLM_name}"
 
     if args.test:
         llm = load_from_checkpoint(llm, args.saved_checkpoint)
@@ -130,7 +131,7 @@ if __name__ == '__main__':
                configs.type,
                data_loader["train"],
                data_loader["test"], 
-               configs.MODELS_TRAIN_DIR,
+               configs.MODELS_TRAIN_PATH,
                epochs = args.epochs,
                save_epochs = args.save_epochs,
                starting_epoch = args.starting_epoch,

@@ -30,7 +30,7 @@ def save_checkpoint(model, model_name, saving_path, cur_epoch, is_best=False):
 
     save_obj = {"model": state_dict,"epoch": cur_epoch}
 
-    save_to = "%s/%s_%s.pth"%(configs.TRAINED_MODELS_PATH, model_name, str (cur_epoch))
+    save_to = "%s/%s_%s.pth"%(configs.TRAINED_MODELS_PATH, model_name, ("best" if is_best else str (cur_epoch)))
     print("Saving checkpoint at epoch {} to {}.".format(cur_epoch, save_to))
     torch.save(save_obj, save_to)
 
@@ -63,23 +63,23 @@ def train (model, model_name, data_loader, saving_path, epochs = 10, save_epochs
 			optim.zero_grad()
 			loss.backward()
 			optim.step()
-
+               
 		lr_scheduler.step()
 
 		print (mean_loss / len (data_loader))
-		if epoch % save_epochs == 0 and mean_loss < best_loss:
+		if epoch % save_epochs == 0:
 			best_loss = mean_loss
 			save_checkpoint(model, model_name, saving_path, epoch)
 			test (model, model_name, epoch)
-
-
+     
+		
 
 
 @torch.no_grad()
 def test (model, model_name, epoch):
     model.eval()
 
-    test_files = glob("%s/%s/*test_*"%(configs.PROCESSED_DATA_PATH, args.subject))
+    test_files = glob("%s/%s/*test_perceived_speech*"%(configs.PROCESSED_DATA_PATH, args.subject))
 
     for test_file in test_files:
         finename = os.path.basename(test_file).split('.')[0]
@@ -102,13 +102,12 @@ if __name__ == '__main__':
     parser.add_argument("--model_name", "-m", help="Name of the model to train.", choices = ["V0"], default = "BrainDEC_V0")
     parser.add_argument('--test', action='store_true', help = "test the model")
     parser.add_argument('--retrain', action='store_true', help = "retrain from existing checkpoint")
+    parser.add_argument('--use_lora', action='store_true')
     parser.add_argument("--starting_epoch", default = 1, type = int)
     parser.add_argument("--save_epochs", default = 1, type = int)
     parser.add_argument("--epochs", default = 10, type = int)
     parser.add_argument("--subject", '-s', choices=['S1', 'S2', 'S3'])
     parser.add_argument("--saving_path", default = "trained_models")
-
-
     parser.add_argument("--saved_checkpoint", "-c", type = str)
 
     args = parser.parse_args()
@@ -127,12 +126,15 @@ if __name__ == '__main__':
     elif args.subject == "S3":
         src_fmri_features = 95556
 
-
     torch.manual_seed(args.seed)
 
+
+    ############### Loading data ##############
     data_loader = data_builder(args.subject, args.batch_size)
 
-    model_base_filename =  "DeconvBipartiteTransformerConv_" + args.subject + '.pt'
+
+    ############### Loading the pretrained fMRI encoder ##############
+    model_base_filename =  "DeconvBipartiteTransformerConv.pt"
     fmri_encoder_path = os.path.join (configs.TRAINED_MODELS_PATH, model_base_filename)
 
     if not os.path.exists(fmri_encoder_path):
@@ -140,10 +142,17 @@ if __name__ == '__main__':
         print ()
         exit ()
 
-    llm = BrainDEC_V0(fmri_encoder_path, src_fmri_features)
 
+    ################ Model Init ##############
+    llm = BrainDEC_V0(fmri_encoder_path, src_fmri_features, lora=args.use_lora)
     args.model_name = args.model_name + "_" + args.subject + "_" + configs.LLM_name
 
+    if args.use_lora:
+         args.model_name = args.model_name + "_lora"
+
+
+
+    ################ Training / Testing ##############
     if args.test:
         llm = load_from_checkpoint(llm, args.saved_checkpoint)
         test (llm, args.model_name)

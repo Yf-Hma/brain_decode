@@ -37,6 +37,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(args.seed)
+
+    if not os.path.exists('results/convers'):
+        os.mkdir('results/convers')
     
     batch_size = args.batch_size
     wandb_log = False
@@ -71,8 +74,7 @@ if __name__ == '__main__':
 
     ################ Model Training/Testing ##############
     name = args.model_name  + '_' + str(src_fmri_features) + '_' + args.type
-    out_name = os.path.join (configs.MODELS_TRAIN_DIR, name)
-
+    out_name = os.path.join (configs.MODELS_TRAIN_PATH, name)
 
     if args.test:
         model.load_state_dict(torch.load('%s.pt'%(out_name), weights_only=True))

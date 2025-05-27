@@ -57,10 +57,9 @@ class Tan2023CaptioningDataset(Dataset):
         if len (bold_signal.shape) == 3:
             padded = torch.zeros(bold_signal.shape[0], bold_signal.shape[1], configs.src_fmri_features_max - bold_signal.shape[2])
             bold_signal = torch.cat([bold_signal,padded], dim = 2)
-        elif len (bold_signal.shape) == 2:
+        elif len(bold_signal.shape) == 2:
             padded = torch.zeros(bold_signal.shape[0], configs.src_fmri_features_max - bold_signal.shape[1])
             bold_signal = torch.cat([bold_signal,padded], dim = 1)
-
 
 
         caption = self.prompt + self.pre_caption(self.dataset[idx]["text-output"])
