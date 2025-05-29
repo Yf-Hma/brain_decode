@@ -17,7 +17,7 @@ from src.load_perceived_data import data_builder, data_builder_from_file
 import src.configs.perceived.configs as configs
 from src.models.models_semantic import BrainDEC_V0
 
-def save_checkpoint(model, model_name, saving_path, cur_epoch, is_best=False):
+def save_checkpoint(model, model_name, cur_epoch, is_best=False):
 
     param_grad_dic = {
         k: v.requires_grad for (k, v) in model.named_parameters()
@@ -44,7 +44,7 @@ def load_from_checkpoint(model, checkpoint_path):
     return model
 
 
-def train (model, model_name, data_loader, saving_path, epochs = 10, save_epochs = 5, starting_epoch = 1):
+def train (model, model_name, data_loader, epochs = 10, save_epochs = 5, starting_epoch = 1):
 
 	model.train()
 	optim = Adam(model.parameters(), lr=0.001)
@@ -69,14 +69,14 @@ def train (model, model_name, data_loader, saving_path, epochs = 10, save_epochs
 		print (mean_loss / len (data_loader))
 		if epoch % save_epochs == 0:
 			best_loss = mean_loss
-			save_checkpoint(model, model_name, saving_path, epoch)
+			save_checkpoint(model, model_name, epoch)
 			test (model, model_name, epoch)
      
 		
 
 
 @torch.no_grad()
-def test (model, model_name, epoch):
+def test (model, model_name, epoch = ''):
     model.eval()
 
     test_files = glob("%s/%s/*test_perceived_speech*"%(configs.PROCESSED_DATA_PATH, args.subject))
@@ -95,6 +95,7 @@ def test (model, model_name, epoch):
         f.close()
 
 
+############ MAIN ##################
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", default = 64, type = int)
@@ -112,6 +113,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    torch.manual_seed(args.seed)
+
+
+    ############### Results paths ##############
     if not os.path.exists ("results/perceived"):
         os.mkdir ("results/perceived")
 
@@ -119,14 +124,13 @@ if __name__ == '__main__':
         os.mkdir ("results/perceived/%s"%args.subject)
 
 
+    ############### Different ROIs for each participant ##############
     if args.subject == "S1":
         src_fmri_features = 81126
     elif args.subject == "S2":
         src_fmri_features = 94251
     elif args.subject == "S3":
         src_fmri_features = 95556
-
-    torch.manual_seed(args.seed)
 
 
     ############### Loading data ##############
@@ -138,8 +142,7 @@ if __name__ == '__main__':
     fmri_encoder_path = os.path.join (configs.TRAINED_MODELS_PATH, model_base_filename)
 
     if not os.path.exists(fmri_encoder_path):
-        print ("fMRI encoder path does not exists!", fmri_encoder_path)
-        print ()
+        print ("\n fMRI encoder path does not exists!", fmri_encoder_path, "\n")
         exit ()
 
 
@@ -155,6 +158,7 @@ if __name__ == '__main__':
     ################ Training / Testing ##############
     if args.test:
         llm = load_from_checkpoint(llm, args.saved_checkpoint)
+        args.model_name = args.saved_checkpoint.split ('/')[-1].split ('.')[0]
         test (llm, args.model_name)
     else:
         if args.retrain:
@@ -163,7 +167,6 @@ if __name__ == '__main__':
         train (llm,
                args.model_name,
                data_loader["train"],
-               args.saving_path,
                epochs = args.epochs,
                save_epochs = args.save_epochs,
                starting_epoch = args.starting_epoch)
