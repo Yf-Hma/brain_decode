@@ -14,7 +14,6 @@ sys.path.append(main)
 
 
 from utils.stimulus_utils import get_story_wordseqs, get_resp, load_transcript
-#from utils.utils_eval import load_transcript
 import src.configs.perceived.configs as configs
 
 np.random.seed(42)
@@ -197,9 +196,11 @@ def build_test_data (args):
 
     test_dict_data = []
 
-    experiments = glob(os.path.join(args.data_path, configs.DATA_TEST_PATH, "test_stimulus/*"))
-    experiments = [os.path.basename(x) for x in experiments]
+    experiments = glob(os.path.join(configs.DATA_TEST_PATH, "test_stimulus/*"))
 
+    #print (os.path.join(configs.DATA_TEST_PATH, "test_stimulus/*"))
+
+    experiments = [os.path.basename(x) for x in experiments]
 
     for experiment in experiments:
         tasks = glob(os.path.join(configs.DATA_TEST_PATH, "test_response", args.subject, experiment, "*"))

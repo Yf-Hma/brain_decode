@@ -75,7 +75,7 @@ python exps/convers/evaluation.py  # Evaluate the results of the test set and re
 #### Training and evaluation
 * To run the experiments on this dataset, run the following commands from "comparison_semantic_perceived_GPT_2023" folder:
 ```bash
-python exps/perceived/prepare_Tang2023_datasets.py -s $subject (for $subject  in ['S1', 'S2', 'S3'])
+python exps/perceived/prepare_datasets.py -s $subject (for $subject  in ['S1', 'S2', 'S3'])
 python exps/perceived/build_tokenizer.py
 python exps/perceived/train_stage1.py --batch_size 128
 python exps/perceived/train_stage2.py --batch_size 32 -s $subject (for $subject  in ['S1', 'S2', 'S3'])
