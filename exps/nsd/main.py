@@ -33,11 +33,11 @@ set_seed(42)
 def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, args):
     print('Making datasets..')
     name = args.model_name + "_" + str (args.subj) + '_' + configs.LLM_name
-    train_loader, val_loader, _, _ = get_loaders (data_path, args.subj, 
-                                        args.batch_size, 
-                                        args.val_batch_size, 
+    train_loader, val_loader, _, _ = get_loaders (data_path, args.subj,
+                                        args.batch_size,
+                                        args.val_batch_size,
                                         num_devices=1,
-                                        rank = 0, 
+                                        rank = 0,
                                         world_size = 1
                                         )
 
@@ -45,7 +45,7 @@ def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, 
     n_samples = 0
     for sample in train_loader:
         n_samples += 1
-    
+
     print('Making model..')
     llm = models_dict_type[args.type](src_fmri_features, device = "cuda", load_in_4bit = args.load_in_4bit)
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
@@ -57,7 +57,7 @@ def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, 
     #     t_initial=30,
     #     lr_min=4e-5,
     #     t_in_epochs=True)
-    
+
     if args.retrain:
         args.starting_epoch, best_loss = load_from_checkpoint(llm, optim, lr_scheduler, args.saved_checkpoint, args.starting_epoch, 0)
 
@@ -67,7 +67,7 @@ def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, 
     llm.train()
     print('Training..')
     train (llm,
-           optim, 
+           optim,
            lr_scheduler,
             name,
             configs.type,
@@ -83,7 +83,7 @@ def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, 
             starting_epoch = args.starting_epoch,
             lr = args.lr,
             best_loss = best_loss)
-    
+
     print('..Done')
 
 
@@ -99,11 +99,11 @@ def main_worker(rank, ngpus_per_node, models_dict_type, data_path, src_fmri_feat
     name = args.model_name + "_" + str (args.subj) + '_' + configs.LLM_name
     args.batch_size = int(args.batch_size / ngpus_per_node)
 
-    train_loader, val_loader, _, _ = get_loaders (data_path, args.subj, 
-                                        args.batch_size, 
-                                        args.val_batch_size, 
+    train_loader, val_loader, _, _ = get_loaders (data_path, args.subj,
+                                        args.batch_size,
+                                        args.val_batch_size,
                                         num_devices=1,
-                                        rank = rank, 
+                                        rank = rank,
                                         world_size=args.world_size
                                         )
 
@@ -122,7 +122,7 @@ def main_worker(rank, ngpus_per_node, models_dict_type, data_path, src_fmri_feat
         args.starting_epoch, best_loss = load_from_checkpoint(llm, optim, lr_scheduler, args.saved_checkpoint, args.starting_epoch, rank)
     else:
         best_loss = 10000
-    
+
     llm = llm.to(rank)
     llm = DDP(llm, device_ids=[rank], output_device=rank, find_unused_parameters = True)
     dist.barrier()
@@ -131,7 +131,7 @@ def main_worker(rank, ngpus_per_node, models_dict_type, data_path, src_fmri_feat
 
     print('Training..')
     train (llm,
-           optim, 
+           optim,
            lr_scheduler,
             name,
             configs.type,
@@ -153,7 +153,7 @@ def main_worker(rank, ngpus_per_node, models_dict_type, data_path, src_fmri_feat
 
 def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loaders,
            saving_path, rank, src_fmri_features, args, n_samples,
-           epochs = 10, save_epochs = 1, 
+           epochs = 10, save_epochs = 1,
            starting_epoch = 1, lr = 0.0001, best_loss = 10000):
 
     model.train()
@@ -171,8 +171,8 @@ def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loader
             loss.backward()
             optim.step()
 
-        lr_scheduler.step()  
-            
+        lr_scheduler.step()
+
         print (lr_scheduler.get_last_lr())
 
         if args.distributed:
@@ -235,15 +235,15 @@ def test (data_path, models_dict_type, src_fmri_features, epoch = ""):
     model.load_state_dict(checkpoint["model"], strict=False)
     model.eval()
 
-    _, data_loader, _, _ = get_loaders (data_path, 
-                                     args.subj, 
-                                     args.batch_size, 
-                                     args.val_batch_size, 
+    _, data_loader, _, _ = get_loaders (data_path,
+                                     args.subj,
+                                     args.batch_size,
+                                     args.val_batch_size,
                                      num_devices=1,
-                                     rank=0, 
+                                     rank=0,
                                      world_size=1)
-    
-    
+
+
     if os.path.exists ("results/nsd/%s.json"%model_name):
         os.remove ("results/nsd/%s.json"%model_name)
 
@@ -254,7 +254,7 @@ def test (data_path, models_dict_type, src_fmri_features, epoch = ""):
 
         padded = torch.zeros(src_fmri.shape[0], src_fmri.shape[1], src_fmri_features - src_fmri.shape[2])
         src_fmri = torch.cat([src_fmri,padded], dim = 2)
-        
+
         output_text = model.generate (src_fmri)
 
         output_text = [a.split('.')[0] + '.' for a in output_text]
@@ -273,7 +273,7 @@ def save_checkpoint(model, optimizer, lr_scheduler, cur_epoch, model_name, savin
 
     param_grad_dic = {
         k: v.requires_grad for (k, v) in model.named_parameters()
-    }    
+    }
     state_dict = model.state_dict()
 
     for k in list(state_dict.keys()):
@@ -287,7 +287,7 @@ def save_checkpoint(model, optimizer, lr_scheduler, cur_epoch, model_name, savin
         "lr_scheduler": lr_scheduler.state_dict(),
         'loss': loss.item(),
         "epoch": cur_epoch}
- 
+
     save_to = "%s/%s_%s.pth"%(saving_path, model_name, ("best" if is_best else str (cur_epoch)))
     print("Saving checkpoint at epoch {} to {}.".format(cur_epoch, save_to))
     torch.save(save_obj, save_to)
@@ -324,8 +324,8 @@ if __name__ == '__main__':
     parser.add_argument("--batch_size", default = 64, type = int)
     parser.add_argument("--val_batch_size", default = 128, type = int)
     parser.add_argument("--seed", default = 42, type=int)
-    parser.add_argument("--model_name", "-m", help="Name of the model to train.", 
-                        choices = ["MllmBrainToText_normal", "MllmBrainToText_deconv", "MllmBrainToText_clip_normal", "MllmBrainToText_clip_deconv"], 
+    parser.add_argument("--model_name", "-m", help="Name of the model to train.",
+                        choices = ["MllmBrainToText_normal", "MllmBrainToText_deconv", "MllmBrainToText_clip_normal", "MllmBrainToText_clip_deconv"],
                         default = "MllmBrainToText_normal")
     parser.add_argument('--test', action='store_true', help = "test the model")
     parser.add_argument('--retrain', action='store_true', help = "retrain from existing checkpoint")
@@ -335,7 +335,7 @@ if __name__ == '__main__':
     parser.add_argument("--epochs", default = 240, type = int)
     parser.add_argument("--epochs_max", default = 240, type = int)
     parser.add_argument("--saved_checkpoint", "-s", type = str)
-    parser.add_argument("--type", "-t", type = str, choices = ['cnn', "clip" , 'clip_deconv', 'normal', "deconv", "vit", "vq"])
+    parser.add_argument("--type", "-t", type = str, choices = ['main', "clip"])
     parser.add_argument('--load_in_4bit', action='store_true', help = "to load the llm quantized in 4 bits for inference.")
     parser.add_argument('--subj', type=int, default=1, choices=[1, 2, 5, 7])
     parser.add_argument('--gpu', default=None, type=int, help='GPU id to use.')
@@ -359,7 +359,7 @@ if __name__ == '__main__':
 
     args.model_name = "BrainDEC_" + args.type
     data_path = configs.DATA_PATH
-    
+
     if args.test:
         test (data_path, models_dict_type, src_fmri_features)
     else:
