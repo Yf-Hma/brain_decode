@@ -24,8 +24,8 @@ This benchamrk contains three experiments associated to three different tasks an
 In the following, we detail the steps to conduct or reproduce the results of each experiment.
 
 
-### Spoken text decoding
-#### Congiguration
+### 1. Spoken text decoding
+#### Configuration
 - Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths:
     * DATA_PATH (ex. data/convers)
     * RAW_FMRI_DATA_PATH (ex. data/fmri_convers)
@@ -60,10 +60,10 @@ python exps/convers/evaluation.py  # Evaluate the results of the test set and re
 ```   
 
 
-### Perceived speech decoding
-#### Congiguration
+### 2. Perceived speech decoding
+#### Configuration
 - Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths:
-    
+
     * RAW_FMRI_DATA_PATH (ex. data/perceived)
     * MODELS_TRAIN_PATH (ex. trained_models/perceived)
     * LLM_PATH (ex. LLMs/Meta-llama3.2-8b-Instruct)
@@ -82,7 +82,7 @@ python exps/perceived/train_stage2.py --batch_size 32 -s $subject (for $subject 
 python exps/perceived/evaluation.py $subject ((for $subject  in ['S1', 'S2', 'S3'])
 ```   
 
-##  Brain captioning - BrainHub benchmark on NSD dataset
+###  3. Brain captioning - BrainHub benchmark on NSD dataset
 This a comparison with brain understanding benchmark ([BrainHub](https://github.com/weihaox/BrainHub)), based on Natural Scenes Dataset [NSD](https://naturalscenesdataset.org/) and [COCO](https://cocodataset.org).
 
 #### Configuration
@@ -92,7 +92,7 @@ This a comparison with brain understanding benchmark ([BrainHub](https://github.
 - Update the configuration file 'src/configs.nsd/configs_nsd.py' to specify the paths, and eventually to modify the hyperparameters.
 - To train and evaluate the model:
 ```bash
-python exps/nsd/main.py --epochs 7 --save_epochs 1 --batch_size 32 -s $subject (choices=[1, 2, 5, 7]) 
+python exps/nsd/main.py --epochs 7 --save_epochs 1 --batch_size 32 -s $subject (choices=[1, 2, 5, 7])
 ```   
 - To get the evaluation scores for each subject based on the generated files of the test set, refer to the Benchmark [project](https://github.com/weihaox/BrainHub).
 - Please be aware that the training process involves non-deterministic algorithms even with fixed seed, which can lead to slightly different results on each run.
