@@ -24,7 +24,7 @@ This benchamrk contains three experiments associated to three different tasks an
 In the following, we detail the steps to conduct or reproduce the results of each experiment.
 
 
-### 1. Spoken text decoding
+### 1. Spoken Text Decoding
 #### Configuration
 - Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths:
     * DATA_PATH (ex. data/convers)
@@ -60,7 +60,7 @@ python exps/convers/evaluation.py  # Evaluate the results of the test set and re
 ```   
 
 
-### 2. Perceived speech decoding
+### 2. Perceived Speech Dsecoding
 #### Configuration
 - Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths:
 
@@ -73,7 +73,7 @@ python exps/convers/evaluation.py  # Evaluate the results of the test set and re
 * In the folders "DATA_TRAIN_DIR" and "DATA_TEST_DIR" (see the config file), download the training and test datasets as outlined in the project [semantic-decoding](https://github.com/HuthLab/semantic-decoding).
 
 #### Training and evaluation
-* To run the experiments on this dataset, run the following commands from "comparison_semantic_perceived_GPT_2023" folder:
+* To run the experiments on this dataset, run the following commands:
 ```bash
 python exps/perceived/prepare_datasets.py -s $subject (for $subject  in ['S1', 'S2', 'S3'])
 python exps/perceived/build_tokenizer.py
@@ -82,7 +82,7 @@ python exps/perceived/train_stage2.py --batch_size 32 -s $subject (for $subject 
 python exps/perceived/evaluation.py $subject ((for $subject  in ['S1', 'S2', 'S3'])
 ```   
 
-###  3. Brain captioning - BrainHub benchmark on NSD dataset
+###  3. Brain Captioning - BrainHub benchmark on NSD dataset
 This a comparison with brain understanding benchmark ([BrainHub](https://github.com/weihaox/BrainHub)), based on Natural Scenes Dataset [NSD](https://naturalscenesdataset.org/) and [COCO](https://cocodataset.org).
 
 #### Configuration
@@ -145,12 +145,57 @@ The model achieved very competitive results, yielding, in several cases, to the 
 | BrainDEC-S7-mistral-8b (ours) | S7  | 57.48 | 17.35 | 16.90  | 43.31 |  66.71    |
 
 
-#### TODO
-- [x] Apply the proposed methodology for NSD datasets (Brain captioning).
-- [x] Test other LLM decoders.
-- [ ] Cross-subject training for NSD dataset.
-- [ ] Add experiments for decoding text from EEG signals.
 
+### 4. Decodes Reading Text from EGG Signals
+#### Configuration and data preparation
+The same raw data and preprocessing presented in [EEG-To-Text](https://github.com/MikeWangWZHL/EEG-To-Text) are employed here.
+
+* Update the configuration files "srs/configs/zuco/configs.py" by specifying the paths similarly to the previous experiments.
+* Download the following folders from [ZuCo v1.0](https://osf.io/q3zws/files/) and place them in the `DATA_PATH` specified in the config file (e.g., `data/zuco/task1-SR/Matlab_files`, etc.).
+* Download `task1-NR/Matlab_files` from [ZuCo v2.0](https://osf.io/2urht/files/) and place it as `task2-NR-2.0/Matlab_files` inside `DATA_PATH`.
+* Generate the preprocessed data using the following instructions:
+
+```bash
+python exps/zuco/preprocess_data.py -t task1-SR
+python exps/zuco/preprocess_data.py -t task2-NR
+python exps/zuco/preprocess_data.py -t task3-TSR
+python exps/zuco/preprocess_data_v2.py
+``` 
+
+* With DATA_PATH set to data/zuco, for example, you should obtain the following structure:
+
+```
+data
+└── zuco
+    ├── processed
+    │   ├── task1-SR
+    │   ├── task2-NR
+    │   ├── task2-NR-2.0
+    │   └── task3-TSR
+    ├── task1-SR
+    │   └── Matlab_files
+    ├── task2-NR
+    │   └── Matlab_files
+    ├── task2-NR-2.0
+    │   └── Matlab_files
+    └── task3-TSR
+        └── Matlab_files
+```
+
+#### Training and evaluation
+* To run the experiments on this dataset, run the following commands:
+```bash
+python exps/zuco/build_tokenizer.py # For stage 1
+python exps/zuco/train_stage1.py --batch_size 128 --epochs 20
+python exps/zuco/train_stage2.py --batch_size 16 --epochs 4
+python exps/zuco/evaluation.py
+```   
+
+## TODO
+- [x] Apply the proposed methodology for NSD datasets.
+- [x] Test other LLM decoders.
+- [x] Add experiments for decoding text from EEG signals.
+- [ ] Cross-subject training for NSD dataset.
 
 ## Notes
 * The structure of this repository is in work progress

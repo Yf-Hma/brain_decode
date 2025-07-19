@@ -3,7 +3,7 @@ import os
 # Paths
 DATA_PATH="data/nsd"
 MODELS_TRAIN_PATH =  "trained_models/nsd"
-LLM_PATH = "llms/llama3"
+LLM_PATH = "LLMs/llama3"
 LLM_name = "llama"
 
 assert os.path.exists (DATA_PATH), "DATA_PATH, specified in config file, does not exist!"

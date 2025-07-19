@@ -15,13 +15,15 @@ main = os.path.dirname(parent)
 sys.path.append(main)
 
 
-from src.transformers_src.Transformer import DeconvBipartiteTransformerConv
+from src.transformers_src.Transformer import *
 import src.configs.convers.configs as configs
 
 
 class BrainDEC_V0(nn.Module):
     def __init__(
         self,
+        encoder_class,
+        encoder_path,
         max_txt_len=128,
         max_output_txt_len=256,
         lora = False,
@@ -37,19 +39,20 @@ class BrainDEC_V0(nn.Module):
         heads = configs.heads
         d_ff = configs.d_ff
         N = configs.N
+        self.device = "cuda"
 
         tokenizer = Tokenizer.from_file("./tools/tokenizer-convers.json")
         vocab_len = tokenizer.get_vocab_size()
 
         model_name_or_path = configs.LLM_PATH
-        self.device = "cuda"
-        encoder_path = os.path.join (configs.MODELS_TRAIN_PATH, "DeconvBipartiteTransformerConv_%d_%s.pt"%(src_fmri_features, configs.type))
-
-        model = DeconvBipartiteTransformerConv(time_steps, src_fmri_features, max_size,\
+        
+        model = encoder_class(time_steps, src_fmri_features, max_size,\
                                                vocab_len, d_model, d_ff, N, heads, self.device)\
                                                .to(self.device)
         model = model.float()
         model.load_state_dict(torch.load(encoder_path, weights_only=True))
+
+
         self.frmi_encoder = model.encoder
 
         for param in self.frmi_encoder.parameters():
@@ -57,7 +60,7 @@ class BrainDEC_V0(nn.Module):
         self.frmi_encoder.eval()
 
 
-        self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
+        self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
 
         if load_in_4bit:
             bnb_config = BitsAndBytesConfig(
@@ -213,9 +216,8 @@ class BrainDEC_V0(nn.Module):
         self,
         samples,
         use_nucleus_sampling=False,
-        num_beams=3,
-        max_length=400,
-        max_new_tokens = 200,
+        num_beams=configs.num_beams,
+        max_new_tokens = configs.max_new_tokens,
         min_length=1,
         top_p=0.9,
         repetition_penalty=1.5,
@@ -235,8 +237,6 @@ class BrainDEC_V0(nn.Module):
         bold_embeddings = bold_embeddings[-1]
         inputs_llm_bold = self.llm_proj (bold_embeddings)
         atts_llm_bold = torch.ones(inputs_llm_bold.size()[:-1], dtype=torch.long).to(self.device)
-
-
 
         llm_tokens = self.llm_tokenizer(
             prompt,
@@ -276,6 +276,8 @@ class BrainDEC_V1(nn.Module):
 
     def __init__(
         self,
+        encoder_class,
+        encoder_path,
         img_size=256,
         drop_path_rate=0,
         max_txt_len=128,
@@ -300,13 +302,13 @@ class BrainDEC_V1(nn.Module):
         model_name_or_path = configs.LLM_PATH
         self.device = "cuda"
 
-        # self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
-        encoder_path = os.path.join (configs.MODELS_TRAIN_PATH, "DeconvBipartiteTransformerConv_%d_%s.pt"%(src_fmri_features, configs.type))
-        model = DeconvBipartiteTransformerConv(time_steps, src_fmri_features, max_size, vocab_len, d_model, d_ff, N, heads, self.device).to(self.device)
-        # self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
-
+        model = encoder_class(time_steps, src_fmri_features, max_size,\
+                                               vocab_len, d_model, d_ff, N, heads, self.device)\
+                                               .to(self.device)
         model = model.float()
         model.load_state_dict(torch.load(encoder_path, weights_only=True))
+
+
         self.frmi_encoder = model.encoder
 
         for param in self.frmi_encoder.parameters():
@@ -477,8 +479,7 @@ class BrainDEC_V1(nn.Module):
         samples,
         use_nucleus_sampling=False,
         num_beams=3,
-        max_length=500,
-        max_new_tokens = 100,
+        max_new_tokens = configs.max_new_tokens,
         min_length=1,
         top_p=0.9,
         repetition_penalty=1.5,
@@ -539,6 +540,8 @@ class BrainDEC_V2(nn.Module):
 
     def __init__(
         self,
+        encoder_class,
+        encoder_path,
         img_size=256,
         drop_path_rate=0,
         max_txt_len=128,
@@ -575,12 +578,12 @@ class BrainDEC_V2(nn.Module):
         model_name_or_path = configs.LLM_PATH
         self.device = "cuda"
 
-        # self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
-        encoder_path = os.path.join (configs.MODELS_TRAIN_PATH, "DeconvBipartiteTransformerConv_%d_%s.pt"%(src_fmri_features, configs.type))
-        model = DeconvBipartiteTransformerConv(time_steps, src_fmri_features, max_size, vocab_len, d_model, d_ff, N, heads, self.device).to(self.device)
-        # self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
+        model = encoder_class(time_steps, src_fmri_features, max_size,\
+                                               vocab_len, d_model, d_ff, N, heads, self.device)\
+                                               .to(self.device)
         model = model.float()
         model.load_state_dict(torch.load(encoder_path, weights_only=True))
+
         self.frmi_encoder = model.encoder
 
         self.max_output_txt_len = max_output_txt_len
@@ -763,9 +766,8 @@ class BrainDEC_V2(nn.Module):
         self,
         samples,
         use_nucleus_sampling=False,
-        num_beams=1,
-        #max_length=500,
-        max_new_tokens = 100,
+        num_beams=3,
+        max_new_tokens = configs.max_new_tokens,
         min_length=1,
         top_p=0.9,
         repetition_penalty=1.5,

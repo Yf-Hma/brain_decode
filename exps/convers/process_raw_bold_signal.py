@@ -108,8 +108,11 @@ if __name__ == '__main__':
         resampling_target = "labels",
     )
 
-    region_names = ["atlas_%d"%(i+1) for i in range (0, len (atlas.labels))]
+    #region_names = ["atlas_%d"%(i+1) for i in range (0, len (atlas.labels))]
+    region_names = ["atlas_%d"%(i+1) for i in range (0, n_rois)]
     colnames = region_names
+
+
 
     folder_name = "fMRI_data_%d"%n_rois
     if not os.path.exists ("%s/fMRI_data_%d"%(data_path, n_rois)):

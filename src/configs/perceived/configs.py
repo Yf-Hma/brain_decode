@@ -14,11 +14,9 @@ DATA_TRAIN_PATH = os.path.join(RAW_DATA_PATH, "data_train")
 DATA_TEST_PATH = os.path.join(RAW_DATA_PATH, "data_test")
 PROCESSED_DATA_PATH = os.path.join(RAW_DATA_PATH, "processed")
 
-
-LLM_PATH = "llms/llama3"
+LLM_PATH = "LLMs/llama3"
 LLM_name = "llama"
 llm_hidden_dim = 4096
-
 
 if not os.path.exists(PROCESSED_DATA_PATH):
     os.mkdir(PROCESSED_DATA_PATH)
@@ -31,7 +29,6 @@ RESULT_PATH = "results/perceived"
 if not os.path.exists(RESULT_PATH):
     os.mkdir(RESULT_PATH)
 
-
 # Chunking parameters
 TRIM = 5
 STIM_DELAYS = [1, 2, 3, 4]
@@ -41,7 +38,6 @@ NBOOTS = 50
 VOXELS = 10000
 CHUNKLEN = 10
 WINDOW = 20
-
 
 ## Transformers configs
 d_model = 1024
@@ -57,7 +53,6 @@ src_fmri_features_max = 95556
 time_steps = 10
 wandb_log = False
 max_size = 200
-
 
 # MLLM configs
 max_txt_len=32

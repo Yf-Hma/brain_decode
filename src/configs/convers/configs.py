@@ -9,9 +9,8 @@ if not os.path.exists (MODELS_TRAIN_PATH):
 
 PROCESSED_FMRI_DATA_PATH = os.path.join (DATA_PATH, "preprocessed_fmri_data")
 
-LLM_PATH = "llms/llama3"
-LLM_name = "llama3"
-
+LLM_PATH = "LLMs/vicuna-7b" # Or other LLMs
+LLM_name = "vicuna"
 
 # check if paths exist
 assert os.path.exists(RAW_FMRI_DATA_PATH), "RAW_FMRI_DATA_PATH does not exist."
@@ -28,8 +27,8 @@ d_model = 256
 d_ff = 512
 heads = 8
 N = 2
-src_fmri_features = 200
-max_size = 100
+src_fmri_features = 100
+max_size = 72
 type = 'spoken'
 
 # MLLM configs
@@ -39,7 +38,7 @@ max_txt_len=128
 max_output_txt_len=128
 use_nucleus_sampling=False
 num_beams=3
-max_new_tokens = 100
+max_new_tokens = 70
 min_length=1
 top_p=0.9
 repetition_penalty=1.5
