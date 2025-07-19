@@ -146,7 +146,7 @@ The model achieved very competitive results, yielding, in several cases, to the 
 
 
 
-### 4. Decodes Reading Text from EGG Signals
+### 4. Decoding Reading Text from EGG Signals
 #### Configuration and data preparation
 The same raw data and preprocessing presented in [EEG-To-Text](https://github.com/MikeWangWZHL/EEG-To-Text) are employed here.
 
