@@ -1,5 +1,5 @@
 import numpy as np
-from datasets import load_metric
+#from datasets import load_metric
 from bert_score import BERTScorer
 from jiwer import wer
 
@@ -43,9 +43,8 @@ BLEU (https://aclanthology.org/P02-1040.pdf)
 """
 class BLEU(object):
     def __init__(self, n = 4):
-        self.metric = load_metric("bleu", keep_in_memory=True)
+        self.metric = load("bleu", keep_in_memory=True)
         self.n = n
-
 
     def score(self, ref, pred):
         results = []
@@ -62,16 +61,14 @@ METEOR (https://aclanthology.org/W05-0909.pdf)
 """
 class METEOR(object):
     def __init__(self):
-        self.metric = load_metric("meteor", keep_in_memory=True)
+        self.metric = load("meteor", keep_in_memory=True)
 
     def score(self, ref, pred):
         results = []
-        ref_strings = [" ".join(x) for x in ref]
-        pred_strings = [" ".join(x) for x in pred]
+        # ref = [" ".join(x) for x in ref]
+        # pred = [" ".join(x) for x in pred]
 
-
-        for r, p in zip(ref_strings, pred_strings):
-
+        for r, p in zip(ref, pred):
             self.metric.add_batch(predictions=[p], references=[r])
             results.append(self.metric.compute()["meteor"])
         return np.array(results)

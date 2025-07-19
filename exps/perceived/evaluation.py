@@ -112,8 +112,15 @@ if __name__ == "__main__":
     for pred, targ in zip(segmented_sentences_pred, segmented_sentences_real):
       pred = str (pred).replace('\_', '').replace('\n', ' ').strip()
       targ = targ.strip()
-      bleu_score = BLEU_metric.score([targ.split()], [pred.split()])[0]
-      meteor_score = METEOR_metric.score([targ.split()], [pred.split()])[0]
+
+
+      bleu_score = BLEU_metric.score([targ], [pred])[0]
+      meteor_score = METEOR_metric.score([targ], [pred])[0]
+
+    #   bleu_score = BLEU_metric.score([targ.split()], [pred.split()])[0]
+    #   meteor_score = METEOR_metric.score([targ.split()], [pred.split()])[0]
+
+
       bert_score = BERTSCORE_metric.score([pred], [targ])[0]
       
       word_erro_rate = calculate_wer(targ.split(), pred.split())
