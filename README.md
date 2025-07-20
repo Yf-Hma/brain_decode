@@ -6,20 +6,18 @@
  In this paper, we propose and end-to-end multimodal large language model for decoding the spoken text in a human-human or human-robot interactions. The proposed architecture is founded on  ($i$) an encoder derived from a specific transformer with the incorporation of an augmented embedding layer for the encoder and a better-adjusted attention mechanism than that present in the state of the art, and ($ii$) a frozen LLM adapted via instruction tuning to align the embedding of the input modalities to decode the output text. A benchmark in performed on two publicly available datasets where fMRI brain activity and conversational signals are recorded synchronously.
 
 ## Requirements
-
 * python 3.9.19
 * Required packages:  ```python install -r requirement.txt```
 * vicuna-7b-v1.3 from https://huggingface.co/lmsys/vicuna-7b-v1.3 in the folder 'llm' (or other LLMs such as Meta-llama3.2-8b-Instruct)
 * CLIP in the main folder: git clone https://github.com/openai/CLIP
-* To use other data storage paths, change the configuration file: src/config.py
-
+* To use other data paths, change the configuration file in 'src/configs'.
 
 ## Experiments
-
 This benchamrk contains three experiments associated to three different tasks and datasets:
 * Spoken text decoding (convers): Multimodal spoken text decoding during conversations (main task of this work).
 * Perceived speech decoding (perceived): Decoding the textual content of listened stories.
-* Brain captioning (nsd): Decoding the captions of viewed images using the NSD datasets.
+* Brain captioning (NSD): Decoding the captions of viewed images using the NSD datasets.
+* Decoding reading text from EEG signals.
 
 In the following, we detail the steps to conduct or reproduce the results of each experiment.
 
@@ -39,28 +37,28 @@ In the following, we detail the steps to conduct or reproduce the results of eac
 https://www.ortolang.fr/market/corpora/convers/v2
 
 
-#### Preprocessing raw data:
+#### Preprocessing
 ```bash
+# Preprocessing raw data
 python exps/convers/process_raw_bold_signal.py --n_rois 200 # Parcellation using 200 ROIs
 python exps/convers/data_builder_tools/split_bold_files.py  # Processing raw 4D voxel BOLD signals and segmenting them into fixed-duration chunks
 python exps/convers/data_builder_tools/textgrid_to_text.py # Processing transcription files (conversations) and segmenting them into fixed-duration text sequences
-```
 
-#### Building training and test data
-```bash
+# Building training and test data
 python exps/convers/data_builder_tools/build_data.py # Using json files to save paths of bold chunks and the [input, output] text for instruction tuning
 python exps/convers/data_builder_tools/build_tokenizer.py # Building the tokenizer for the first stage of training
 ```
 
 #### Training and evaluation
 ```bash
+# Training and evaluation
 python  exps/convers/train_stage1.py -m DeconvBipartiteTransformerConv --batch_size 128 --epochs 200 # Stage1: training the DeconvBipartite Transformer
-python  exps/convers/train_stage2.py --batch_size 32 --epochs 200  -m BrainDEC_V0  --save_epochs 100 # Stage2: training the overall MLLM with the pre-trained DeconvBipartite encoder and BrainDEC_V0. BrainDEC_V1 or BrainDEC_V2 converge quickly than V0, only 20 epochs are needed.
+python  exps/convers/train_stage2.py --batch_size 32 --epochs 100  -m BrainDEC_V0  --save_epochs 50 # Stage2. Note: BrainDEC_V1 or BrainDEC_V2 converge quickly than V0, only 20 epochs are needed.
 python exps/convers/evaluation.py  # Evaluate the results of the test set and report the scores
 ```   
 
 
-### 2. Perceived Speech Dsecoding
+### 2. Perceived Speech Decoding
 #### Configuration
 - Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths:
 
@@ -146,7 +144,7 @@ The model achieved very competitive results, yielding, in several cases, to the 
 
 
 
-### 4. Decoding Reading Text from EGG Signals
+### 4. Decoding Reading Text from EEG Signals
 #### Configuration and data preparation
 The same raw data and preprocessing presented in [EEG-To-Text](https://github.com/MikeWangWZHL/EEG-To-Text) are employed here.
 
@@ -160,9 +158,9 @@ python exps/zuco/preprocess_data.py -t task1-SR
 python exps/zuco/preprocess_data.py -t task2-NR
 python exps/zuco/preprocess_data.py -t task3-TSR
 python exps/zuco/preprocess_data_v2.py
-``` 
+```
 
-* With DATA_PATH set to data/zuco, for example, you should obtain the following structure:
+With DATA_PATH set to data/zuco, for example, you should obtain the following structure:
 
 ```
 data
