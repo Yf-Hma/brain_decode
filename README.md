@@ -31,7 +31,7 @@ In the following, we detail the steps to conduct or reproduce the results of eac
 - Create a folder named "raw_data/transcriptions" inside __DATA_PATH__ and upload  the raw Transcriptions from the Ortolang platform [convers/v2](https://www.ortolang.fr/market/corpora/convers/v2) into it:
 
 
-With DATA_PATH set to "data/convers" for example, you should obtain a structure similar to this:
+With DATA_PATH set to "data/convers" for example, you should obtain a structure similar to this after data preprocessing:
 
 ```
 data/
@@ -50,7 +50,7 @@ data/
 ```
 
 
-#### Preprocessing and Evaluation
+#### Preprocessing and evaluation
 ```bash
 # Preprocessing raw data
 python exps/convers/process_raw_bold_signal.py --n_rois 200 # Parcellation using 200 ROIs
@@ -78,7 +78,7 @@ python exps/convers/evaluation.py
 ####  Data preparation
 * In the folders "DATA_TRAIN_DIR" and "DATA_TEST_DIR" (see the config file), download the training and test datasets as outlined in the project [semantic-decoding](https://github.com/HuthLab/semantic-decoding).
 
-With DATA_PATH set to "data/perceived" for example, you should obtain a structure similar to this:
+With DATA_PATH set to "data/perceived" for example, you should obtain a structure similar to this after data preprocessing:
 
 ```
 data/
@@ -93,7 +93,7 @@ data/
         └── fMRI_data_train_split/
 ```
 
-#### Preprocessing and Evaluation
+#### Preprocessing and evaluation
 ```bash
 # Data preparation
 python exps/perceived/prepare_datasets.py -s $subject (for $subject  in ['S1', 'S2', 'S3'])
@@ -135,14 +135,8 @@ The same raw data and preprocessing presented in [EEG-To-Text](https://github.co
 * Download `task1-NR/Matlab_files` from [ZuCo v2.0](https://osf.io/2urht/files/) and place it as `task2-NR-2.0/Matlab_files` inside `DATA_PATH`.
 * Generate the preprocessed data using the following instructions:
 
-```bash
-python exps/zuco/preprocess_data.py -t task1-SR
-python exps/zuco/preprocess_data.py -t task2-NR
-python exps/zuco/preprocess_data.py -t task3-TSR
-python exps/zuco/preprocess_data_v2.py
-```
 
-With DATA_PATH set to data/zuco, for example, you should obtain the following structure:
+With DATA_PATH set to data/zuco, for example, you should obtain the following structure after data preprocessing:
 
 ```
 data
@@ -162,10 +156,18 @@ data
         └── Matlab_files
 ```
 
-#### Training and evaluation
-* To run the experiments on this dataset, run the following commands:
+#### Preprocessing and evaluation
 ```bash
-python exps/zuco/build_tokenizer.py # For stage 1
+# Data preparation
+python exps/zuco/preprocess_data.py -t task1-SR
+python exps/zuco/preprocess_data.py -t task2-NR
+python exps/zuco/preprocess_data.py -t task3-TSR
+python exps/zuco/preprocess_data_v2.py
+
+# Build tokenizer for stage 1
+python exps/zuco/build_tokenizer.py
+
+# Training and evaluation
 python exps/zuco/train_stage1.py --batch_size 128 --epochs 20
 python exps/zuco/train_stage2.py --batch_size 16 --epochs 4
 python exps/zuco/evaluation.py
