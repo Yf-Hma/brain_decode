@@ -82,7 +82,7 @@ With DATA_PATH set to "data/perceived" for example, you should obtain a structur
 
 ```
 data/
-└── convers/
+└── perceived/
     ├── data_test/
     ├── data_train/
     └── processed/
