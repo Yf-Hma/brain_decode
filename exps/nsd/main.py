@@ -11,24 +11,18 @@ import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 torch.cuda.empty_cache()
-# from timm.scheduler.cosine_lr import CosineLRScheduler
-
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main_folder = os.path.dirname(parent)
-sys.path.append(main_folder)
+sys.path.insert(0, os.getcwd())
 
 from src.models.models_nsd import BrainDEC_V0, BrainDEC_Clip
 from src.load_nsd_data import get_loaders
 import src.configs.nsd.configs as configs
 
-
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
 
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 set_seed(42)
+
 
 def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, args):
     print('Making datasets..')
@@ -41,7 +35,6 @@ def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, 
                                         world_size = 1
                                         )
 
-
     n_samples = 0
     for sample in train_loader:
         n_samples += 1
@@ -50,13 +43,6 @@ def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, 
     llm = models_dict_type[args.type](src_fmri_features, device = "cuda", load_in_4bit = args.load_in_4bit)
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
     lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs_max)
-
-
-    # lr_scheduler = CosineLRScheduler(
-    #     optim,
-    #     t_initial=30,
-    #     lr_min=4e-5,
-    #     t_in_epochs=True)
 
     if args.retrain:
         args.starting_epoch, best_loss = load_from_checkpoint(llm, optim, lr_scheduler, args.saved_checkpoint, args.starting_epoch, 0)
@@ -95,6 +81,8 @@ def main_worker(rank, ngpus_per_node, models_dict_type, data_path, src_fmri_feat
                             world_size=args.world_size, rank=rank)
 
     print('Making datasets..')
+
+    assert os.path.exists (configs.LLM_PATH), "LLM_PATH, specified in config file, does not exist!"
 
     name = args.model_name + "_" + str (args.subj) + '_' + configs.LLM_name
     args.batch_size = int(args.batch_size / ngpus_per_node)
@@ -159,8 +147,6 @@ def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loader
     model.train()
     for epoch in range(starting_epoch, epochs + 1):
         mean_loss = 0
-        # random.shuffle (data_loaders)
-        #for data_loader in data_loaders:
         for id, sample in enumerate (data_loaders[-1]):
             padded = torch.zeros(sample[0].shape[0], sample[0].shape[1], src_fmri_features - sample[0].shape[2])
             sample[0] = torch.cat([sample[0],padded], dim = 2)
@@ -173,13 +159,10 @@ def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loader
 
         lr_scheduler.step()
 
-        print (lr_scheduler.get_last_lr())
-
         if args.distributed:
             dist.barrier()
 
         if epoch % save_epochs == 0:
-            # if epoch > 3:
             test_from_loader (val_loader, model, model_name, src_fmri_features, args, epoch)
             if rank == 0:
                 print ('Loss: ', (mean_loss / n_samples))
@@ -221,16 +204,10 @@ def test_from_loader (data_loader, model, model_name, src_fmri_features, args, e
 
 
 def test (data_path, models_dict_type, src_fmri_features, epoch = ""):
-
-    #torch.cuda.set_device(0)
     model = models_dict_type[args.type](src_fmri_features, "cuda", load_in_4bit = args.load_in_4bit, inference_mode=True)
     model_name = args.saved_checkpoint.split('/')[-1].split('.')[0]
     checkpoint = torch.load(args.saved_checkpoint, map_location="cuda")
 
-    # try:
-    #     model.load_state_dict(checkpoint["model"])
-    # except RuntimeError as e:
-    #     model.load_state_dict(checkpoint["model"], strict=False)
 
     model.load_state_dict(checkpoint["model"], strict=False)
     model.eval()
@@ -351,9 +328,7 @@ if __name__ == '__main__':
 
 
     models_dict_type = {'normal':BrainDEC_V0, 'clip':BrainDEC_Clip}
-
     voxels_per_subj = {1: 15724, 2: 14280, 5: 13040, 7: 12685}
-
     src_fmri_features = 15724
 
 

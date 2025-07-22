@@ -3,10 +3,7 @@ from utils.utils_eval import WER, BLEU, METEOR, BERTSCORE
 import pandas as pd
 import sys
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
+sys.path.insert(0, os.getcwd())
 
 import src.configs.perceived.configs as configs
 
@@ -68,10 +65,10 @@ if __name__ == "__main__":
 
     predictions = content["predicted"].values.tolist()
     reals = content["target"].values.tolist()
-    
+
 
     # print (predictions[0])
-    
+
 
     N = WINDOW // CHUNKLEN
     #N = 1
@@ -87,7 +84,7 @@ if __name__ == "__main__":
         for j in range (i, min (i + N, len (predictions))):
             segment_pred += predictions[j] + " "
             segment_real += reals[j] + " "
-            
+
         segmented_sentences_pred.append (segment_pred)
         segmented_sentences_real.append (segment_real)
 
@@ -122,7 +119,7 @@ if __name__ == "__main__":
 
 
       bert_score = BERTSCORE_metric.score([pred], [targ])[0]
-      
+
       word_erro_rate = calculate_wer(targ.split(), pred.split())
       total_bleu += bleu_score
       total_meteor += meteor_score
@@ -131,9 +128,9 @@ if __name__ == "__main__":
 
 
     f_stories.write ("%s ; %s ; %s ; %s ; %s\n"%(filename.split('.txt')[0], round(total_bleu / len(segmented_sentences_pred), 4),
-                                                                         round(total_meteor / len(segmented_sentences_pred), 4), 
-                                                                         round(total_bert_score / len(segmented_sentences_pred), 4), 
-                                                                         round(total_word_erro_rate / len(segmented_sentences_pred), 4), 
+                                                                         round(total_meteor / len(segmented_sentences_pred), 4),
+                                                                         round(total_bert_score / len(segmented_sentences_pred), 4),
+                                                                         round(total_word_erro_rate / len(segmented_sentences_pred), 4),
                                               ))
 
   f_stories.close()

@@ -14,10 +14,7 @@ from tokenizers.trainers import BpeTrainer, WordLevelTrainer, \
 from tokenizers.pre_tokenizers import CharDelimiterSplit
 
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
+sys.path.insert(0, os.getcwd())
 
 import src.configs.zuco.configs as configs
 from exps.zuco.load_zuco_data import get_loaders
@@ -59,7 +56,7 @@ def train_tokenizer(files, alg='BPE'):
 
 
 
- 
+
 
 if __name__ == "__main__":
 
@@ -80,12 +77,7 @@ if __name__ == "__main__":
     # with open('words_train.txt', 'w') as f:
     #     for line in words_train:
     #         f.write(f"{line}\n")
-   
+
     trained_tokenizer = train_tokenizer(['words_train.txt'], "")
 
     os.remove ('text_zuco.txt')
-
-    
-
-
-    

@@ -1,5 +1,0 @@
-salut   oui
-salut   oui #   tu as raison   ouais   c'est une fraise
-salut   oui #   tu as raison   ouais   c'est une fraise   # ah oui   cette fraise est plutôt malheureuse
-salut   oui #   tu as raison   ouais   c'est une fraise   # ah oui   cette fraise est plutôt malheureuse   # oui   qu'est-ce que tu en penses   tu as une idée du message   tu as une idée du message
-salut   oui #   tu as raison   ouais   c'est une fraise   # ah oui   cette fraise est plutôt malheureuse   # oui   qu'est-ce que tu en penses   tu as une idée du message   tu as une idée du message   # ouais

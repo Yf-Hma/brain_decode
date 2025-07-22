@@ -7,11 +7,7 @@ from nilearn.image import load_img
 from nilearn import datasets
 from nilearn.maskers import NiftiLabelsMasker
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
-
+sys.path.insert(0, os.getcwd())
 import src.configs.convers.configs as configs
 
 #============================================================
@@ -93,7 +89,7 @@ if __name__ == '__main__':
     data_path = configs.RAW_FMRI_DATA_PATH
 
     # Output directory of the preprocessed data from configs file
-    args.output_data_path = configs.PROCESSED_FMRI_DATA_PATH 
+    args.output_data_path = configs.PROCESSED_FMRI_DATA_PATH
     out_data_path = args.output_data_path
 
 

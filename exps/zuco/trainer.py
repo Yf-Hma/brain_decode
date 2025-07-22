@@ -1,7 +1,5 @@
 import torch
 import os, json
-
-
 import torch.distributed as dist
 
 ############# Training on a single GPU #############
@@ -48,7 +46,7 @@ def train (model, optim, lr_scheduler, model_name, val_loader, data_loaders,
     model.train()
     for epoch in range(args.starting_epoch, args.epochs + 1):
         mean_loss = 0
-        
+
         for id, sample in enumerate (data_loaders):
             loss = model (sample)
             mean_loss += loss.item()

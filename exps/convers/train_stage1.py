@@ -6,10 +6,7 @@ from transformers import set_seed
 import torch.nn.functional as F
 import json
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
+sys.path.insert(0, os.getcwd())
 
 import src.configs.convers.configs as configs
 from src.load_convers_data import data_builder
@@ -63,7 +60,7 @@ def inference(model, saving_file, tokenizer, vocab_len, test_dataset, sos_token_
 
     with open(saving_file, 'w') as out_file:
         json.dump(results, out_file)
-            
+
 def generate_sentence_ids(model, src, sos_token_id, eos_token_id, pad_token_id, max_length, vocab_len, device):
     model.eval()
     bs = src.size(0)
@@ -108,23 +105,23 @@ if __name__ == '__main__':
     parser.add_argument("--model_name", "-m", help="Name of the model to train.", choices = models_dict.keys(), default = "DeconvBipartiteTransformerConv")
     parser.add_argument("--test", action='store_true')
     parser.add_argument("--retrain", action='store_true')
-    parser.add_argument("--seed", default = 3, type=int)
+    parser.add_argument("--seed", default = 1, type=int)
     parser.add_argument("--batch_size", default = 64, type = int)
     parser.add_argument("--epochs", default = 200, type = int)
     parser.add_argument("--lr", default = 0.0001, type = float)
     parser.add_argument("--type", "-t", type = str, default = 'spoken', choices = ['spoken', 'perceived'])
-    
+
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+
     if not os.path.exists('results/convers'):
         os.mkdir('results/convers')
-    
+
     batch_size = args.batch_size
     wandb_log = False
     epochs = args.epochs
     lr = args.lr
-    
+
     src_fmri_features = configs.src_fmri_features
     time_steps = configs.time_steps
     max_size = configs.max_size
@@ -154,8 +151,8 @@ if __name__ == '__main__':
     ################ Model Training/Testing ##############
     seed = args.seed
     set_seed(seed)
-        
-    name = args.model_name  + '_' + str(src_fmri_features) + '_' + args.type + '_' + str(seed)
+
+    name = args.model_name  + '_' + str(src_fmri_features)
     out_name = os.path.join (configs.MODELS_TRAIN_PATH, name)
 
     if args.test:
@@ -163,7 +160,7 @@ if __name__ == '__main__':
 
         if not os.path.exists('results/convers/%s'%(args.model_name)):
             os.mkdir('results/convers/%s'%(args.model_name))
-            
+
         saving_file = 'results/convers/%s/%s.json'%(args.model_name, name)
         inference(model, saving_file, tokenizer, vocab_len, data_loader["test"], sos_token_id, eos_token_id, pad_token_id, max_size, device)
     else:

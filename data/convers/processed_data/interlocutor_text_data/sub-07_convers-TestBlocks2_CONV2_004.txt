@@ -1,4 +1,0 @@
-bon-   c'est une framboise
-bon-   c'est une framboise   # elle semble triste   tu ne penses pas
-bon-   c'est une framboise   # elle semble triste   tu ne penses pas   # oui ça se pourrait   elle semble malheureuse
-bon-   c'est une framboise   # elle semble triste   tu ne penses pas   # oui ça se pourrait   elle semble malheureuse   # je ne suis pas sûre   elle est peut-être triste car elle est pourrie

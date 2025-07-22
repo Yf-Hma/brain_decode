@@ -6,12 +6,7 @@ import os
 from glob import glob
 import sys
 
-
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
-
+sys.path.insert(0, os.getcwd())
 
 from src.load_perceived_data import data_builder, data_builder_from_file
 import src.configs.perceived.configs as configs
@@ -63,7 +58,7 @@ def train (model, model_name, data_loader, epochs = 10, save_epochs = 5, startin
 			optim.zero_grad()
 			loss.backward()
 			optim.step()
-               
+
 		lr_scheduler.step()
 
 		print (mean_loss / len (data_loader))
@@ -71,8 +66,8 @@ def train (model, model_name, data_loader, epochs = 10, save_epochs = 5, startin
 			best_loss = mean_loss
 			save_checkpoint(model, model_name, epoch)
 			test (model, model_name, epoch)
-     
-		
+
+
 
 
 @torch.no_grad()

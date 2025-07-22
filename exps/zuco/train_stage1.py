@@ -8,10 +8,7 @@ import argparse
 from transformers import set_seed
 from tokenizers import Tokenizer
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
+sys.path.insert(0, os.getcwd())
 
 from exps.zuco.load_zuco_data import get_loaders
 import src.configs.zuco.configs as configs
@@ -108,7 +105,7 @@ if __name__ == '__main__':
     parser.add_argument("--lr", default = 0.0001, type = float)
     parser.add_argument("--saving_path", default = "trained_models/zuco")
     args = parser.parse_args()
-    
+
 
     ################ Parameters ##############
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

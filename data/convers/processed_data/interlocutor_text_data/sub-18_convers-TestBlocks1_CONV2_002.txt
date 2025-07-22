@@ -1,5 +1,0 @@
-*   salut   oui
-*   salut   oui #   c'est une pomme   cette pomme a des grands yeux
-*   salut   oui #   c'est une pomme   cette pomme a des grands yeux   # oui bien sûr   la pomme a l'air méchante
-*   salut   oui #   c'est une pomme   cette pomme a des grands yeux   # oui bien sûr   la pomme a l'air méchante   # ouais   quelqu'un a découpé un visage dans la pomme
-*   salut   oui #   c'est une pomme   cette pomme a des grands yeux   # oui bien sûr   la pomme a l'air méchante   # ouais   quelqu'un a découpé un visage dans la pomme   # tu as une idée du message

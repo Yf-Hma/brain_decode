@@ -12,13 +12,7 @@ from glob import glob
 
 import os, sys
 
-
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-tasks = os.path.dirname(parent)
-main = os.path.dirname(tasks)
-sys.path.append(main)
-
+sys.path.insert(0, os.getcwd())
 import src.configs.convers.configs as configs
 
 unk_token = "<UNK>"  # token for unknown words

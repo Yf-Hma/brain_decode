@@ -1,5 +1,0 @@
-salut   c'est une poire   c'est une poire moche
-salut   c'est une poire   c'est une poire moche   # c'est une poire pourrie   ses bras pendent
-salut   c'est une poire   c'est une poire moche   # c'est une poire pourrie   ses bras pendent   # non je pense que tu as tort   oui exactement
-salut   c'est une poire   c'est une poire moche   # c'est une poire pourrie   ses bras pendent   # non je pense que tu as tort   oui exactement   # la poire est un peu abîmée   elle semble malheureuse
-salut   c'est une poire   c'est une poire moche   # c'est une poire pourrie   ses bras pendent   # non je pense que tu as tort   oui exactement   # la poire est un peu abîmée   elle semble malheureuse #   elle est peut-être triste car elle est pourrie

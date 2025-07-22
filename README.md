@@ -6,38 +6,51 @@
  In this paper, we propose and end-to-end multimodal large language model for decoding the spoken text in a human-human or human-robot interactions. The proposed architecture is founded on  ($i$) an encoder derived from a specific transformer with the incorporation of an augmented embedding layer for the encoder and a better-adjusted attention mechanism than that present in the state of the art, and ($ii$) a frozen LLM adapted via instruction tuning to align the embedding of the input modalities to decode the output text. A benchmark in performed on two publicly available datasets where fMRI brain activity and conversational signals are recorded synchronously.
 
 ## Requirements
-* python 3.9.19
+* python 3.12.2
 * Required packages:  ```python install -r requirement.txt```
-* vicuna-7b-v1.3 from https://huggingface.co/lmsys/vicuna-7b-v1.3 in the folder 'llm' (or other LLMs such as Meta-llama3.2-8b-Instruct)
+* vicuna-7b-v1.3 from https://huggingface.co/lmsys/vicuna-7b-v1.3 in the folder 'LLMs' (or other LLMs such as Meta-llama3.2-8b-Instruct)
 * CLIP in the main folder: git clone https://github.com/openai/CLIP
 * To use other data paths, change the configuration file in 'src/configs'.
 
 ## Experiments
 This benchamrk contains three experiments associated to three different tasks and datasets:
-* Spoken text decoding (convers): Multimodal spoken text decoding during conversations (main task of this work).
-* Perceived speech decoding (perceived): Decoding the textual content of listened stories.
-* Brain captioning (NSD): Decoding the captions of viewed images using the NSD datasets.
-* Decoding reading text from EEG signals.
+ - Spoken text decoding (convers): Multimodal spoken text decoding during conversations (main task of this work).
+ - Perceived speech decoding (perceived): Decoding the textual content of listened stories.
+ - Brain captioning (NSD): Decoding the captions of viewed images using the NSD datasets.
+ - Decoding reading text from EEG signals.
 
 In the following, we detail the steps to conduct or reproduce the results of each experiment.
 
-
 ### 1. Spoken Text Decoding
 #### Configuration
-- Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths:
-    * DATA_PATH (ex. data/convers)
-    * RAW_FMRI_DATA_PATH (ex. data/fmri_convers)
-    * MODELS_TRAIN_PATH (ex. trained_models/convers)
-    * LLM_PATH (ex. LLMs/Meta-llama3.2-8b-Instruct)
+- Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths: __DATA_PATH__ (ex. data/convers), __RAW_FMRI_DATA_PATH__ (ex. data/fmri_convers), __MODELS_TRAIN_PATH__ (ex. trained_models/convers), __LLM_PATH__ (ex. LLMs/Meta-llama3.2-8b-Instruct)
 
-- Download the version 2.2.0 of the Convers datasets from the OpenNeuro platform (https://openneuro.org/datasets/ds001740/versions/2.2.0)
- in the path 'RAW_FMRI_DATA_PATH' specified in the config file.
+- Download the version 2.2.0 of the Convers datasets from the OpenNeuro platform [ds001740](https://openneuro.org/datasets/ds001740/versions/2.2.0)
+ inside __RAW_FMRI_DATA_PATH__ specified in the config file.
 
-- Create a folder named $DATA_PATH/raw_data/transcriptions" and upload  the raw Transcriptions from the Ortolang platform into it:
-https://www.ortolang.fr/market/corpora/convers/v2
+- Create a folder named "raw_data/transcriptions" inside __DATA_PATH__ and upload  the raw Transcriptions from the Ortolang platform [convers/v2](https://www.ortolang.fr/market/corpora/convers/v2) into it:
 
 
-#### Preprocessing
+With DATA_PATH set to "data/convers" for example, you should obtain a structure similar to this:
+
+```
+data/
+└── convers/
+    ├── preprocessed_fmri_data/
+    │   └── fMRI_data_200/
+    ├── processed_data/
+    │   ├── fMRI_data_split/
+    │   ├── interlocutor_text_data/
+    │   └── participant_text_data/
+    ├── raw_data/
+    │   ├── transcriptions/
+    │   └── fmri/
+    ├── test.json
+    └── train.json
+```
+
+
+#### Preprocessing and Evaluation
 ```bash
 # Preprocessing raw data
 python exps/convers/process_raw_bold_signal.py --n_rois 200 # Parcellation using 200 ROIs
@@ -47,36 +60,52 @@ python exps/convers/data_builder_tools/textgrid_to_text.py # Processing transcri
 # Building training and test data
 python exps/convers/data_builder_tools/build_data.py # Using json files to save paths of bold chunks and the [input, output] text for instruction tuning
 python exps/convers/data_builder_tools/build_tokenizer.py # Building the tokenizer for the first stage of training
-```
 
-#### Training and evaluation
-```bash
-# Training and evaluation
+# Training and testing after each save_epoch
 python  exps/convers/train_stage1.py -m DeconvBipartiteTransformerConv --batch_size 128 --epochs 200 # Stage1: training the DeconvBipartite Transformer
 python  exps/convers/train_stage2.py --batch_size 32 --epochs 100  -m BrainDEC_V0  --save_epochs 50 # Stage2. Note: BrainDEC_V1 or BrainDEC_V2 converge quickly than V0, only 20 epochs are needed.
-python exps/convers/evaluation.py  # Evaluate the results of the test set and report the scores
+
+# Evaluate the results of the test set and save the scores
+python exps/convers/evaluation.py   
 ```   
 
 
 ### 2. Perceived Speech Decoding
 #### Configuration
-- Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths:
-
-    * RAW_FMRI_DATA_PATH (ex. data/perceived)
-    * MODELS_TRAIN_PATH (ex. trained_models/perceived)
-    * LLM_PATH (ex. LLMs/Meta-llama3.2-8b-Instruct)
+- Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths: __RAW_FMRI_DATA_PATH__ (ex. data/perceived), __MODELS_TRAIN_PATH__ (ex. trained_models/perceived), and __LLM_PATH__ (ex. LLMs/Meta-llama3.2-8b-Instruct).
 
 
 ####  Data preparation
 * In the folders "DATA_TRAIN_DIR" and "DATA_TEST_DIR" (see the config file), download the training and test datasets as outlined in the project [semantic-decoding](https://github.com/HuthLab/semantic-decoding).
 
-#### Training and evaluation
-* To run the experiments on this dataset, run the following commands:
+With DATA_PATH set to "data/perceived" for example, you should obtain a structure similar to this:
+
+```
+data/
+└── convers/
+    ├── data_test/
+    ├── data_train/
+    └── processed/
+        ├── S1/
+        ├── S2/
+        ├── S3/
+        ├── fMRI_data_test_split/
+        └── fMRI_data_train_split/
+```
+
+#### Preprocessing and Evaluation
 ```bash
+# Data preparation
 python exps/perceived/prepare_datasets.py -s $subject (for $subject  in ['S1', 'S2', 'S3'])
+
+# Build tokenizer for stage 1
 python exps/perceived/build_tokenizer.py
+
+# Training and testing after each save_epoch
 python exps/perceived/train_stage1.py --batch_size 128
 python exps/perceived/train_stage2.py --batch_size 32 -s $subject (for $subject  in ['S1', 'S2', 'S3'])
+
+# Evaluate the results of the test set and save the scores
 python exps/perceived/evaluation.py $subject ((for $subject  in ['S1', 'S2', 'S3'])
 ```   
 
@@ -96,53 +125,6 @@ python exps/nsd/main.py --epochs 6 --save_epochs 1 --batch_size 32 -s $subject (
 - Please be aware that the training process involves non-deterministic algorithms even with fixed seed, which can lead to slightly different results on each run.
 In our case, we ran the training procedure 5 times for 7 epochs each, and selected the best result.
  **TODO**: Implementing a fully deterministic mode, even if it may impact the overall performance.
-
-
-#### Results
-We adapted the previous architecture to work with Llama-3.2-8B-Instruct and Mistral-8b and finetune it using LoRA for brain captioning. Unlike existing models, ours uses only brain fMRI signals and text during training, without leveraging VLMs or brain-image alignment.
-The model achieved very competitive results, yielding, in several cases, to the first or second best scores based on  BLEU1, BLEU4, ROUGE, and METEOR. The generated caption on the test are in the folder "results/nsd". As future work, we aim to train our model in a cross-subject manner. Let BrainDEC be the abbreviation of our method. The following tables compares the results obtained with existing methods.
-
-
-| Method            | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | RefCLIPS |
-|-------------------|------|-------|-------|--------|-------|----------|
-| UMBRAE            | S1   | 59.44 | 19.03 | 19.45  | 43.71 | 73.54    |
-| UMBRAE-S1         | S1   | 57.63 | 16.76 | 18.41  | 42.15 | 72.12    |
-| BrainCap          | S1   | 55.96 | 14.51 | 16.68  | 40.69 |  69.90    |
-| OneLLM            | S1   | 47.04 | 9.51  | 13.55  | 35.05 | 61.28    |
-| SDRecon           | S1   | 36.21 | 3.43  | 10.03  | 25.13 |  66.36    |
-| BrainDEC-S1-llama3-8b (ours)| S1   | 59.93 | 20.05 | 18.57  | 43.71  | 69.66    |
-| BrainDEC-S1-mistral-8b (ours)| S1   | 58.90 | 18.23 | 17.22  | 42.60 |  68.20 | 69.66    |
-
-| Method            | Eval | BLEU1 | BLEU4 | METEOR | ROUGE |  RefCLIPS |
-|-------------------|------|-------|-------|--------|-------|----------|
-| UMBRAE            | S2   | 59.37 | 18.41 | 19.17  | 43.86 | 72.36    |
-| UMBRAE-S2         | S2   | 57.18 | 17.18 | 18.11  | 41.85 |  71.06    |
-| BrainCap          | S2   | 53.80 | 13.03 | 15.90  | 39.96 |  68.19    |
-| SDRecon           | S2   | 34.71 | 3.02  | 9.60   | 24.22 |  65.30    |
-| BrainDEC-S2-llama3-8b (ours)  | S2  | 57.85 | 18.52 | 17.61  | 43.11 |  68.01    |
-| BrainDEC-S2-mistral-8b (ours) | S2  | 57.77 | 18.01 | 17.03  | 42.29 |  66.69    |
-
-
-| Method            | Eval | BLEU1 | BLEU4 | METEOR | ROUGE |  RefCLIPS |
-|-------------------|------|-------|-------|--------|-------|----------|
-| UMBRAE            | S5   | 60.36 | 19.03 | 20.04  | 44.81 |  74.11    |
-| UMBRAE-S5         | S5   | 58.99 | 18.73 | 19.04  | 43.30 |  72.69    |
-| BrainCap          | S5   | 55.28 | 14.62 | 16.45  | 40.87 |  69.64    |
-| SDRecon           | S5   | 34.96 | 3.49  | 9.93   | 24.77 |  66.30    |
-| BrainDEC-S5-llama3-8b (ours) | S5   | 60.52 | 20.19 | 18.82  | 44.69 |  69.57    |
-| BrainDEC-S5-mistral-8b (ours) | S5  | 61.00 | 20.16 | 18.83  | 44.52 |  70.15    |
-
-
-| Method            | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | RefCLIPS |
-|-------------------|------|-------|-------|--------|-------|----------|
-| UMBRAE            | S7   | 57.20 | 17.13 | 18.29  | 42.16 |  71.83    |
-| UMBRAE-S7         | S7   | 55.71 | 15.75 | 17.51  | 40.64 |  70.09    |
-| BrainCap          | S7   | 54.25 | 14.00 | 15.94  | 40.02 |  68.48    |
-| SDRecon           | S7   | 34.99 | 3.26  | 9.54   | 24.33 |  64.59    |
-| BrainDEC-S5-llama3-8b (ours) | S7   | 56.98 | 17.77 | 17.42  | 42.01 |  67.08    |
-| BrainDEC-S7-mistral-8b (ours) | S7  | 57.48 | 17.35 | 16.90  | 43.31 |  66.71    |
-
-
 
 ### 4. Decoding Reading Text from EEG Signals
 #### Configuration and data preparation

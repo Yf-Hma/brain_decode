@@ -4,18 +4,13 @@ import torch
 import sys
 import json
 
-
 from transformers import set_seed
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
+sys.path.insert(0, os.getcwd())
 
 from src.load_convers_data import data_builder
 from src.models.models_convers import BrainDEC_V0, BrainDEC_V1, BrainDEC_V2
 import src.configs.convers.configs as configs
-
 from src.transformers_src.Transformer import *
 
 
@@ -67,7 +62,7 @@ def train (model, model_name, type, data_loader, data_loader_test, saving_path, 
 			print(model_name + "_" + type, epoch, saving_path)
 			save_checkpoint(model, model_name, epoch, saving_path)
 			test (model, data_loader_test, f"{model_name}_{str(epoch)}")
-     
+
 
 def test (model, data_loader, model_name):
     model.eval()
@@ -97,7 +92,6 @@ if __name__ == '__main__':
     parser.add_argument("--save_epochs", default = 50, type = int)
     parser.add_argument("--epochs", default = 200, type = int)
     parser.add_argument("--saved_checkpoint", "-s", type = str)
-    parser.add_argument("--type", "-t", type = str, default = 'deconv', choices=['deconv', "transf", 'CNN'])
     parser.add_argument('--use_lora', action='store_true', help = "To use LoRA on the decoder LLM.")
     parser.add_argument('--load_in_4bit', action='store_true', help = "To load the llm quantized in 4 bits for inference.")
 
@@ -113,29 +107,37 @@ if __name__ == '__main__':
     data_loader = data_builder(args.batch_size)
     set_seed(args.seed)
 
-    encoder_path = os.path.join (configs.MODELS_TRAIN_PATH, "DeconvBipartiteTransformerConv_%d_%s.pt"%(configs.src_fmri_features, configs.type))
+
+    assert os.path.exists(configs.LLM_PATH), "LLM_PATH does not exist."
+
+
+    ################# Init fMRI Encoder #######################
+    encoder_path = os.path.join (configs.MODELS_TRAIN_PATH, "DeconvBipartiteTransformerConv_%d.pt"%(configs.src_fmri_features))
     encoder_class = DeconvBipartiteTransformerConv
-    
-    llm = models_dict[args.model_name](encoder_class = encoder_class, encoder_path = encoder_path, load_in_4bit = args.load_in_4bit, lora = args.use_lora, inference_mode = args.test)
 
+    ################# Init BrainDEC Model #######################
+    BrainDEC_model = models_dict[args.model_name](encoder_class = encoder_class, encoder_path = encoder_path, load_in_4bit = args.load_in_4bit, lora = args.use_lora, inference_mode = args.test)
+
+    ################# Checkpoint Filename #######################
     if args.use_lora:
-        name = f"{args.model_name}_{str(configs.src_fmri_features)}_{args.type}_{configs.LLM_name}_lora"
+        name = f"{args.model_name}_{str(configs.src_fmri_features)}_{configs.LLM_name}_lora"
     else:
-        name = f"{args.model_name}_{str(configs.src_fmri_features)}_{args.type}_{configs.LLM_name}"
+        name = f"{args.model_name}_{str(configs.src_fmri_features)}_{configs.LLM_name}"
 
+    ################# Model Training / Testing #######################
     if args.test:
         name = args.saved_checkpoint.split('/')[-1].split('.')[0]
-        llm = load_from_checkpoint(llm, args.saved_checkpoint)
+        BrainDEC_model = load_from_checkpoint(llm, args.saved_checkpoint)
         test (llm, data_loader["test"], name)
     else:
         if args.retrain:
-            llm = load_from_checkpoint(llm, args.saved_checkpoint)
+            BrainDEC_model = load_from_checkpoint(llm, args.saved_checkpoint)
 
-        train (llm,
+        train (BrainDEC_model,
             name,
             configs.type,
             data_loader["train"],
-            data_loader["test"], 
+            data_loader["test"],
             configs.MODELS_TRAIN_PATH,
             epochs = args.epochs,
             save_epochs = args.save_epochs,

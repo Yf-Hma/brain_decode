@@ -13,14 +13,11 @@ from tokenizers.trainers import BpeTrainer, WordLevelTrainer, \
 ## a pretokenizer to segment the text into words
 from tokenizers.pre_tokenizers import Whitespace, CharDelimiterSplit
 
+from exps.perceived.utils.stimulus_utils import get_story_wordseqs, load_transcript
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
+sys.path.insert(0, os.getcwd())
 
 import src.configs.perceived.configs as configs
-from exps.perceived.utils.stimulus_utils import get_story_wordseqs, load_transcript
 
 
 unk_token = "<UNK>"  # token for unknown words
@@ -89,7 +86,7 @@ def gather_all_text_train (args):
     # training stories
     stories = []
     with open(os.path.join(configs.DATA_TRAIN_PATH, "sess_to_story.json"), "r") as f:
-        sess_to_story = json.load(f) 
+        sess_to_story = json.load(f)
     for sess in args.sessions:
         stories.extend(sess_to_story[str(sess)])
 
@@ -98,7 +95,7 @@ def gather_all_text_train (args):
     rtext_data = get_wordseqs_data (stories)
 
     return rtext_data
- 
+
 
 def gather_all_text_test (args):
 
@@ -129,7 +126,7 @@ def gather_all_text_test (args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--gpt", type = str, default = "perceived")
-    parser.add_argument("--sessions", nargs = "+", type = int, 
+    parser.add_argument("--sessions", nargs = "+", type = int,
         default = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 18, 20])
     args = parser.parse_args()
 
@@ -146,10 +143,5 @@ if __name__ == "__main__":
         for line in words_train:
             f.write(f"{line}\n")
 
-   
+
     trained_tokenizer = train_tokenizer(['words_train.txt'], "")
-
-    
-
-
-    

@@ -5,11 +5,7 @@ from tokenizers import Tokenizer
 import os
 import sys
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
-
+sys.path.insert(0, os.getcwd())
 
 from src.load_perceived_all_subject import data_builder
 import src.configs.perceived.configs as configs

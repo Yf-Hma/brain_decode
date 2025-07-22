@@ -9,11 +9,7 @@ import pickle
 import argparse
 import sys
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
-
+sys.path.insert(0, os.getcwd())
 
 import src.configs.zuco.configs as configs
 
@@ -40,11 +36,11 @@ data_path = configs.DATA_PATH
 outdir = f"{data_path}/processed"
 
 if version == 'v1':
-    # old version 
-    input_mat_files_dir = f'{data_path}/{task_name}/Matlab_files' 
+    # old version
+    input_mat_files_dir = f'{data_path}/{task_name}/Matlab_files'
 elif version == 'v2':
-    # new version, mat73 
-    input_mat_files_dir = f'{data_path}/{task_name}/Matlab_files' 
+    # new version, mat73
+    input_mat_files_dir = f'{data_path}/{task_name}/Matlab_files'
 
 output_dir = f'%s/{task_name}/pickle'%outdir
 if not os.path.exists(output_dir):
@@ -62,7 +58,7 @@ dataset_dict = {}
 for mat_file in tqdm(mat_files):
     subject_name = os.path.basename(mat_file).split('_')[0].replace('results','').strip()
     dataset_dict[subject_name] = []
-    
+
     if version == 'v1':
         matdata = io.loadmat(mat_file, squeeze_me=True, struct_as_record=False)['sentenceData']
     elif version == 'v2':
@@ -78,11 +74,11 @@ for mat_file in tqdm(mat_files):
 
             if task_name == 'task1-SR':
                 sent_obj['answer_EEG'] = {'answer_mean_t1':sent.answer_mean_t1, 'answer_mean_t2':sent.answer_mean_t2, 'answer_mean_a1':sent.answer_mean_a1, 'answer_mean_a2':sent.answer_mean_a2, 'answer_mean_b1':sent.answer_mean_b1, 'answer_mean_b2':sent.answer_mean_b2, 'answer_mean_g1':sent.answer_mean_g1, 'answer_mean_g2':sent.answer_mean_g2}
-            
+
             # word level:
             sent_obj['word'] = []
-            
-            word_tokens_has_fixation = [] 
+
+            word_tokens_has_fixation = []
             word_tokens_with_mask = []
             word_tokens_all = []
             print(sent.content)
@@ -91,7 +87,7 @@ for mat_file in tqdm(mat_files):
                 word_tokens_all.append(word.content)
                 # TODO: add more version of word level eeg: GD, SFD, GPT
                 word_obj['nFixations'] = word.nFixations
-                if word.nFixations > 0:    
+                if word.nFixations > 0:
                     word_obj['word_level_EEG'] = {'FFD':{'FFD_t1':word.FFD_t1, 'FFD_t2':word.FFD_t2, 'FFD_a1':word.FFD_a1, 'FFD_a2':word.FFD_a2, 'FFD_b1':word.FFD_b1, 'FFD_b2':word.FFD_b2, 'FFD_g1':word.FFD_g1, 'FFD_g2':word.FFD_g2}}
                     word_obj['word_level_EEG']['TRT'] = {'TRT_t1':word.TRT_t1, 'TRT_t2':word.TRT_t2, 'TRT_a1':word.TRT_a1, 'TRT_a2':word.TRT_a2, 'TRT_b1':word.TRT_b1, 'TRT_b2':word.TRT_b2, 'TRT_g1':word.TRT_g1, 'TRT_g2':word.TRT_g2}
                     word_obj['word_level_EEG']['GD'] = {'GD_t1':word.GD_t1, 'GD_t2':word.GD_t2, 'GD_a1':word.GD_a1, 'GD_a2':word.GD_a2, 'GD_b1':word.GD_b1, 'GD_b2':word.GD_b2, 'GD_g1':word.GD_g1, 'GD_g2':word.GD_g2}
@@ -126,14 +122,14 @@ for mat_file in tqdm(mat_files):
                     # if a word has no fixation, use sentence level feature
                     # word_obj['word_level_EEG'] = {'FFD':{'FFD_t1':sent.mean_t1, 'FFD_t2':sent.mean_t2, 'FFD_a1':sent.mean_a1, 'FFD_a2':sent.mean_a2, 'FFD_b1':sent.mean_b1, 'FFD_b2':sent.mean_b2, 'FFD_g1':sent.mean_g1, 'FFD_g2':sent.mean_g2}}
                     # word_obj['word_level_EEG']['TRT'] = {'TRT_t1':sent.mean_t1, 'TRT_t2':sent.mean_t2, 'TRT_a1':sent.mean_a1, 'TRT_a2':sent.mean_a2, 'TRT_b1':sent.mean_b1, 'TRT_b2':sent.mean_b2, 'TRT_g1':sent.mean_g1, 'TRT_g2':sent.mean_g2}
-                    
+
                     # NOTE:if a word has no fixation, simply skip it
                     continue
-            
+
             sent_obj['word_tokens_has_fixation'] = word_tokens_has_fixation
             sent_obj['word_tokens_with_mask'] = word_tokens_with_mask
             sent_obj['word_tokens_all'] = word_tokens_all
-            
+
             dataset_dict[subject_name].append(sent_obj)
 
         else:

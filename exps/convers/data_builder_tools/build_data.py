@@ -5,13 +5,9 @@ import numpy as np
 import random
 import shutil
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-tasks = os.path.dirname(parent)
-main = os.path.dirname(tasks)
-sys.path.append(main)
-
+sys.path.insert(0, os.getcwd())
 import src.configs.convers.configs as configs
+
 
 def load_vocab_from_json(file_path):
     with open(file_path, 'r') as file:

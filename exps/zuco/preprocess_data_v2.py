@@ -8,10 +8,7 @@ import sys
 
 print("modified version of construct_dataset_mat_to_pickle_v2.py to include raw EEG data, fixed")
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
+sys.path.insert(0, os.getcwd())
 
 import src.configs.zuco.configs as configs
 
@@ -58,8 +55,8 @@ if __name__ == '__main__':
                 # print('keys in f:', list(f.keys()))
                 sentence_data = f['sentenceData']
                 # print('keys in sentence_data:', list(sentence_data.keys()))
-                
-                # sent level eeg 
+
+                # sent level eeg
                 # mean_t1 = np.squeeze(f[sentence_data['mean_t1'][0][0]][()])
                 mean_t1_objs = sentence_data['mean_t1']
                 mean_t2_objs = sentence_data['mean_t2']
@@ -69,7 +66,7 @@ if __name__ == '__main__':
                 mean_b2_objs = sentence_data['mean_b2']
                 mean_g1_objs = sentence_data['mean_g1']
                 mean_g2_objs = sentence_data['mean_g2']
-                
+
                 rawData = sentence_data['rawData']
                 contentData = sentence_data['content']
                 # print('contentData shape:', contentData.shape, 'dtype:', contentData.dtype)
@@ -82,18 +79,18 @@ if __name__ == '__main__':
                     obj_reference_content = contentData[idx][0]
                     sent_string = dh.load_matlab_string(f[obj_reference_content])
                     # print('sentence string:', sent_string)
-                    
+
                     sent_obj = {'content':sent_string}
-                    
+
                     # get sentence level EEG
                     sent_obj['sentence_level_EEG'] = {
-                        'mean_t1':np.squeeze(f[mean_t1_objs[idx][0]][()]), 
-                        'mean_t2':np.squeeze(f[mean_t2_objs[idx][0]][()]), 
-                        'mean_a1':np.squeeze(f[mean_a1_objs[idx][0]][()]), 
-                        'mean_a2':np.squeeze(f[mean_a2_objs[idx][0]][()]), 
-                        'mean_b1':np.squeeze(f[mean_b1_objs[idx][0]][()]), 
-                        'mean_b2':np.squeeze(f[mean_b2_objs[idx][0]][()]), 
-                        'mean_g1':np.squeeze(f[mean_g1_objs[idx][0]][()]), 
+                        'mean_t1':np.squeeze(f[mean_t1_objs[idx][0]][()]),
+                        'mean_t2':np.squeeze(f[mean_t2_objs[idx][0]][()]),
+                        'mean_a1':np.squeeze(f[mean_a1_objs[idx][0]][()]),
+                        'mean_a2':np.squeeze(f[mean_a2_objs[idx][0]][()]),
+                        'mean_b1':np.squeeze(f[mean_b1_objs[idx][0]][()]),
+                        'mean_b2':np.squeeze(f[mean_b2_objs[idx][0]][()]),
+                        'mean_g1':np.squeeze(f[mean_g1_objs[idx][0]][()]),
                         'mean_g2':np.squeeze(f[mean_g2_objs[idx][0]][()])
                     }
                     # print(sent_obj)
@@ -101,7 +98,7 @@ if __name__ == '__main__':
 
                     # get word level data
                     word_data, word_tokens_all, word_tokens_has_fixation, word_tokens_with_mask = dh.extract_word_level_data(f, f[wordData[idx][0]])
-                    
+
                     if word_data == {}:
                         print(f'missing sent: subj:{subject} content:{sent_string}, append None')
                         dataset_dict[subject].append(None)
@@ -111,7 +108,7 @@ if __name__ == '__main__':
                         dataset_dict[subject].append(None)
                         continue
 
-                    else:                    
+                    else:
                         for widx in range(len(word_data)):
                             data_dict = word_data[widx]
                             word_obj = {'content':data_dict['content'], 'nFixations': data_dict['nFix'], 'rawEEG':data_dict['RAW_EEG']} #@zavidos
@@ -131,11 +128,11 @@ if __name__ == '__main__':
                                     'TRT':{'TRT_t1':trt[0], 'TRT_t2':trt[1], 'TRT_a1':trt[2], 'TRT_a2':trt[3], 'TRT_b1':trt[4], 'TRT_b2':trt[5], 'TRT_g1':trt[6], 'TRT_g2':trt[7]}
                                 }
                                 sent_obj['word'].append(word_obj)
-                            
+
                         sent_obj['word_tokens_has_fixation'] = word_tokens_has_fixation
                         sent_obj['word_tokens_with_mask'] = word_tokens_with_mask
-                        sent_obj['word_tokens_all'] = word_tokens_all     
-                        
+                        sent_obj['word_tokens_all'] = word_tokens_all
+
                         # print(sent_obj.keys())
                         # print(len(sent_obj['word']))
                         # print(sent_obj['word'][0])
@@ -146,7 +143,7 @@ if __name__ == '__main__':
     if dataset_dict == {}:
         print(f'No mat file found for {task_name}')
         quit()
-    
+
 
     with open(os.path.join(output_dir,output_name), 'wb') as handle:
         pickle.dump(dataset_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)

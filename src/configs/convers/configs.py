@@ -14,8 +14,6 @@ LLM_name = "vicuna"
 
 # check if paths exist
 assert os.path.exists(RAW_FMRI_DATA_PATH), "RAW_FMRI_DATA_PATH does not exist."
-assert os.path.exists(LLM_PATH), "LLM_PATH does not exist."
-
 
 # DATA parameters
 fmri_timestep=1.2 # fMRI scans are recorded with a timestep of 1.2 s
@@ -27,7 +25,7 @@ d_model = 256
 d_ff = 512
 heads = 8
 N = 2
-src_fmri_features = 100
+src_fmri_features = 200
 max_size = 72
 type = 'spoken'
 

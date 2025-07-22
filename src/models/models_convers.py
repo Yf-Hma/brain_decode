@@ -8,16 +8,13 @@ from CLIP import clip
 from tokenizers import Tokenizer
 from peft import get_peft_model, LoraConfig
 
-
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 main = os.path.dirname(parent)
-sys.path.append(main)
-
+sys.path.insert(0, main)
 
 from src.transformers_src.Transformer import *
 import src.configs.convers.configs as configs
-
 
 class BrainDEC_V0(nn.Module):
     def __init__(
@@ -31,7 +28,6 @@ class BrainDEC_V0(nn.Module):
         load_in_4bit = False
     ):
         super().__init__()
-
         src_fmri_features = configs.src_fmri_features
         time_steps = configs.time_steps
         max_size = configs.max_size
@@ -45,13 +41,12 @@ class BrainDEC_V0(nn.Module):
         vocab_len = tokenizer.get_vocab_size()
 
         model_name_or_path = configs.LLM_PATH
-        
+
         model = encoder_class(time_steps, src_fmri_features, max_size,\
                                                vocab_len, d_model, d_ff, N, heads, self.device)\
                                                .to(self.device)
         model = model.float()
         model.load_state_dict(torch.load(encoder_path, weights_only=True))
-
 
         self.frmi_encoder = model.encoder
 
@@ -826,7 +821,3 @@ class BrainDEC_V2(nn.Module):
         output_text = [text.strip() for text in output_text]
 
         return output_text
-
-
-
-

@@ -1,5 +1,0 @@
-salut   c'est une fraise   tu ne crois pas
-salut   c'est une fraise   tu ne crois pas   # ouais   ah oui
-salut   c'est une fraise   tu ne crois pas   # ouais   ah oui #   elle n'a pas l'air contente   cette fraise est plutôt malheureuse
-salut   c'est une fraise   tu ne crois pas   # ouais   ah oui #   elle n'a pas l'air contente   cette fraise est plutôt malheureuse   # peut-être   elle est un peu abîmée
-salut   c'est une fraise   tu ne crois pas   # ouais   ah oui #   elle n'a pas l'air contente   cette fraise est plutôt malheureuse   # peut-être   elle est un peu abîmée   # tu as une idée du message   tu as une idée du message

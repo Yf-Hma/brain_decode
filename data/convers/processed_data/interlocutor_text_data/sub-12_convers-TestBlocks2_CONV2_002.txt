@@ -1,5 +1,0 @@
-salut   oui   c'est une poire pourrie
-salut   oui   c'est une poire pourrie   # je suis d'accord
-salut   oui   c'est une poire pourrie   # je suis d'accord   # elle a un visage   c'est une poire avec des bras
-salut   oui   c'est une poire pourrie   # je suis d'accord   # elle a un visage   c'est une poire avec des bras   # la poire semble triste   qu'est ce que t'en penses   *   *
-salut   oui   c'est une poire pourrie   # je suis d'accord   # elle a un visage   c'est une poire avec des bras   # la poire semble triste   qu'est ce que t'en penses   *   *   # elle semble fatiguée   oui c'est possible

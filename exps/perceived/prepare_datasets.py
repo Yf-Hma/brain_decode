@@ -6,14 +6,10 @@ import argparse
 import h5py
 from glob import glob
 
-
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
-
-
 from utils.stimulus_utils import get_story_wordseqs, get_resp, load_transcript
+
+sys.path.insert(0, os.getcwd())
+
 import src.configs.perceived.configs as configs
 
 np.random.seed(42)

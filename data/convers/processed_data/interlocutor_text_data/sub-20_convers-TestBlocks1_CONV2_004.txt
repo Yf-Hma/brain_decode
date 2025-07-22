@@ -1,5 +1,0 @@
-c'est une aubergine
-c'est une aubergine   # elle ressemble à Batman   oui je crois aussi
-c'est une aubergine   # elle ressemble à Batman   oui je crois aussi   # elle a l'air plus méchante que la pomme   oui
-c'est une aubergine   # elle ressemble à Batman   oui je crois aussi   # elle a l'air plus méchante que la pomme   oui   # tu as une idée du message   oui c'est possible
-c'est une aubergine   # elle ressemble à Batman   oui je crois aussi   # elle a l'air plus méchante que la pomme   oui   # tu as une idée du message   oui c'est possible #

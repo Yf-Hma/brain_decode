@@ -6,15 +6,9 @@ import torch
 import torch.nn as nn
 from tokenizers import Tokenizer
 
-from src.transformers_src.Transformer import DeconvBipartiteTransformerConv, Transformer
-
 from peft import get_peft_model, LoraConfig
 
-
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.append(main)
+sys.path.insert(0, os.getcwd())
 
 from src.transformers_src.Transformer import DeconvBipartiteTransformerConv
 import src.configs.perceived.configs as configs

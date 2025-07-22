@@ -78,45 +78,34 @@ if __name__ == "__main__":
   models_results = sorted (glob.glob (f"results/convers/*"))
 
   for model_dir_results in models_results:
-
     if not os.path.isdir(model_dir_results):
       continue
-    
-    model_name = model_dir_results.split ('/')[-1]
 
+    model_name = model_dir_results.split ('/')[-1]
     filenames = sorted (glob.glob (f"results/convers/{model_name}/*.json"))
 
     f = open(f"results/convers/final_results_{model_name}.csv", "w")
     f.write ("Model ; BLUE score ; meteor score ; jaccard similarity ; word overlap ;  LPIPS\n")
 
-
     for filename in filenames:
 
-      # if filename.split ('_')[-1].split ('.')[0] not in [str (i) for i in range (1, 11, 1)]:
-      #   continue
-      
       predictions = []
       target = []
-      # Open the file
+
       with open(filename, 'r') as d:
         file = json.load(d)
-        # Loop through each line in the file
-
-
         for line in file:
             sentence_txt = line["Generated"].replace('<unk>', ' ').strip()
             predictions.append(sentence_txt)
-            
+
             sentence_txt = line["Real"].strip()
             target.append(sentence_txt)
 
       pred_conversations = [predictions[x:x+5] for x in range(0, len(predictions), 5)]
       true_conversations = [target[x:x+5] for x in range(0, len(target), 5)]
 
-
       full_preds = [' '.join(inner_list)for inner_list in pred_conversations]
       full_targs = [' '.join(inner_list) for inner_list in true_conversations]
-
 
       total_bleu = 0
       total_meteor = 0

@@ -7,8 +7,6 @@ LLM_PATH = "LLMs/llama3"
 LLM_name = "llama"
 
 assert os.path.exists (DATA_PATH), "DATA_PATH, specified in config file, does not exist!"
-assert os.path.exists (MODELS_TRAIN_PATH), "MODELS_TRAIN_PATH, specified in config file, does not exist!"
-assert os.path.exists (LLM_PATH), "LLM_PATH, specified in config file, does not exist!"
 
 coco_annotation_file_path = "./tools/COCO_73k_annots.npy"
 

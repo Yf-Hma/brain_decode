@@ -3,14 +3,12 @@ import torch
 import os, sys
 from transformers import set_seed
 
-current=os.path.dirname(os.path.realpath(__file__))
-parent=os.path.dirname(current)
-main=os.path.dirname(parent)
-sys.path.append(main)
+import trainer
+
+sys.path.insert(0, os.getcwd())
 
 from exps.zuco.load_zuco_data import get_loaders
 from src.models.models_eeg import BrainDEC_V0
-import trainer
 import src.configs.zuco.configs as configs
 
 if __name__ == '__main__':
@@ -59,12 +57,10 @@ if __name__ == '__main__':
         model_name=args.saved_checkpoint.split('/')[-1].split('.')[0]
         checkpoint=torch.load(args.saved_checkpoint, map_location=device)
         model.load_state_dict(checkpoint["model"], strict=False)
-                              
+
     if args.test:
         results_fname=args.saved_checkpoint.split ('/')[-1].split ('.')[0]
         trainer.test (model, results_fname, test_set)
     else:
         out_name=f"BrainDEC_zuco_{configs.LLM_name}_v{args.version}"
         trainer.train_single(model, out_name, train_set, test_set, args, configs.MODELS_TRAIN_DIR)
-
-

@@ -3,12 +3,7 @@ from glob import glob
 import os, sys
 import shutil
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-tasks = os.path.dirname(parent)
-main = os.path.dirname(tasks)
-sys.path.append(main)
-
+sys.path.insert(0, os.getcwd())
 import src.configs.convers.configs as configs
 
 
@@ -21,7 +16,6 @@ def parse_textgrid(file_path):
     intervals = interval_pattern.findall(content)
 
     return intervals
-
 
 
 def extract_text_by_intervals(intervals, interval_length=12, lagged = True):

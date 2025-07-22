@@ -1,5 +1,0 @@
-salut   oui
-salut   oui   # c'est une poire jaune   c'est une poire moche   ouais
-salut   oui   # c'est une poire jaune   c'est une poire moche   ouais   # oui   la poire est un peu abimée   la poire est un peu abimée
-salut   oui   # c'est une poire jaune   c'est une poire moche   ouais   # oui   la poire est un peu abimée   la poire est un peu abimée   # ouais   elle est déformée
-salut   oui   # c'est une poire jaune   c'est une poire moche   ouais   # oui   la poire est un peu abimée   la poire est un peu abimée   # ouais   elle est déformée   # oui c'est possible   oui
