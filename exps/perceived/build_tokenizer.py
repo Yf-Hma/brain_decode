@@ -13,10 +13,9 @@ from tokenizers.trainers import BpeTrainer, WordLevelTrainer, \
 ## a pretokenizer to segment the text into words
 from tokenizers.pre_tokenizers import Whitespace, CharDelimiterSplit
 
-from exps.perceived.utils.stimulus_utils import get_story_wordseqs, load_transcript
-
 sys.path.insert(0, os.getcwd())
 
+from exps.perceived.utils.stimulus_utils import get_story_wordseqs, load_transcript
 import src.configs.perceived.configs as configs
 
 

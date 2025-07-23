@@ -2,9 +2,9 @@ import os, shutil, sys
 from glob import glob
 import pandas as pd
 import numpy as np
-import argparse
 
 sys.path.insert(0, os.getcwd())
+
 import src.configs.convers.configs as configs
 
 def split_tensor(tensor, sub_tensor_length, exclude_steps):
@@ -34,13 +34,14 @@ def read_bold_append(fmri_paths):
 
 if __name__ == "__main__":
 
-
+    
     if os.path.exists("%s/processed_data/fMRI_data_split"%configs.DATA_PATH):
         shutil.rmtree('%s/processed_data/fMRI_data_split'%configs.DATA_PATH)
 
     os.makedirs('%s/processed_data/fMRI_data_split'%configs.DATA_PATH)
+    
+    bold_files = glob ("%s/fMRI_data_%s/**/*.csv"%(configs.PROCESSED_FMRI_DATA_PATH, str(configs.src_fmri_features)), recursive=True)
 
-    bold_files = glob ("%s/**/*.csv"%configs.PROCESSED_FMRI_DATA_PATH, recursive=True)
 
     for filename in bold_files:
 

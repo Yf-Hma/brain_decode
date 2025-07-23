@@ -73,7 +73,7 @@ def extract_text_from_textgrid (text_grid_files, out_dir, interval_length=12, la
             text = text.replace ("@", "")
             text = text.replace ("#", " ")
             text = text.replace ("***", "(rire)")
-            text = re.sub("\s\s+" , " ", text)
+            text = re.sub(r"\s\s+" , " ", text)
 
             if text_lagged == "":
                 text_lagged = text
