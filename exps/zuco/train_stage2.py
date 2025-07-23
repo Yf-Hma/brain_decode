@@ -41,14 +41,14 @@ if __name__ == '__main__':
     ################## Parameters ######################
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
     processed_data_path=configs.PROCESSED_DATA_PATH
-    args.saving_path=configs.MODELS_TRAIN_DIR
+    args.saving_path=configs.MODELS_TRAIN_PATH
     set_seed(args.seed)
 
     ################## Loading data ######################
     train_set, test_set=get_loaders (processed_data_path, args.version, args.batch_size,args.val_batch_size)
 
     ################ Model Init ##############
-    eeg_encoder_checkpoint=f'{configs.MODELS_TRAIN_DIR}/DeconvBipartiteTransformerConv_v{args.version}.pt'
+    eeg_encoder_checkpoint=f'{configs.MODELS_TRAIN_PATH}/DeconvBipartiteTransformerConv_v{args.version}.pt'
     model=BrainDEC_V0(configs, eeg_encoder_checkpoint, device=device, load_in_4bit=args.load_in_4bit, use_lora=args.use_lora)
 
     ################## Model Training/Testing ######################
@@ -63,4 +63,4 @@ if __name__ == '__main__':
         trainer.test (model, results_fname, test_set)
     else:
         out_name=f"BrainDEC_zuco_{configs.LLM_name}_v{args.version}"
-        trainer.train_single(model, out_name, train_set, test_set, args, configs.MODELS_TRAIN_DIR)
+        trainer.train_single(model, out_name, train_set, test_set, args, configs.MODELS_TRAIN_PATH)

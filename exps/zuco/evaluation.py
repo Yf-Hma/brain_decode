@@ -1,10 +1,9 @@
 import glob, json
 from nltk.translate.bleu_score import corpus_bleu
 from rouge import Rouge
-#from bert_score import score
 import numpy as np
 import nltk
-import os, sys
+import os
 
 nltk.download('punkt')
 from nltk.tokenize import word_tokenize
@@ -59,7 +58,7 @@ for json_path in files:
 
     for a in ["p", "r", "f"]:
         f_eval.write (f" , {np.round (rouge_scores['rouge-1'][a], 5)}")
-                
+
     """ calculate WER score """
     #wer = WordErrorRate()
     wer_scores = wer_metric.compute(predictions=pred_string_list, references=target_string_list)
@@ -67,5 +66,5 @@ for json_path in files:
     f_eval.write (f" , {np.round (wer_scores, 5)}")
 
     f_eval.write ("\n")
-    
+
 f_eval.close()

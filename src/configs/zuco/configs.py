@@ -2,7 +2,11 @@ import os
 
 DATA_PATH = 'data/zuco'
 PROCESSED_DATA_PATH = "data/zuco/processed"
-MODELS_TRAIN_DIR =  "trained_models/zuco"
+MODELS_TRAIN_PATH =  "trained_models/zuco"
+
+if not os.path.exists (MODELS_TRAIN_PATH):
+    os.mkdir (MODELS_TRAIN_PATH)
+
 
 LLM_DIR = "LLMs/llama3"
 LLM_name = "llama"

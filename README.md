@@ -5,14 +5,14 @@
 
  In this paper, we propose and end-to-end multimodal large language model for decoding the spoken text in a human-human or human-robot interactions. The proposed architecture is founded on  ($i$) an encoder derived from a specific transformer with the incorporation of an augmented embedding layer for the encoder and a better-adjusted attention mechanism than that present in the state of the art, and ($ii$) a frozen LLM adapted via instruction tuning to align the embedding of the input modalities to decode the output text. A benchmark in performed on two publicly available datasets where fMRI brain activity and conversational signals are recorded synchronously.
 
-## Requirements
+### Requirements
 * python 3.12.2
 * Required packages:  ```python install -r requirement.txt```
 * vicuna-7b-v1.3 from https://huggingface.co/lmsys/vicuna-7b-v1.3 in the folder 'LLMs' (or other LLMs such as Meta-llama3.2-8b-Instruct)
 * CLIP in the main folder: git clone https://github.com/openai/CLIP
 * To use other data paths, change the configuration file in 'src/configs'.
 
-## Experiments
+### Experiments
 This benchamrk contains three experiments associated to three different tasks and datasets:
  - Spoken text decoding (convers): Multimodal spoken text decoding during conversations (main task of this work).
  - Perceived speech decoding (perceived): Decoding the textual content of listened stories.
@@ -21,8 +21,8 @@ This benchamrk contains three experiments associated to three different tasks an
 
 In the following, we detail the steps to conduct or reproduce the results of each experiment.
 
-### 1. Spoken Text Decoding
-#### Configuration
+#### 1. Spoken Text Decoding
+##### Configuration
 - Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths: __DATA_PATH__ (ex. data/convers), __RAW_FMRI_DATA_PATH__ (ex. data/fmri_convers), __MODELS_TRAIN_PATH__ (ex. trained_models/convers), __LLM_PATH__ (ex. LLMs/Meta-llama3.2-8b-Instruct)
 
 - Download the version 2.2.0 of the Convers datasets from the OpenNeuro platform [ds001740](https://openneuro.org/datasets/ds001740/versions/2.2.0)
@@ -34,23 +34,23 @@ In the following, we detail the steps to conduct or reproduce the results of eac
 With DATA_PATH set to "data/convers" for example, you should obtain a structure similar to this after data preprocessing:
 
 ```
-data/
-└── convers/
-    ├── preprocessed_fmri_data/
-    │   └── fMRI_data_200/
-    ├── processed_data/
-    │   ├── fMRI_data_split/
-    │   ├── interlocutor_text_data/
-    │   └── participant_text_data/
-    ├── raw_data/
-    │   ├── transcriptions/
-    │   └── fmri/
+data
+└── convers
+    ├── preprocessed_fmri_data
+    │   └── fMRI_data_200
+    ├── processed_data
+    │   ├── fMRI_data_split
+    │   ├── interlocutor_text_data
+    │   └── participant_text_data
+    ├── raw_data
+    │   ├── transcriptions
+    │   └── fmri
     ├── test.json
     └── train.json
 ```
 
 
-#### Preprocessing and evaluation
+##### Preprocessing and evaluation
 ```bash
 # Preprocessing raw data
 python exps/convers/process_raw_bold_signal.py --n_rois 200 # Parcellation using 200 ROIs
@@ -70,30 +70,30 @@ python exps/convers/evaluation.py
 ```   
 
 
-### 2. Perceived Speech Decoding
-#### Configuration
+#### 2. Perceived Speech Decoding
+##### Configuration
 - Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths: __RAW_FMRI_DATA_PATH__ (ex. data/perceived), __MODELS_TRAIN_PATH__ (ex. trained_models/perceived), and __LLM_PATH__ (ex. LLMs/Meta-llama3.2-8b-Instruct).
 
 
-####  Data preparation
+##### Data preparation
 * In the folders "DATA_TRAIN_DIR" and "DATA_TEST_DIR" (see the config file), download the training and test datasets as outlined in the project [semantic-decoding](https://github.com/HuthLab/semantic-decoding).
 
 With DATA_PATH set to "data/perceived" for example, you should obtain a structure similar to this after data preprocessing:
 
 ```
-data/
-└── perceived/
-    ├── data_test/
-    ├── data_train/
-    └── processed/
-        ├── S1/
-        ├── S2/
-        ├── S3/
-        ├── fMRI_data_test_split/
-        └── fMRI_data_train_split/
+data
+└── perceived
+    ├── data_test
+    ├── data_train
+    └── processed
+        ├── S1
+        ├── S2
+        ├── S3
+        ├── fMRI_data_test_split
+        └── fMRI_data_train_split
 ```
 
-#### Preprocessing and evaluation
+##### Preprocessing and evaluation
 ```bash
 # Data preparation
 python exps/perceived/prepare_datasets.py -s $subject (for $subject  in ['S1', 'S2', 'S3'])
@@ -109,25 +109,34 @@ python exps/perceived/train_stage2.py --batch_size 32 -s $subject (for $subject 
 python exps/perceived/evaluation.py $subject ((for $subject  in ['S1', 'S2', 'S3'])
 ```   
 
-###  3. Brain Captioning - BrainHub benchmark on NSD dataset
+#### 3. Brain Captioning - BrainHub benchmark on NSD dataset
 This a comparison with brain understanding benchmark ([BrainHub](https://github.com/weihaox/BrainHub)), based on Natural Scenes Dataset [NSD](https://naturalscenesdataset.org/) and [COCO](https://cocodataset.org).
 
-#### Configuration
+##### Configuration
 - The processed datasets are available in [here](https://huggingface.co/datasets/pscotti/naturalscenesdataset).
 - Download the datasets using this [script](https://github.com/weihaox/UMBRAE/blob/main/umbrae/download_data.sh).
-- Download COCO annotations from this [link](https://huggingface.co/datasets/pscotti/naturalscenesdataset/blob/main/COCO_73k_annots.npy), and put it in the folder 'tools'
+- Download COCO annotations from this [link](https://huggingface.co/datasets/pscotti/naturalscenesdataset/blob/main/COCO_73k_annots.npy) in the folder 'tools'
 - Update the configuration file 'src/configs.nsd/configs_nsd.py' to specify the paths, and eventually to modify the hyperparameters.
 - To train and evaluate the model:
 ```bash
 python exps/nsd/main.py --epochs 6 --save_epochs 1 --batch_size 32 -s $subject (choices=[1, 2, 5, 7])
 ```   
 - To get the evaluation scores for each subject based on the generated files of the test set, refer to the Benchmark [project](https://github.com/weihaox/BrainHub).
-- Please be aware that the training process involves non-deterministic algorithms even with fixed seed, which can lead to slightly different results on each run.
-In our case, we ran the training procedure 5 times for 7 epochs each, and selected the best result.
- **TODO**: Implementing a fully deterministic mode, even if it may impact the overall performance.
 
-### 4. Decoding Reading Text from EEG Signals
-#### Configuration and data preparation
+With DATA_PATH set to "data/nsd", you should obtain the following structure:
+
+ ```
+ data
+ └── nsd
+     ├── webdataset_avg_split
+     │   ├── test
+     │   ├── train
+     └── └── val
+ ```
+
+
+#### 4. Decoding Reading Text from EEG Signals
+##### Configuration and data preparation
 The same raw data and preprocessing presented in [EEG-To-Text](https://github.com/MikeWangWZHL/EEG-To-Text) are employed here.
 
 * Update the configuration files "srs/configs/zuco/configs.py" by specifying the paths similarly to the previous experiments.
@@ -156,7 +165,7 @@ data
         └── Matlab_files
 ```
 
-#### Preprocessing and evaluation
+##### Preprocessing and evaluation
 ```bash
 # Data preparation
 python exps/zuco/preprocess_data.py -t task1-SR
@@ -173,20 +182,20 @@ python exps/zuco/train_stage2.py --batch_size 16 --epochs 4
 python exps/zuco/evaluation.py
 ```   
 
-## TODO
+### TODO
 - [x] Apply the proposed methodology for NSD datasets.
 - [x] Test other LLM decoders.
 - [x] Add experiments for decoding text from EEG signals.
 - [ ] Cross-subject training for NSD dataset.
 
-## Notes
+### Notes
 * The structure of this repository is in work progress
 * Some parts of the code of this project are adapted from [InstructBlip](https://github.com/salesforce/LAVIS/blob/main/projects/instructblip/README.md), we thank the authors for their great work.
 
 * In the comparison on perceived speech decoding, we used the same datasets and configuration setup in this [article](https://www.nature.com/articles/s41593-023-01304-9). Data preprocessing and preparation scripts are taken from this [link](https://github.com/HuthLab/semantic-decoding). We thank the authors for their great work.
 
 
-## Citation
+### Citation
 ```bibtex
 @article{hmamouche2024multimodal,
   title={A multimodal LLM for the non-invasive decoding of spoken text from brain recordings},

@@ -10,7 +10,6 @@ from tokenizers.models import BPE, Unigram, WordLevel, WordPiece
 from tokenizers.trainers import BpeTrainer, WordLevelTrainer, \
                                 WordPieceTrainer, UnigramTrainer
 
-## a pretokenizer to segment the text into words
 from tokenizers.pre_tokenizers import Whitespace, CharDelimiterSplit
 
 sys.path.insert(0, os.getcwd())

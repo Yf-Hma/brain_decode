@@ -13,18 +13,16 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 torch.cuda.empty_cache()
 sys.path.insert(0, os.getcwd())
 
-from src.models.models_nsd import BrainDEC_V0, BrainDEC_Clip
+from src.models.models_nsd import BrainDEC_V0
 from src.load_nsd_data import get_loaders
 import src.configs.nsd.configs as configs
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
 set_seed(42)
 
 
-def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, args):
+def main_single(ngpus_per_node, data_path, src_fmri_features, args):
     print('Making datasets..')
     name = args.model_name + "_" + str (args.subj) + '_' + configs.LLM_name
     train_loader, val_loader, _, _ = get_loaders (data_path, args.subj,
@@ -40,9 +38,9 @@ def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, 
         n_samples += 1
 
     print('Making model..')
-    llm = models_dict_type[args.type](src_fmri_features, device = "cuda", load_in_4bit = args.load_in_4bit)
+    llm = BrainDEC_V0(src_fmri_features, device = "cuda", load_in_4bit = args.load_in_4bit)
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
-    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs_max)
+    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs)
 
     if args.retrain:
         args.starting_epoch, best_loss = load_from_checkpoint(llm, optim, lr_scheduler, args.saved_checkpoint, args.starting_epoch, 0)
@@ -74,7 +72,7 @@ def main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, 
 
 
 
-def main_worker(rank, ngpus_per_node, models_dict_type, data_path, src_fmri_features, args):
+def main_worker(rank, ngpus_per_node, data_path, src_fmri_features, args):
 
     torch.cuda.set_device(rank)
     dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
@@ -101,7 +99,7 @@ def main_worker(rank, ngpus_per_node, models_dict_type, data_path, src_fmri_feat
     print (n_samples)
 
     print('Making model..')
-    llm = models_dict_type[args.type](src_fmri_features, device = "cuda:%d"%rank, load_in_4bit = args.load_in_4bit)
+    llm = BrainDEC_V0(src_fmri_features, device = "cuda:%d"%rank, load_in_4bit = args.load_in_4bit)
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
 
     lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs)
@@ -203,8 +201,8 @@ def test_from_loader (data_loader, model, model_name, src_fmri_features, args, e
 
 
 
-def test (data_path, models_dict_type, src_fmri_features, epoch = ""):
-    model = models_dict_type[args.type](src_fmri_features, "cuda", load_in_4bit = args.load_in_4bit, inference_mode=True)
+def test (data_path, src_fmri_features, epoch = ""):
+    model = BrainDEC_V0(src_fmri_features, "cuda", load_in_4bit = args.load_in_4bit, inference_mode=True)
     model_name = args.saved_checkpoint.split('/')[-1].split('.')[0]
     checkpoint = torch.load(args.saved_checkpoint, map_location="cuda")
 
@@ -308,11 +306,9 @@ if __name__ == '__main__':
     parser.add_argument('--retrain', action='store_true', help = "retrain from existing checkpoint")
     parser.add_argument("--lr", default = 0.0001, type = float)
     parser.add_argument("--starting_epoch", default = 1, type = int)
-    parser.add_argument("--save_epochs", default = 5, type = int)
-    parser.add_argument("--epochs", default = 240, type = int)
-    parser.add_argument("--epochs_max", default = 240, type = int)
+    parser.add_argument("--save_epochs", default = 1, type = int)
+    parser.add_argument("--epochs", default = 7, type = int)
     parser.add_argument("--saved_checkpoint", "-s", type = str)
-    parser.add_argument("--type", "-t", type = str, choices = ['normal', "clip"])
     parser.add_argument('--load_in_4bit', action='store_true', help = "to load the llm quantized in 4 bits for inference.")
     parser.add_argument('--subj', type=int, default=1, choices=[1, 2, 5, 7])
     parser.add_argument('--gpu', default=None, type=int, help='GPU id to use.')
@@ -326,27 +322,28 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.saving_path = configs.MODELS_TRAIN_PATH
 
-
-    models_dict_type = {'normal':BrainDEC_V0, 'clip':BrainDEC_Clip}
     voxels_per_subj = {1: 15724, 2: 14280, 5: 13040, 7: 12685}
     src_fmri_features = 15724
 
 
-    args.model_name = "BrainDEC_" + args.type
+    if not os.path.exists("results/nsd"):
+        os.mkdir("results/nsd")
+
+    args.model_name = "BrainDEC_V0"
     data_path = configs.DATA_PATH
 
     if args.test:
-        test (data_path, models_dict_type, src_fmri_features)
+        test (data_path, src_fmri_features)
     else:
         ngpus_per_node = torch.cuda.device_count()
         args.world_size = ngpus_per_node
 
         if args.distributed:
-            mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, models_dict_type, data_path, src_fmri_features, args))
+            mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, data_path, src_fmri_features, args))
         else:
             ngpus_per_node = 1
             args.world_size = 1
-            main_single(ngpus_per_node, models_dict_type, data_path, src_fmri_features, args)
+            main_single(ngpus_per_node, data_path, src_fmri_features, args)
 
 
     print (20 * '--', "Subject: ", args.subj, " ......Done")

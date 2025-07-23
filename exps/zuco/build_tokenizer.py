@@ -1,8 +1,5 @@
 import os
-import json
-import argparse
 import sys
-from glob import glob
 
 ## importing the tokenizer and subword BPE trainer
 from tokenizers import Tokenizer
@@ -10,7 +7,6 @@ from tokenizers.models import BPE, Unigram, WordLevel, WordPiece
 from tokenizers.trainers import BpeTrainer, WordLevelTrainer, \
                                 WordPieceTrainer, UnigramTrainer
 
-## a pretokenizer to segment the text into words
 from tokenizers.pre_tokenizers import CharDelimiterSplit
 
 
@@ -56,8 +52,6 @@ def train_tokenizer(files, alg='BPE'):
 
 
 
-
-
 if __name__ == "__main__":
 
     ################## Load Data ####################################
@@ -66,17 +60,11 @@ if __name__ == "__main__":
 
     ################## Gather text from Train Data ###################
     for item in train_set:
-        print (item["signal"].shape)
-        print (item["text_output"])
         all_text += item["text_output"]
 
     with open('text_zuco.txt', 'w') as f:
         for line in all_text:
             f.write(f"{line}\n")
-
-    # with open('words_train.txt', 'w') as f:
-    #     for line in words_train:
-    #         f.write(f"{line}\n")
 
     trained_tokenizer = train_tokenizer(['words_train.txt'], "")
 

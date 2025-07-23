@@ -80,7 +80,7 @@ def train_model(name, model, train_dataset, optimizer, num_epochs, sos_token_id,
 
         print(f"Epoch {epoch + 1}/{num_epochs} Loss: {epoch_loss:.4f}")
 
-        if (epoch + 1) % 20 == 0:
+        if (epoch + 1) % 20 == 0 or (epoch + 1) == num_epochs:
             torch.save(model.state_dict(), '%s/%s_%d.pt'%(configs.TRAINED_MODELS_PATH, name, epoch))
             torch.save(model.state_dict(), '%s/%s.pt'%(configs.TRAINED_MODELS_PATH, name))
 

@@ -13,14 +13,10 @@ sys.path.insert(0, os.getcwd())
 from exps.zuco.load_zuco_data import get_loaders
 import src.configs.zuco.configs as configs
 
-from src.transformers_src.Transformer import Transformer, CNNTransformer, DuplexTransformerConv, BipartiteTransformerConv, DeconvBipartiteTransformerConv
+from src.transformers_src.Transformer import DeconvBipartiteTransformerConv
 
 models_dict = {
-'Transformer':Transformer,
-'CNNTransformer':CNNTransformer,
-'DuplexTransformerConv':DuplexTransformerConv,
-'BipartiteTransformerConv':BipartiteTransformerConv,
-'DeconvBipartiteTransformerConv':DeconvBipartiteTransformerConv,
+'DeconvBipartiteTransformerConv':DeconvBipartiteTransformerConv
 }
 
 def add_filling_tokens_convert_to_tensor(token_id_list, sos_token_id, eos_token_id, pad_token_id, max_size):
@@ -83,14 +79,12 @@ def train_model(name, model, train_dataset, optimizer, num_epochs, sos_token_id,
 
         print(f"Epoch {epoch + 1}/{num_epochs} Loss: {epoch_loss:.4f}")
 
-        if (epoch + 1) % 20 == 0:
-            #torch.save(model.state_dict(), '%s/%s_%d.pt'%(configs.MODELS_TRAIN_DIR, name, epoch + 1))
-            torch.save(model.state_dict(), '%s/%s.pt'%(configs.MODELS_TRAIN_DIR, name))
-
+        if (epoch + 1) % 20 == 0 or (epoch + 1) == num_epochs:
+            torch.save(model.state_dict(), '%s/%s_%d.pt'%(configs.MODELS_TRAIN_PATH, name, epoch + 1))
+            torch.save(model.state_dict(), '%s/%s.pt'%(configs.MODELS_TRAIN_PATH, name))
 
     print("Training completed!")
 
-set_seed(42)
 
 
 if __name__ == '__main__':
@@ -99,14 +93,14 @@ if __name__ == '__main__':
     parser.add_argument("--test", action='store_true')
     parser.add_argument("--version", default=2, type=int, choices=[1, 2])
     parser.add_argument("--retrain", action='store_true')
-    parser.add_argument("--seed", default = 3)
+    parser.add_argument("--seed", default = 42)
     parser.add_argument("--batch_size", default = 128, type = int)
     parser.add_argument("--epochs", default = 20, type = int)
     parser.add_argument("--lr", default = 0.0001, type = float)
     parser.add_argument("--saving_path", default = "trained_models/zuco")
     args = parser.parse_args()
 
-
+    set_seed(args.seed)
     ################ Parameters ##############
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     lr = args.lr
@@ -122,7 +116,7 @@ if __name__ == '__main__':
     pad_token_id, sos_token_id, eos_token_id = 0, 1, 2
     tokenizer = Tokenizer.from_file("./tools/tokenizer-zuco.json")
     vocab_len = tokenizer.get_vocab_size()
-    args.saving_path = configs.MODELS_TRAIN_DIR
+    args.saving_path = configs.MODELS_TRAIN_PATH
     processed_data_path = configs.PROCESSED_DATA_PATH
 
     ################ Loading data ##############

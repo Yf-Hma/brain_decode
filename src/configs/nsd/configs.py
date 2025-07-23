@@ -8,6 +8,9 @@ LLM_name = "llama"
 
 assert os.path.exists (DATA_PATH), "DATA_PATH, specified in config file, does not exist!"
 
+if not os.path.exists (MODELS_TRAIN_PATH):
+    os.mkdir (MODELS_TRAIN_PATH)
+
 coco_annotation_file_path = "./tools/COCO_73k_annots.npy"
 
 voxels_per_subj = {1: 15724, 2: 14278, 3: 15226, 4: 13153, 5: 13039, 6: 17907, 7: 12682, 8: 14386}
@@ -39,4 +42,4 @@ num_captions=1
 temperature=0.8
 
 # Or, Describe this content:
-fixed_instruction="Based on this content, provide a simple caption: "
+fixed_instruction="Based on this content, provide a descriptive caption: "
