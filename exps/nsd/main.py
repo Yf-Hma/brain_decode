@@ -11,34 +11,48 @@ import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 torch.cuda.empty_cache()
+
 sys.path.insert(0, os.getcwd())
 
-from src.models.models_nsd import BrainDEC_V0
-from src.load_nsd_data import get_loaders
-import src.configs.nsd.configs as configs
+from src.model import BrainDEC_V0
+from src.loaders.dataloader_nsd import get_loaders as nsd_loader
+import configs.configs_nsd as configs
+
+from src.transformers_src.Transformer import DeconvBipartiteTransformerConv, Transformer
+
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 set_seed(42)
 
+coco_captions_file = np.load('tools/COCO_73k_annots_curated.npy')
 
-def main_single(ngpus_per_node, data_path, src_fmri_features, args):
+def main_single(ngpus_per_node, encoder_model, data_path, src_fmri_features, args):
     print('Making datasets..')
+
     name = args.model_name + "_" + str (args.subj) + '_' + configs.LLM_name
-    train_loader, val_loader, _, _ = get_loaders (data_path, args.subj,
+
+    train_loader, val_loader, _, _ = nsd_loader (data_path, args.subj,
                                         args.batch_size,
                                         args.val_batch_size,
                                         num_devices=1,
                                         rank = 0,
-                                        world_size = 1
+                                        world_size = 1,
+                                        coco_captions_file = coco_captions_file
                                         )
 
     n_samples = 0
     for sample in train_loader:
         n_samples += 1
 
+
     print('Making model..')
-    llm = BrainDEC_V0(src_fmri_features, device = "cuda", load_in_4bit = args.load_in_4bit)
+    llm = BrainDEC_V0(encoder_model,
+                      configs, 
+                      src_fmri_features, 
+                      freeze_encoder = False, 
+                      load_in_4bit = args.load_in_4bit)
+    
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
     lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs)
 
@@ -59,20 +73,18 @@ def main_single(ngpus_per_node, data_path, src_fmri_features, args):
             [train_loader],
             configs.MODELS_TRAIN_PATH,
             0,
-            src_fmri_features,
             args,
             n_samples = n_samples,
             epochs = args.epochs,
             save_epochs = args.save_epochs,
             starting_epoch = args.starting_epoch,
-            lr = args.lr,
             best_loss = best_loss)
 
     print('..Done')
 
 
 
-def main_worker(rank, ngpus_per_node, data_path, src_fmri_features, args):
+def main_worker(rank, ngpus_per_node, encoder_model, data_path, src_fmri_features, args):
 
     torch.cuda.set_device(rank)
     dist.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
@@ -83,23 +95,25 @@ def main_worker(rank, ngpus_per_node, data_path, src_fmri_features, args):
     assert os.path.exists (configs.LLM_PATH), "LLM_PATH, specified in config file, does not exist!"
 
     name = args.model_name + "_" + str (args.subj) + '_' + configs.LLM_name
-    args.batch_size = int(args.batch_size / ngpus_per_node)
+    local_batch_size = int(args.batch_size / ngpus_per_node)
 
-    train_loader, val_loader, _, _ = get_loaders (data_path, args.subj,
-                                        args.batch_size,
+    train_loader, val_loader, _, _ = nsd_loader (data_path, args.subj,
+                                        local_batch_size,
                                         args.val_batch_size,
                                         num_devices=1,
                                         rank = rank,
-                                        world_size=args.world_size
+                                        world_size=args.world_size,
+                                        coco_captions_file = coco_captions_file
                                         )
-
+    
+    # N_samples per rank
     n_samples = 0
     for sample in train_loader:
         n_samples += 1
-    print (n_samples)
 
-    print('Making model..')
-    llm = BrainDEC_V0(src_fmri_features, device = "cuda:%d"%rank, load_in_4bit = args.load_in_4bit)
+
+    print('Making model..')    
+    llm = BrainDEC_V0(encoder_model, configs, src_fmri_features, freeze_encoder = False, device="cuda:%d"%rank, load_in_4bit = args.load_in_4bit).to("cuda:%d"%rank)
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
 
     lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs)
@@ -109,8 +123,7 @@ def main_worker(rank, ngpus_per_node, data_path, src_fmri_features, args):
     else:
         best_loss = 10000
 
-    llm = llm.to(rank)
-    llm = DDP(llm, device_ids=[rank], output_device=rank, find_unused_parameters = True)
+    llm = DDP(llm, device_ids=[rank], output_device=rank, find_unused_parameters = False)
     dist.barrier()
 
     llm.train()
@@ -125,30 +138,25 @@ def main_worker(rank, ngpus_per_node, data_path, src_fmri_features, args):
             [train_loader],
             configs.MODELS_TRAIN_PATH,
             rank,
-            src_fmri_features,
             args,
             n_samples = n_samples,
             epochs = args.epochs,
             save_epochs = args.save_epochs,
             starting_epoch = args.starting_epoch,
-            lr = args.lr,
             best_loss = best_loss)
 
     print('..Done')
     dist.destroy_process_group()
 
 def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loaders,
-           saving_path, rank, src_fmri_features, args, n_samples,
+           saving_path, rank, args, n_samples,
            epochs = 10, save_epochs = 1,
-           starting_epoch = 1, lr = 0.0001, best_loss = 10000):
+           starting_epoch = 1, best_loss = 10000):
 
     model.train()
     for epoch in range(starting_epoch, epochs + 1):
         mean_loss = 0
         for id, sample in enumerate (data_loaders[-1]):
-            padded = torch.zeros(sample[0].shape[0], sample[0].shape[1], src_fmri_features - sample[0].shape[2])
-            sample[0] = torch.cat([sample[0],padded], dim = 2)
-
             loss = model (sample)
             mean_loss += loss
             optim.zero_grad()
@@ -160,21 +168,26 @@ def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loader
         if args.distributed:
             dist.barrier()
 
-        if epoch % save_epochs == 0:
-            test_from_loader (val_loader, model, model_name, src_fmri_features, args, epoch)
+        if epoch % save_epochs == 0:                
             if rank == 0:
+                if args.distributed:
+                    test_from_loader (val_loader, model.module, model_name, args, epoch)
+                else:
+                    test_from_loader (val_loader, model, model_name, args, epoch)
+                    
                 print ('Loss: ', (mean_loss / n_samples))
                 if (mean_loss / n_samples) < best_loss:
                     best_loss = mean_loss / n_samples
                     print(model_name + "_" + type, epoch, saving_path)
+
                 if args.distributed:
                     save_checkpoint(model.module, optim, lr_scheduler, epoch, model_name, saving_path, best_loss)
                 else:
                     save_checkpoint(model, optim, lr_scheduler, epoch, model_name, saving_path, best_loss)
+                    
+                    
 
-
-def test_from_loader (data_loader, model, model_name, src_fmri_features, args, epoch):
-
+def test_from_loader (data_loader, model, model_name, args, epoch):
     model.eval()
     if os.path.exists ("results/nsd/%s_%d.json"%(model_name, epoch)):
         os.remove ("results/nsd/%s_%d.json"%(model_name, epoch))
@@ -182,13 +195,7 @@ def test_from_loader (data_loader, model, model_name, src_fmri_features, args, e
     results = {}
     sample_id = 0
     for sample in data_loader:
-
-        src_fmri, _ = sample[0], sample[2].flatten().tolist()
-        padded = torch.zeros(src_fmri.shape[0], src_fmri.shape[1], src_fmri_features - src_fmri.shape[2])
-        src_fmri = torch.cat([src_fmri,padded], dim = 2)
-
-        output_text = model.generate (src_fmri)
-
+        output_text = model.generate (sample)
         output_text = [a.split('.')[0] + '.' for a in output_text]
         for a in  output_text:
             results[sample_id] = a
@@ -201,22 +208,24 @@ def test_from_loader (data_loader, model, model_name, src_fmri_features, args, e
 
 
 
-def test (data_path, src_fmri_features, epoch = ""):
-    model = BrainDEC_V0(src_fmri_features, "cuda", load_in_4bit = args.load_in_4bit, inference_mode=True)
+def test (data_path, encoder_model, configs, src_fmri_features, args):
+    
+    model = BrainDEC_V0(encoder_model, configs, src_fmri_features, freeze_encoder = False, load_in_4bit=args.load_in_4bit)
+    
     model_name = args.saved_checkpoint.split('/')[-1].split('.')[0]
     checkpoint = torch.load(args.saved_checkpoint, map_location="cuda")
-
 
     model.load_state_dict(checkpoint["model"], strict=False)
     model.eval()
 
-    _, data_loader, _, _ = get_loaders (data_path,
+    _, data_loader, _, _ = nsd_loader (data_path,
                                      args.subj,
                                      args.batch_size,
                                      args.val_batch_size,
                                      num_devices=1,
                                      rank=0,
-                                     world_size=1)
+                                     world_size=1,
+                                     coco_captions_file = coco_captions_file)
 
 
     if os.path.exists ("results/nsd/%s.json"%model_name):
@@ -225,15 +234,9 @@ def test (data_path, src_fmri_features, epoch = ""):
     results = {}
     sample_id = 0
     for sample in data_loader:
-        src_fmri, _ = sample[0], sample[2]
 
-        padded = torch.zeros(src_fmri.shape[0], src_fmri.shape[1], src_fmri_features - src_fmri.shape[2])
-        src_fmri = torch.cat([src_fmri,padded], dim = 2)
-
-        output_text = model.generate (src_fmri)
-
+        output_text = model.generate (sample)
         output_text = [a.split('.')[0] + '.' for a in output_text]
-
 
         for a in  output_text:
             results[sample_id] = a
@@ -294,6 +297,7 @@ def load_from_checkpoint(model, optimizer, lr_scheduler, checkpoint_path, starti
     return start_epoch, best_loss
 
 
+######################################################
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", default = 64, type = int)
@@ -307,7 +311,8 @@ if __name__ == '__main__':
     parser.add_argument("--lr", default = 0.0001, type = float)
     parser.add_argument("--starting_epoch", default = 1, type = int)
     parser.add_argument("--save_epochs", default = 1, type = int)
-    parser.add_argument("--epochs", default = 7, type = int)
+    parser.add_argument("--epochs", default = 6, type = int)
+    parser.add_argument("--device", default = "cuda", type = str)
     parser.add_argument("--saved_checkpoint", "-s", type = str)
     parser.add_argument('--load_in_4bit', action='store_true', help = "to load the llm quantized in 4 bits for inference.")
     parser.add_argument('--subj', type=int, default=1, choices=[1, 2, 5, 7])
@@ -320,10 +325,12 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', type=int, default=1, help='')
 
     args = parser.parse_args()
+
+    #########################################################
     args.saving_path = configs.MODELS_TRAIN_PATH
 
-    voxels_per_subj = {1: 15724, 2: 14280, 5: 13040, 7: 12685}
-    src_fmri_features = 15724
+    #voxels_per_subj = {1: 15724, 2: 14280, 5: 13040, 7: 12685}
+    src_fmri_features = 17910
 
 
     if not os.path.exists("results/nsd"):
@@ -332,18 +339,30 @@ if __name__ == '__main__':
     args.model_name = "BrainDEC_V0"
     data_path = configs.DATA_PATH
 
+    #########################################################
+    encoder_model = Transformer(configs.time_steps, 
+                                src_fmri_features, 
+                                configs.max_size,
+                                configs.vocab_len,
+                                configs.d_model, 
+                                configs.d_ff, 
+                                configs.N, 
+                                configs.heads, 
+                                args.device).to(args.device).encoder
+    
+    #########################################################
     if args.test:
-        test (data_path, src_fmri_features)
+        test (data_path, encoder_model, configs, src_fmri_features, args)
     else:
         ngpus_per_node = torch.cuda.device_count()
         args.world_size = ngpus_per_node
-
+        
         if args.distributed:
-            mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, data_path, src_fmri_features, args))
+            mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, encoder_model, data_path, src_fmri_features, args))
         else:
             ngpus_per_node = 1
             args.world_size = 1
-            main_single(ngpus_per_node, data_path, src_fmri_features, args)
+            main_single(ngpus_per_node, encoder_model, data_path, src_fmri_features, args)
 
 
     print (20 * '--', "Subject: ", args.subj, " ......Done")

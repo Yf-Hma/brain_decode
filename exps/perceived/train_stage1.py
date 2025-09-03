@@ -7,15 +7,14 @@ import sys
 
 sys.path.insert(0, os.getcwd())
 
-from src.load_perceived_all_subject import data_builder
-import src.configs.perceived.configs as configs
-from src.transformers_src.Transformer import Transformer, CNNTransformer, DuplexTransformerConv, BipartiteTransformerConv, DeconvBipartiteTransformerConv
+#from src.load_perceived_all_subject import data_builder
+
+from src.loaders.dataloader_perceived import get_loaders_all as semantic_loader
+
+import configs.configs_perceived as configs
+from src.transformers_src.Transformer import DeconvBipartiteTransformerConv
 
 models_dict = {
-'Transformer':Transformer,
-'CNNTransformer':CNNTransformer,
-'DuplexTransformerConv':DuplexTransformerConv,
-'BipartiteTransformerConv':BipartiteTransformerConv,
 'DeconvBipartiteTransformerConv':DeconvBipartiteTransformerConv,
 }
 
@@ -45,7 +44,7 @@ def train_model(name, model, train_dataset, optimizer, num_epochs, sos_token_id,
 
         # Iterate over batches
         for batch in train_dataset:
-            src, trg_sentences = batch["bold_signal"], batch["text_output"]
+            src, trg_sentences = batch["signal"], batch["text_output"]
 
             #print (src.shape)
             trg = []
@@ -81,8 +80,9 @@ def train_model(name, model, train_dataset, optimizer, num_epochs, sos_token_id,
         print(f"Epoch {epoch + 1}/{num_epochs} Loss: {epoch_loss:.4f}")
 
         if (epoch + 1) % 20 == 0 or (epoch + 1) == num_epochs:
-            torch.save(model.state_dict(), '%s/%s_%d.pt'%(configs.TRAINED_MODELS_PATH, name, epoch))
-            torch.save(model.state_dict(), '%s/%s.pt'%(configs.TRAINED_MODELS_PATH, name))
+            torch.save(model.state_dict(), '%s/%s_%d.pt'%(configs.MODELS_TRAIN_PATH, name, epoch))
+            torch.save(model.state_dict(), '%s/%s.pt'%(configs.MODELS_TRAIN_PATH, name))
+
 
 
     print("Training completed!")
@@ -121,8 +121,8 @@ if __name__ == '__main__':
     vocab_len = tokenizer.get_vocab_size()
 
     ################ Datasets ##############
-    data_loader = data_builder(batch_size)
-
+    #data_loader = data_builder(batch_size)
+    train_set, test_set = semantic_loader(batch_size = args.batch_size, val_batch_size = args.batch_size)
 
     ################ Model Init ##############
     model_class = models_dict[args.model_name]
@@ -135,4 +135,4 @@ if __name__ == '__main__':
 
     if args.retrain:
         model.load_state_dict(torch.load(checkpoint_filename, weights_only=True))
-    train_model(name, model, data_loader["train"], optim, epochs, sos_token_id, eos_token_id, pad_token_id,max_size, tokenizer, device)
+    train_model(name, model, train_set, optim, epochs, sos_token_id, eos_token_id, pad_token_id,max_size, tokenizer, device)

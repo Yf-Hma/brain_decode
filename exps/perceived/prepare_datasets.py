@@ -10,9 +10,31 @@ from utils.stimulus_utils import get_story_wordseqs, get_resp, load_transcript
 
 sys.path.insert(0, os.getcwd())
 
-import src.configs.perceived.configs as configs
+import configs.configs_perceived as configs
 
 np.random.seed(42)
+
+def remove_all_files_from_folder(folder_path):
+    """
+    Removes all files from the specified folder, leaving subdirectories intact.
+    """
+    try:
+        # Get a list of all items (files and directories) in the folder
+        for item_name in os.listdir(folder_path):
+            item_path = os.path.join(folder_path, item_name)
+
+            # Check if the item is a file before attempting to remove it
+            if os.path.isfile(item_path):
+                os.remove(item_path)
+                print(f"Removed file: {item_name}")
+            else:
+                print(f"Skipped directory: {item_name}")
+        print(f"All files removed from: {folder_path}")
+    except FileNotFoundError:
+        print(f"Error: Folder not found at {folder_path}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 
 def extract_array_between_values(array, min_value, max_value):
   """Extracts a subarray from a chronological numpy array based on min and max values.
@@ -177,11 +199,11 @@ def build_train_dict (args):
     for num_chunk, data_chunk in enumerate (rtext_data_chunked):
         filename = "bold_chunk_%d.npy"%(num_chunk+1)
         bold_signal_filename = os.path.join(folder_path, filename)
-        entity = {"bold_signal":bold_signal_filename, "text-output":data_chunk}
+        entity = {"bold_signal":bold_signal_filename, "text_output":data_chunk}
         train_dict_data.append (entity)
 
 
-    with open('%s/%s/train.json'%(args.data_path,args.subject), 'w') as output_file:
+    with open('%s/%s/train.json'%(args.DATA_JSON_PATH,args.subject), 'w') as output_file:
         json.dump(train_dict_data, output_file)
 
 
@@ -192,7 +214,7 @@ def build_test_data (args):
 
     test_dict_data = []
 
-    experiments = glob(os.path.join(configs.DATA_TEST_PATH, "test_stimulus/*"))
+    experiments = glob(os.path.join(configs.DATA_TEST_PATH, "test_stimulus/*perceived*"))
 
     #print (os.path.join(configs.DATA_TEST_PATH, "test_stimulus/*"))
 
@@ -238,10 +260,10 @@ def build_test_data (args):
               filename_out = os.path.join(folder_path, filename)
               np.save(filename_out, data_chunk)
 
-              entity = {"bold_signal":filename_out, "text-output":' '.join(text_splitted[num_chunk].tolist()), "chunk_number": num_chunk+1}
+              entity = {"bold_signal":filename_out, "text_output":' '.join(text_splitted[num_chunk].tolist()), "chunk_number": num_chunk+1}
               test_dict_data.append (entity)
 
-          with open('%s/%s/test_%s_%s.json'%(args.data_path, args.subject, experiment, task), 'w') as output_file:
+          with open('%s/%s/test_%s_%s.json'%(args.DATA_JSON_PATH, args.subject, experiment, task), 'w') as output_file:
               json.dump(test_dict_data, output_file)
 
 
@@ -253,12 +275,17 @@ if __name__ == "__main__":
         default = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 18, 20])
     args = parser.parse_args()
 
+    ################ The path of the output processed data and json training/test files ################
+    args.data_path = configs.PROCESSED_DATA_PATH
+    args.DATA_JSON_PATH = configs.DATA_JSON_PATH
 
-    args.data_path = configs.PROCESSED_DATA_PATH # the path of the output processed data
+    ################ Create DATA_JSON_PATH output folder ################
+    if not os.path.exists(os.path.join(configs.DATA_JSON_PATH, args.subject)):
+      os.mkdir(os.path.join(configs.DATA_JSON_PATH, args.subject))
 
-    if os.path.isdir(f"{args.data_path}/{args.subject}"):
-        shutil.rmtree(f"{args.data_path}/{args.subject}")
-    os.mkdir(f"{args.data_path}/{args.subject}")
+    ################ Remove previous json files ################
+    remove_all_files_from_folder (os.path.join(configs.DATA_JSON_PATH, args.subject))
 
+    ################ Create new json files ################
     build_train_dict (args)
     build_test_data (args)

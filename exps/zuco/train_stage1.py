@@ -10,8 +10,8 @@ from tokenizers import Tokenizer
 
 sys.path.insert(0, os.getcwd())
 
-from exps.zuco.load_zuco_data import get_loaders
-import src.configs.zuco.configs as configs
+from src.loaders.dataloader_zuco import get_dada_loaders_all as zuco_loader
+from configs import configs_zuco as configs
 
 from src.transformers_src.Transformer import DeconvBipartiteTransformerConv
 
@@ -120,7 +120,10 @@ if __name__ == '__main__':
     processed_data_path = configs.PROCESSED_DATA_PATH
 
     ################ Loading data ##############
-    train_set, _ = get_loaders (processed_data_path, args.version, args.batch_size,args.batch_size)
+    #train_set, _ = get_loaders (processed_data_path, args.version, args.batch_size,args.batch_size)
+
+    train_set, test_set = zuco_loader (configs.PROCESSED_DATA_PATH, args.batch_size,args.batch_size)
+    
 
     ################ Model Init ##############
     model_class = models_dict[args.model_name]

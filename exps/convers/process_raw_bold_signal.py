@@ -8,7 +8,7 @@ from nilearn import datasets
 from nilearn.maskers import NiftiLabelsMasker
 
 sys.path.insert(0, os.getcwd())
-import src.configs.convers.configs as configs
+import configs.configs_convers as configs
 
 #============================================================
 def normalize_vect (x):

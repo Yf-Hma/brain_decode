@@ -10,12 +10,14 @@ from tokenizers.models import BPE, Unigram, WordLevel, WordPiece
 from tokenizers.trainers import BpeTrainer, WordLevelTrainer, \
                                 WordPieceTrainer, UnigramTrainer
 
+## a pretokenizer to segment the text into words
 from tokenizers.pre_tokenizers import Whitespace, CharDelimiterSplit
 
 sys.path.insert(0, os.getcwd())
 
 from exps.perceived.utils.stimulus_utils import get_story_wordseqs, load_transcript
-import src.configs.perceived.configs as configs
+
+import configs.configs_perceived as configs
 
 
 unk_token = "<UNK>"  # token for unknown words

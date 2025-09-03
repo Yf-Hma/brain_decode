@@ -6,7 +6,7 @@ import random
 import shutil
 
 sys.path.insert(0, os.getcwd())
-import src.configs.convers.configs as configs
+import configs.configs_convers as configs
 
 
 def load_vocab_from_json(file_path):

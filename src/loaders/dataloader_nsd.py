@@ -24,8 +24,10 @@ from torch.utils.data import DataLoader
 
 #np.random.seed(42)
 
+
 def get_dataloaders(
     batch_size,
+    coco_captions_file,
     image_var='images',
     num_devices=None,
     num_workers=None,
@@ -43,6 +45,24 @@ def get_dataloaders(
     rank=0,
     world_size=1
 ):
+    
+
+    def transform_sample(sample):
+
+            output_text = coco_captions_file[sample[2].flatten()].tolist()
+
+            for i in range (len (output_text)):
+                if isinstance(output_text[i], list):
+                    output_text[i] = [s for s in output_text[i] if len (s) > 0][0]
+                output_text[i] = output_text[i].lower().strip()
+
+                # Padding signals of all subjects to the maximum number of ROIs for cross-subject training
+                padded = torch.zeros(sample[0].shape[0], sample[0].shape[1], 17910 - sample[0].shape[2])
+                signal_padded = torch.cat([torch.from_numpy(sample[0]),padded], dim = 2)
+
+            return {"signal": signal_padded, "text_output": output_text}
+
+
     print("Getting dataloaders...")
     assert image_var == 'images'
     
@@ -79,6 +99,7 @@ def get_dataloaders(
     num_samples = int(num_train * data_ratio)
     train_data = wds.WebDataset(train_url,
                                 resampled=True,
+                                shardshuffle=False,
                                 cache_dir=cache_dir,
                                 nodesplitter=my_split_by_node)\
         .shuffle(500, initial=500, rng=random.Random(42))\
@@ -89,7 +110,11 @@ def get_dataloaders(
         .batched(batch_size, partial=True)\
         .with_epoch(num_worker_batches)
 
-    train_dl = DataLoader(train_data, batch_size=None, shuffle=False,  worker_init_fn=np.random.seed(42), pin_memory=True, num_workers=0)
+
+    train_data = train_data.map(transform_sample)
+
+
+    train_dl = DataLoader(train_data, batch_size=None, shuffle=False,  worker_init_fn=np.random.seed(42), pin_memory=False, num_workers=0)
 
     # validation (no shuffling, should be deterministic)  
     num_batches = math.floor(num_val / global_batch_size)
@@ -100,19 +125,20 @@ def get_dataloaders(
     # print("val_num_batches", num_batches)
     # print("val_batch_size", val_batch_size)
     
-    val_data = wds.WebDataset(val_url, resampled=False, cache_dir=cache_dir, nodesplitter=my_split_by_node)\
+    val_data = wds.WebDataset(val_url, resampled=False, shardshuffle=False, cache_dir=cache_dir, nodesplitter=my_split_by_node)\
         .decode("torch")\
         .rename(images="jpg;png", voxels=voxels_key, trial="trial.npy", coco="coco73k.npy", reps="num_uniques.npy")\
         .to_tuple(*to_tuple)\
         .batched(val_batch_size, partial=True)
 
+    val_data = val_data.map(transform_sample)
     val_dl = DataLoader(val_data, 
                         batch_size=None, 
                         shuffle=False)
 
     return train_dl, val_dl, num_train, num_val
 
-def get_loaders (data_path, subj, batch_size, val_batch_size, num_devices, rank, world_size):
+def get_loaders (data_path, subj, batch_size, val_batch_size, num_devices, rank, world_size, coco_captions_file="tools/COCO_73k_annots_curated.npy"):
 
     train_url = "{" + f"{data_path}/webdataset_avg_split/train/train_subj0{subj}_" + "{0..17}.tar," + f"{data_path}/webdataset_avg_split/val/val_subj0{subj}_0.tar" + "}"
     val_url = f"{data_path}/webdataset_avg_split/test/test_subj0{subj}_" + "{0..1}.tar"
@@ -124,7 +150,9 @@ def get_loaders (data_path, subj, batch_size, val_batch_size, num_devices, rank,
     num_workers = num_devices
     print('\nprepare train and validation dataloaders...')
     train_dl, val_dl, num_train, num_val = get_dataloaders(
-        batch_size, 'images',
+        batch_size, 
+        coco_captions_file,
+        'images',
         num_devices=num_devices,
         num_workers=num_workers,
         train_url=train_url,
@@ -144,3 +172,20 @@ def get_loaders (data_path, subj, batch_size, val_batch_size, num_devices, rank,
     return train_dl, val_dl, num_train, num_val
 
 
+
+if __name__ == '__main__':
+
+    data_path = '/home/youssef.hmamouche/lustre/aim_neural-7he0p8agska/users/youssef.hmamouche/brain_decode_small/data/nsd/'
+
+    coco_captions_file = np.load('tools/COCO_73k_annots_curated.npy')
+
+    train_loader, test_loader, _, _ = get_loaders (data_path, "1", 16, 16, num_devices=1, rank = 0, world_size=1, coco_captions_file=coco_captions_file)
+
+    for item in train_loader:
+        print (item ["signal"].shape, item ["text_output"])
+        break
+
+    for item in test_loader:
+        print (item ["signal"].shape, item ["text_output"])
+        break
+    

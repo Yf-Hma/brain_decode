@@ -10,7 +10,7 @@
 * Required packages:  ```python install -r requirement.txt```
 * vicuna-7b-v1.3 from https://huggingface.co/lmsys/vicuna-7b-v1.3 in the folder 'LLMs' (or other LLMs such as Meta-llama3.2-8b-Instruct)
 * CLIP in the main folder: git clone https://github.com/openai/CLIP
-* To use other data paths, change the configuration file in 'src/configs'.
+* To use other data paths, change the configuration file in 'configs'.
 
 ### Experiments
 This benchamrk contains three experiments associated to three different tasks and datasets:
@@ -23,7 +23,7 @@ In the following, we detail the steps to conduct or reproduce the results of eac
 
 #### 1. Spoken Text Decoding
 ##### Configuration
-- Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths: __DATA_PATH__ (ex. data/convers), __RAW_FMRI_DATA_PATH__ (ex. data/fmri_convers), __MODELS_TRAIN_PATH__ (ex. trained_models/convers), __LLM_PATH__ (ex. LLMs/Meta-llama3.2-8b-Instruct)
+- Update the configuration files "configs/configs_convers.py" by specifying the following paths: __DATA_PATH__ (ex. data/convers), __RAW_FMRI_DATA_PATH__ (ex. data/fmri_convers), __MODELS_TRAIN_PATH__ (ex. trained_models/convers), __LLM_PATH__ (ex. LLMs/Meta-llama3.2-8b-Instruct)
 
 - Download the version 2.2.0 of the Convers datasets from the OpenNeuro platform [ds001740](https://openneuro.org/datasets/ds001740/versions/2.2.0)
  inside __RAW_FMRI_DATA_PATH__ specified in the config file.
@@ -49,7 +49,6 @@ data
     └── train.json
 ```
 
-
 ##### Preprocessing and evaluation
 ```bash
 # Preprocessing raw data
@@ -69,10 +68,9 @@ python  exps/convers/train_stage2.py --batch_size 32 --epochs 100  -m BrainDEC_V
 python exps/convers/evaluation.py   
 ```   
 
-
 #### 2. Perceived Speech Decoding
 ##### Configuration
-- Update the configuration files "srs/configs/perceived/configs.py" by specifying the following paths: __RAW_FMRI_DATA_PATH__ (ex. data/perceived), __MODELS_TRAIN_PATH__ (ex. trained_models/perceived), and __LLM_PATH__ (ex. LLMs/Meta-llama3.2-8b-Instruct).
+- Update the configuration files "configs/configs_perceived.py" by specifying the following paths: __RAW_FMRI_DATA_PATH__ (ex. data/perceived), __MODELS_TRAIN_PATH__ (ex. trained_models/perceived), and __LLM_PATH__ (ex. LLMs/Meta-llama3.2-8b-Instruct).
 
 
 ##### Data preparation
@@ -101,7 +99,7 @@ python exps/perceived/prepare_datasets.py -s $subject (for $subject  in ['S1', '
 # Build tokenizer for stage 1
 python exps/perceived/build_tokenizer.py
 
-# Training and testing after each save_epoch
+# Stage 1 training (in a cross-subject manner)
 python exps/perceived/train_stage1.py --batch_size 128
 python exps/perceived/train_stage2.py --batch_size 32 -s $subject (for $subject  in ['S1', 'S2', 'S3'])
 
@@ -115,8 +113,8 @@ This a comparison with brain understanding benchmark ([BrainHub](https://github.
 ##### Configuration
 - The processed datasets are available in [here](https://huggingface.co/datasets/pscotti/naturalscenesdataset).
 - Download the datasets using this [script](https://github.com/weihaox/UMBRAE/blob/main/umbrae/download_data.sh).
-- Download COCO annotations from this [link](https://huggingface.co/datasets/pscotti/naturalscenesdataset/blob/main/COCO_73k_annots.npy) in the folder 'tools'
-- Update the configuration file 'src/configs.nsd/configs_nsd.py' to specify the paths, and eventually to modify the hyperparameters.
+- Download COCO annotations from this [link](https://huggingface.co/datasets/pscotti/naturalscenesdataset/blob/main/COCO_73k_annots_curated.npy) in the folder 'tools'
+- Update the configuration file 'configs/configs_nsd.py' to specify the paths, and eventually to modify the hyperparameters.
 - To train and evaluate the model:
 ```bash
 python exps/nsd/main.py --epochs 6 --save_epochs 1 --batch_size 32 -s $subject (choices=[1, 2, 5, 7])
@@ -139,7 +137,7 @@ With DATA_PATH set to "data/nsd", you should obtain the following structure:
 ##### Configuration and data preparation
 The same raw data and preprocessing presented in [EEG-To-Text](https://github.com/MikeWangWZHL/EEG-To-Text) are employed here.
 
-* Update the configuration files "srs/configs/zuco/configs.py" by specifying the paths similarly to the previous experiments.
+* Update the configuration files "configs/configs_zuco.py" by specifying the paths similarly to the previous experiments.
 * Download the following folders from [ZuCo v1.0](https://osf.io/q3zws/files/) and place them in the `DATA_PATH` specified in the config file (e.g., `data/zuco/task1-SR/Matlab_files`, etc.).
 * Download `task1-NR/Matlab_files` from [ZuCo v2.0](https://osf.io/2urht/files/) and place it as `task2-NR-2.0/Matlab_files` inside `DATA_PATH`.
 * Generate the preprocessed data using the following instructions:

@@ -9,11 +9,10 @@ from tokenizers.trainers import BpeTrainer, WordLevelTrainer, \
 from tokenizers.pre_tokenizers import Whitespace, CharDelimiterSplit
 
 from glob import glob
-
 import os, sys
 
 sys.path.insert(0, os.getcwd())
-import src.configs.convers.configs as configs
+import configs.configs_convers as configs
 
 unk_token = "<UNK>"  # token for unknown words
 spl_tokens = ["<PAD>", "<SOS>", "<EOS>", "<MASK>", "<UNK>"]  # special tokens

@@ -36,7 +36,7 @@ def train_model(out_path, model, train_dataset, batch_size, optimizer, num_epoch
 
         # Iterate over batches
         for batch in train_dataset:
-            src, trg_sentences = batch["bold_signal"], batch["text_output"]
+            src, trg_sentences = batch["signal"], batch["text_output"]
 
             trg = []
             for a in trg_sentences:

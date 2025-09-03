@@ -10,7 +10,7 @@ print("modified version of construct_dataset_mat_to_pickle_v2.py to include raw 
 
 sys.path.insert(0, os.getcwd())
 
-import src.configs.zuco.configs as configs
+import configs.configs_zuco as configs
 
 if __name__ == '__main__':
 

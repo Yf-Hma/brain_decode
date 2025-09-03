@@ -1,59 +1,68 @@
-import os
-import sys
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import torch
 import torch.nn as nn
-
-from CLIP import clip
-from tokenizers import Tokenizer
 from peft import get_peft_model, LoraConfig
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-main = os.path.dirname(parent)
-sys.path.insert(0, main)
+from CLIP import clip
 
-from src.transformers_src.Transformer import *
-import src.configs.convers.configs as configs
 
+########## Aligenemnt Block ##############
+class alignment_block(nn.Module):
+    def __init__(self, encoder, input_size, output_size, src_features_max, freeze_encoder, dropout_rate=0.01, device="cuda"):
+        super(alignment_block, self).__init__()
+        self.encoder = encoder
+        self.linear = nn.Linear(input_size, output_size, device=device)
+        self.dropout = nn.Dropout(dropout_rate).to(device)
+        self.linear_out = nn.Linear(output_size, output_size, device=device)
+        self.device = device
+
+        self.src_features_max = src_features_max
+
+        # Freeze the encoder
+        if freeze_encoder:
+            for name, param in self.encoder.named_parameters():
+                param.requires_grad = False
+            self.encoder.eval()
+
+    def forward(self, x):
+        if x.shape[2] != self.src_features_max:
+            padded = torch.zeros(x.shape[0], x.shape[1], self.src_features_max - x.shape[2]).to(self.device)
+            x = torch.cat([x,padded], dim = 2)
+
+        x, _ = self.encoder (x)
+        x = x[-1]
+        x = self.linear(x)
+        x = self.dropout(x)
+        x = self.linear_out(x)
+        
+        return x
+    
+########## BrainDEC models ##############
 class BrainDEC_V0(nn.Module):
     def __init__(
         self,
-        encoder_class,
-        encoder_path,
+        encoder_model,
+        configs,
+        src_features_max,
+        freeze_encoder = True,
         max_txt_len=128,
         max_output_txt_len=256,
         lora = False,
         inference_mode = False,
-        load_in_4bit = False
+        load_in_4bit = False,
+        device = "cuda"
     ):
         super().__init__()
-        src_fmri_features = configs.src_fmri_features
-        time_steps = configs.time_steps
-        max_size = configs.max_size
-        d_model = configs.d_model
-        heads = configs.heads
-        d_ff = configs.d_ff
-        N = configs.N
-        self.device = "cuda"
 
-        tokenizer = Tokenizer.from_file("./tools/tokenizer-convers.json")
-        vocab_len = tokenizer.get_vocab_size()
+        self.configs = configs
+        d_model = configs.d_model
+        self.device = device
 
         model_name_or_path = configs.LLM_PATH
 
-        model = encoder_class(time_steps, src_fmri_features, max_size,\
-                                               vocab_len, d_model, d_ff, N, heads, self.device)\
-                                               .to(self.device)
-        model = model.float()
-        model.load_state_dict(torch.load(encoder_path, weights_only=True))
-
-        self.frmi_encoder = model.encoder
-
-        for param in self.frmi_encoder.parameters():
-            param.requires_grad = False
-        self.frmi_encoder.eval()
-
+        # Alignment_block for fMRI Encoder adaptation
+        llm_hidden_dim = configs.llm_hidden_dim        
+        self.frmi_encoder = alignment_block(encoder_model, d_model, llm_hidden_dim,  src_features_max, freeze_encoder, device=self.device).to(self.device)
 
         self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
 
@@ -96,8 +105,6 @@ class BrainDEC_V0(nn.Module):
             for name, param in self.llm_model.named_parameters():
                 param.requires_grad = False
 
-        self.llm_proj = nn.Linear(d_model, configs.llm_hidden_size).to(self.device)
-
         self.max_txt_len = max_txt_len
         self.max_output_txt_len = max_output_txt_len
 
@@ -138,17 +145,17 @@ class BrainDEC_V0(nn.Module):
 
     def forward (self, sample):
 
-        output_text = sample["text_output"]
         # Input text
-        input_text = ["En se basant sur ce contenu, réponds en Français : " for a in sample["text_input"]]
-
+        input_text = [self.configs.fixed_instruction] *  len (sample["text_output"])
+        
+        # Target text
+        output_text = sample["text_output"]
+        
         # BOLD embeddings
-        embeddings, masks = self.frmi_encoder (sample["bold_signal"].to(self.device))#.to(device))
-        embeddings = embeddings[-1]
-        inputs_llm_bold = self.llm_proj (embeddings)
+        inputs_llm_bold = self.frmi_encoder (sample["signal"].to(self.device).float())
         atts_llm_bold = torch.ones(inputs_llm_bold.size()[:-1], dtype=torch.long).to(self.device)
 
-
+        # Tokenization
         self.llm_tokenizer.padding_side = "right"
         self.llm_tokenizer.truncation_side = 'left'
         text_input_tokens = self.llm_tokenizer(
@@ -193,44 +200,26 @@ class BrainDEC_V0(nn.Module):
         inputs_embeds = torch.cat([inputs_llm_bold, inputs_embeds], dim=1)
         attention_mask = torch.cat([atts_llm_bold, llm_tokens['attention_mask']], dim=1)
 
+        # Forward and compute loss
         with self.maybe_autocast():
             outputs = self.llm_model(
                 inputs_embeds=inputs_embeds,
                 attention_mask=attention_mask,
                 return_dict=True,
-                labels=targets,
-            )
+                labels=targets)
 
         loss = outputs.loss
-
         return loss
 
 
     @torch.no_grad()
-    def generate(
-        self,
-        samples,
-        use_nucleus_sampling=False,
-        num_beams=configs.num_beams,
-        max_new_tokens = configs.max_new_tokens,
-        min_length=1,
-        top_p=0.9,
-        repetition_penalty=1.5,
-        length_penalty=1,
-        num_captions=1,
-        temperature=1):
+    def generate(self, samples):
 
         self.llm_tokenizer.padding_side = "left"
+        prompt = [self.configs.fixed_instruction] * len (samples["text_output"])
 
-        image = samples["image"]
-        bs = image.size(0)
-
-        prompt = ["En se basant sur ce contenu, réponds en Français : "] *  len (samples["text_input"])
-
-        # Bold embedding
-        bold_embeddings, _ = self.frmi_encoder (samples["bold_signal"].to(self.device))#.to(device))
-        bold_embeddings = bold_embeddings[-1]
-        inputs_llm_bold = self.llm_proj (bold_embeddings)
+        # Bold embedding        
+        inputs_llm_bold = self.frmi_encoder (samples["signal"].to(self.device).float())    
         atts_llm_bold = torch.ones(inputs_llm_bold.size()[:-1], dtype=torch.long).to(self.device)
 
         llm_tokens = self.llm_tokenizer(
@@ -241,7 +230,6 @@ class BrainDEC_V0(nn.Module):
 
         with self.maybe_autocast():
             inputs_embeds = self.llm_model.get_input_embeddings()(llm_tokens.input_ids)
-            #attention_mask = llm_tokens.attention_mask
             inputs_embeds = torch.cat([inputs_llm_bold, inputs_embeds], dim=1)
             attention_mask = torch.cat([atts_llm_bold, llm_tokens.attention_mask], dim=1)
 
@@ -249,16 +237,14 @@ class BrainDEC_V0(nn.Module):
                 inputs_embeds=inputs_embeds,
                 attention_mask=attention_mask,
                 do_sample=True,
-                top_p=top_p,
-                temperature=temperature,
-                num_beams=num_beams,
-                max_new_tokens = max_new_tokens,
-                #max_length=max_length,
-                min_length=min_length,
-                # eos_token_id=self.eos_token_id,
-                repetition_penalty=repetition_penalty,
-                length_penalty=length_penalty,
-                num_return_sequences=num_captions,
+                top_p=self.configs.top_p,
+                temperature=self.configs.temperature,
+                num_beams=self.configs.num_beams,
+                max_new_tokens=self.configs.max_new_tokens,
+                min_length=self.configs.min_length,
+                repetition_penalty=self.configs.repetition_penalty,
+                length_penalty=self.configs.length_penalty,
+                num_return_sequences=self.configs.num_captions,
             )
 
         output_text = self.llm_tokenizer.batch_decode(outputs, skip_special_tokens=True)
@@ -268,48 +254,29 @@ class BrainDEC_V0(nn.Module):
 
 
 class BrainDEC_V1(nn.Module):
-
     def __init__(
         self,
-        encoder_class,
-        encoder_path,
-        img_size=256,
-        drop_path_rate=0,
+        encoder_model,
+        configs,
+        src_features_max,
         max_txt_len=128,
         max_output_txt_len=256,
         lora = False,
         inference_mode = False,
-        load_in_4bit = False
+        load_in_4bit = False,
+        device = "cuda"
     ):
         super().__init__()
 
-        src_fmri_features = configs.src_fmri_features
-        time_steps = configs.time_steps
-        max_size = configs.max_size
         d_model = configs.d_model
-        heads = configs.heads
-        d_ff = configs.d_ff
-        N = configs.N
-
-        tokenizer = Tokenizer.from_file("./tools/tokenizer-convers.json")
-        vocab_len = tokenizer.get_vocab_size()
 
         model_name_or_path = configs.LLM_PATH
-        self.device = "cuda"
+        self.device = device
+        self.configs = configs
 
-        model = encoder_class(time_steps, src_fmri_features, max_size,\
-                                               vocab_len, d_model, d_ff, N, heads, self.device)\
-                                               .to(self.device)
-        model = model.float()
-        model.load_state_dict(torch.load(encoder_path, weights_only=True))
-
-
-        self.frmi_encoder = model.encoder
-
-        for param in self.frmi_encoder.parameters():
-            param.requires_grad = False
-        self.frmi_encoder.eval()
-
+        # fMRI encoder
+        llm_hidden_dim = configs.llm_hidden_dim    
+        self.frmi_encoder = alignment_block(encoder_model, d_model, llm_hidden_dim,  src_features_max, True, device=self.device).to(self.device)
 
         self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
 
@@ -332,7 +299,6 @@ class BrainDEC_V1(nn.Module):
                                                                   torch_dtype=torch.bfloat16,
                                                                   local_files_only=True)
 
-
         self.llm_tokenizer.add_special_tokens({'pad_token': '[PAD]'})
         self.llm_model.resize_token_embeddings(len(self.llm_tokenizer))
 
@@ -353,9 +319,6 @@ class BrainDEC_V1(nn.Module):
             for name, param in self.llm_model.named_parameters():
                 param.requires_grad = False
 
-        self.llm_proj = nn.Linear(d_model, configs.llm_hidden_size).to(self.device)
-
-
         self.max_txt_len = max_txt_len
         self.max_output_txt_len = max_output_txt_len
 
@@ -364,7 +327,7 @@ class BrainDEC_V1(nn.Module):
         enable_autocast = self.device != torch.device("cpu")
 
         if enable_autocast:
-            return torch.cuda.amp.autocast(dtype=dtype)
+            return torch.amp.autocast("cuda", dtype=dtype)
         else:
             return contextlib.nullcontext()
 
@@ -398,12 +361,10 @@ class BrainDEC_V1(nn.Module):
 
         output_text = sample["text_output"]
         # Input text
-        input_text = ["En se basant sur ce contenu, réponds en Français à la phrase suivante '" + a  + "' : " for a in sample["text_input"]]
+        input_text = [self.configs.fixed_instruction_with_input_text + "'"  + a  + "' : " for a in sample["text_input"]]
 
         # BOLD embeddings
-        embeddings, masks = self.frmi_encoder (sample["bold_signal"].to(self.device))#.to(device))
-        embeddings = embeddings[-1]
-        inputs_llm_bold = self.llm_proj (embeddings)
+        inputs_llm_bold = self.frmi_encoder (sample["signal"].to(self.device))#.to(device))
         atts_llm_bold = torch.ones(inputs_llm_bold.size()[:-1], dtype=torch.long).to(self.device)
 
 
@@ -442,11 +403,8 @@ class BrainDEC_V1(nn.Module):
 
         # do not apply loss to the image and bold
         empty_targets_bold = (torch.ones(atts_llm_bold.size(), dtype=torch.long).to(self.device).fill_(-100))
-        #empty_targets_image = (torch.ones(atts_llm_image.size(), dtype=torch.long).to(self.device).fill_(-100))
-
 
         targets = torch.cat([empty_targets_bold, targets], dim=1)
-
 
         # Input embeddings
         inputs_embeds = self.llm_model.get_input_embeddings()(llm_tokens['input_ids'])
@@ -469,33 +427,18 @@ class BrainDEC_V1(nn.Module):
 
 
     @torch.no_grad()
-    def generate(
-        self,
-        samples,
-        use_nucleus_sampling=False,
-        num_beams=3,
-        max_new_tokens = configs.max_new_tokens,
-        min_length=1,
-        top_p=0.9,
-        repetition_penalty=1.5,
-        length_penalty=1,
-        num_captions=1,
-        temperature=1):
+    def generate(self, samples):
 
         self.llm_tokenizer.padding_side = "left"
 
         image = samples["image"]
         bs = image.size(0)
 
-        prompt = ["En se basant sur ce contenu, réponds en Français à la phrase suivante '" + a  + "' : " for a in samples["text_input"]]
+        prompt = [self.configs.fixed_instruction_with_input_text + "'"  + a  + "' : " for a in samples["text_input"]]
 
         # Bold embedding
-        bold_embeddings, _ = self.frmi_encoder (samples["bold_signal"].to(self.device))#.to(device))
-        bold_embeddings = bold_embeddings[-1]
-        inputs_llm_bold = self.llm_proj (bold_embeddings)
+        inputs_llm_bold = self.frmi_encoder (samples["signal"].to(self.device))#.to(device))
         atts_llm_bold = torch.ones(inputs_llm_bold.size()[:-1], dtype=torch.long).to(self.device)
-
-
 
         llm_tokens = self.llm_tokenizer(
             prompt,
@@ -513,16 +456,14 @@ class BrainDEC_V1(nn.Module):
                 inputs_embeds=inputs_embeds,
                 attention_mask=attention_mask,
                 do_sample=True,
-                top_p=top_p,
-                temperature=temperature,
-                num_beams=num_beams,
-                max_new_tokens = max_new_tokens,
-                #max_length=max_length,
-                min_length=min_length,
-                # eos_token_id=self.eos_token_id,
-                repetition_penalty=repetition_penalty,
-                length_penalty=length_penalty,
-                num_return_sequences=num_captions,
+                top_p=self.configs.top_p,
+                temperature=self.configs.temperature,
+                num_beams=self.configs.num_beams,
+                max_new_tokens = self.configs.max_new_tokens,
+                min_length=self.configs.min_length,
+                repetition_penalty=self.configs.repetition_penalty,
+                length_penalty=self.configs.length_penalty,
+                num_return_sequences=self.configs.num_captions,
             )
 
         output_text = self.llm_tokenizer.batch_decode(outputs, skip_special_tokens=True)
@@ -535,20 +476,21 @@ class BrainDEC_V2(nn.Module):
 
     def __init__(
         self,
-        encoder_class,
-        encoder_path,
-        img_size=256,
-        drop_path_rate=0,
+        encoder_model,
+        configs,
+        src_features_max,
         max_txt_len=128,
         max_output_txt_len=256,
         load_in_4bit = False,
         lora = False,
-        inference_mode = False):
+        inference_mode = False,
+        device = "cuda"):
         super().__init__()
 
         model_name_or_path = configs.LLM_PATH
 
-        self.device = "cuda"
+        self.device = device
+        self.configs = configs
 
         self.clip_model, self.clip_preprocess = clip.load("ViT-B/32", device=self.device)
 
@@ -557,29 +499,14 @@ class BrainDEC_V2(nn.Module):
 
         self.clip_model.eval()
 
-        #self.visual_encoder.train = disabled_train
-
-        src_fmri_features = configs.src_fmri_features
-        time_steps = configs.time_steps
-        max_size = configs.max_size
         d_model = configs.d_model
-        heads = configs.heads
-        d_ff = configs.d_ff
-        N = configs.N
-
-        tokenizer = Tokenizer.from_file("./tools/tokenizer-convers.json")
-        vocab_len = tokenizer.get_vocab_size()
 
         model_name_or_path = configs.LLM_PATH
-        self.device = "cuda"
 
-        model = encoder_class(time_steps, src_fmri_features, max_size,\
-                                               vocab_len, d_model, d_ff, N, heads, self.device)\
-                                               .to(self.device)
-        model = model.float()
-        model.load_state_dict(torch.load(encoder_path, weights_only=True))
-
-        self.frmi_encoder = model.encoder
+        # fMRI encoder
+        llm_hidden_dim = configs.llm_hidden_dim      
+        self.frmi_encoder = alignment_block(encoder_model, d_model, llm_hidden_dim,  src_features_max, True, device=self.device).to(self.device)
+          
 
         self.max_output_txt_len = max_output_txt_len
 
@@ -630,12 +557,7 @@ class BrainDEC_V2(nn.Module):
             for name, param in self.llm_model.named_parameters():
                 param.requires_grad = False
 
-
-
-        self.llm_proj = nn.Linear(d_model, configs.llm_hidden_size).to(self.device)
-        self.vision_llm_proj = nn.Linear(512, configs.llm_hidden_size).to(self.device)
-
-
+        self.vision_llm_proj = nn.Linear(512, configs.llm_hidden_dim).to(self.device)
 
         self.max_txt_len = max_txt_len
         self.max_output_txt_len = max_output_txt_len
@@ -679,7 +601,9 @@ class BrainDEC_V2(nn.Module):
 
     def forward (self, sample):
 
-        input_text = ["En se basant sur ce contenu, réponds en Français à la phrase suivante '" + a  + "' : " for a in sample["text_input"]]
+        #input_text = ["En se basant sur ce contenu, réponds en Français à la phrase suivante '" + a  + "' : " for a in sample["text_input"]]
+        input_text = [self.configs.fixed_instruction_with_input_text + "'"  + a  + "' : " for a in sample["text_input"]]
+        
         output_text = sample["text_output"]
 
         # Images embedding and  alignement
@@ -689,9 +613,7 @@ class BrainDEC_V2(nn.Module):
         atts_llm_image = torch.ones(input_llm_image.size()[:-1], dtype=torch.long).to(self.device)
 
         # BOLD embedding and  alignement
-        embeddings, masks = self.frmi_encoder (sample["bold_signal"].to(self.device))#.to(device))
-        embeddings = embeddings[-1]
-        inputs_llm_bold = self.llm_proj (embeddings)
+        inputs_llm_bold = self.frmi_encoder (sample["signal"].to(self.device))#.to(device))
         atts_llm_bold = torch.ones(inputs_llm_bold.size()[:-1], dtype=torch.long).to(self.device)
 
 
@@ -732,9 +654,7 @@ class BrainDEC_V2(nn.Module):
         empty_targets_bold = (torch.ones(atts_llm_bold.size(), dtype=torch.long).to(self.device).fill_(-100))
         empty_targets_image = (torch.ones(atts_llm_image.size(), dtype=torch.long).to(self.device).fill_(-100))
 
-
         targets = torch.cat([empty_targets_image, empty_targets_bold, targets], dim=1)
-
 
         # Input embeddings
         inputs_embeds = self.llm_model.get_input_embeddings()(llm_tokens['input_ids'])
@@ -752,37 +672,25 @@ class BrainDEC_V2(nn.Module):
             )
 
         loss = outputs.loss
-
         return loss
 
 
     @torch.no_grad()
-    def generate(
-        self,
-        samples,
-        use_nucleus_sampling=False,
-        num_beams=3,
-        max_new_tokens = configs.max_new_tokens,
-        min_length=1,
-        top_p=0.9,
-        repetition_penalty=1.5,
-        length_penalty=1,
-        num_captions=1,
-        temperature=1):
+    def generate(self, samples):
 
         self.llm_tokenizer.padding_side = "left"
 
         image = samples["image"]
         bs = image.size(0)
 
-        prompt = ["En se basant sur ce contenu, réponds en Français à la phrase suivante '" + a  + "' : " for a in samples["text_input"]]
+        prompt = [self.configs.fixed_instruction_with_input_text + "'"  + a  + "' : " for a in samples["text_input"]]
+        #prompt = ["En se basant sur ce contenu, réponds en Français à la phrase suivante '" + a  + "' : " for a in samples["text_input"]]
 
-        bold_embeddings, _ = self.frmi_encoder (samples["bold_signal"].to(self.device))#.to(device))
-        bold_embeddings = bold_embeddings[-1]
-        # Image embedding alignement
-        inputs_llm_bold = self.llm_proj (bold_embeddings)
+        # Signal encoding
+        inputs_llm_bold = self.frmi_encoder (samples["signal"].to(self.device))#.to(device))
         atts_llm_bold = torch.ones(inputs_llm_bold.size()[:-1], dtype=torch.long).to(self.device)
 
+        # Image embedding alignement
         image_features = self.clip_model.encode_image(samples["image"].to(self.device))
         image_features= torch.unsqueeze(image_features, dim=1)
         input_llm_image = self.vision_llm_proj (image_features.to(torch.float32))
@@ -796,7 +704,6 @@ class BrainDEC_V2(nn.Module):
 
         with self.maybe_autocast():
             inputs_embeds = self.llm_model.get_input_embeddings()(llm_tokens.input_ids)
-            #attention_mask = llm_tokens.attention_mask
             inputs_embeds = torch.cat([input_llm_image, inputs_llm_bold, inputs_embeds], dim=1)
             attention_mask = torch.cat([atts_llm_image, atts_llm_bold, llm_tokens.attention_mask], dim=1)
 
@@ -804,16 +711,14 @@ class BrainDEC_V2(nn.Module):
                 inputs_embeds=inputs_embeds,
                 attention_mask=attention_mask,
                 do_sample=True,
-                top_p=top_p,
-                temperature=temperature,
-                num_beams=num_beams,
-                max_new_tokens = max_new_tokens,
-                #max_length=max_length,
-                min_length=min_length,
-                # eos_token_id=self.eos_token_id,
-                repetition_penalty=repetition_penalty,
-                length_penalty=length_penalty,
-                num_return_sequences=num_captions,
+                top_p=self.configs.top_p,
+                temperature=self.configs.temperature,
+                num_beams=self.configs.num_beams,
+                max_new_tokens = self.configs.max_new_tokens,
+                min_length=self.configs.min_length,
+                repetition_penalty=self.configs.repetition_penalty,
+                length_penalty=self.configs.length_penalty,
+                num_return_sequences=self.configs.num_captions,
             )
 
         #outputs[outputs == 0] = 2 # convert output id 0 to 2 (eos_token_id)

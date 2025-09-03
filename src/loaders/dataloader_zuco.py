@@ -1,12 +1,10 @@
 import numpy as np
 import torch
 import pickle
-from torch.utils.data import Dataset
-
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, IterableDataset
 
 from scipy.signal import butter, lfilter
-from scipy.signal import freqz
+
 
 def butter_bandpass_filter(signal, lowcut, highcut, fs=500, order=5):
     nyq = 0.5 * fs
@@ -24,7 +22,7 @@ def normalize_1d(input_tensor):
     std = torch.std(input_tensor)
     input_tensor = (input_tensor - mean)/std
     
-    return input_tensor
+    return input_tensor / 30
 
 def get_input_sample(sent_obj, tokenizer, eeg_type = 'GD', bands = ['_t1','_t2','_a1','_a2','_b1','_b2','_g1','_g2'], max_len = 56, add_CLS_token = False, subj='unspecified',raw_eeg=False):
     
@@ -35,7 +33,7 @@ def get_input_sample(sent_obj, tokenizer, eeg_type = 'GD', bands = ['_t1','_t2',
             frequency_features.append(word_obj['word_level_EEG'][eeg_type][eeg_type+band])
         word_eeg_embedding = np.concatenate(frequency_features)
         if len(word_eeg_embedding) != 105*len(bands):
-            print(f'expect word: {content} of subj: {subj} eeg embedding dim to be {105*len(bands)}, but got {len(word_eeg_embedding)}, return None')
+            #print(f'expect word: {content} of subj: {subj} eeg embedding dim to be {105*len(bands)}, but got {len(word_eeg_embedding)}, return None')
             return None
         # assert len(word_eeg_embedding) == 105*len(bands)
         return_tensor = torch.from_numpy(word_eeg_embedding)
@@ -105,10 +103,10 @@ def get_input_sample(sent_obj, tokenizer, eeg_type = 'GD', bands = ['_t1','_t2',
             try:
                 word_level_raw_eeg_tensor = get_word_raweeg_tensor(word)
             except:
-                print('error in raw eeg')
-                print(word['content'])
-                print(sent_obj['content'])
-                print()
+                # print('error in raw eeg')
+                # print(word['content'])
+                # print(sent_obj['content'])
+                # print()
                 return None
         # check none, for v2 dataset
         if word_level_eeg_tensor is None:
@@ -152,7 +150,7 @@ def get_input_sample(sent_obj, tokenizer, eeg_type = 'GD', bands = ['_t1','_t2',
     
     # clean 0 length data
     if input_sample['seq_len'] == 0:
-        print('discard length zero instance: ', target_string)
+        #print('discard length zero instance: ', target_string)
         return None
 
     # subject
@@ -167,34 +165,34 @@ class ZuCo_dataset(Dataset):
 
         if not isinstance(input_dataset_dicts,list):
             input_dataset_dicts = [input_dataset_dicts]
-        print(f'[INFO]loading {len(input_dataset_dicts)} task datasets')
+        #print(f'[INFO]loading {len(input_dataset_dicts)} task datasets')
         for input_dataset_dict in input_dataset_dicts:
             if subject == 'ALL':
                 subjects = list(input_dataset_dict.keys())
-                print('[INFO]using subjects: ', subjects)
+                #print('[INFO]using subjects: ', subjects)
             else:
                 subjects = [subject]
             
-            # take first 80% as trainset, 10% as dev and 10% as test
             total_num_sentence = len(input_dataset_dict[subjects[0]])
+            
             train_divider = int(0.8*total_num_sentence)
             dev_divider = train_divider + int(0.1*total_num_sentence)
-            train_divider_plus_dev = train_divider + int(0.1*total_num_sentence)
             
-            print(f'train divider = {train_divider}')
-            print(f'dev divider = {dev_divider}')
+            #print(f'train divider = {train_divider}')
+            #print(f'dev divider = {dev_divider}')
 
             if setting == 'unique_sent':
+                # take first 80% as trainset, 10% as dev and 10% as test
                 if phase == 'train':
-                    print('[INFO]initializing a train set...')
+                    #print('[INFO]initializing a train set...')
                     for key in subjects:
-                        for i in range(train_divider_plus_dev):
+                        for i in range(train_divider):
                             input_sample = get_input_sample(input_dataset_dict[key][i],self.tokenizer,eeg_type,bands = bands, add_CLS_token = is_add_CLS_token, subj=key,raw_eeg=raweeg)
                             if input_sample is not None:
                                 input_sample['subject']=key
                                 self.inputs.append(input_sample)
                 elif phase == 'dev':
-                    print('[INFO]initializing a dev set...')
+                    #print('[INFO]initializing a dev set...')
                     for key in subjects:
                         for i in range(train_divider,dev_divider):
                             input_sample = get_input_sample(input_dataset_dict[key][i],self.tokenizer,eeg_type,bands = bands, add_CLS_token = is_add_CLS_token, subj=key,raw_eeg=raweeg)
@@ -202,7 +200,7 @@ class ZuCo_dataset(Dataset):
                                 input_sample['subject']=key
                                 self.inputs.append(input_sample)
                 elif phase == 'all':
-                    print('[INFO]initializing all dataset...')
+                    #print('[INFO]initializing all dataset...')
                     for key in subjects:
                         for i in range(int(1*total_num_sentence)):
                             input_sample = get_input_sample(input_dataset_dict[key][i],self.tokenizer,eeg_type,bands = bands, add_CLS_token = is_add_CLS_token, subj=key,raw_eeg=raweeg)
@@ -210,7 +208,7 @@ class ZuCo_dataset(Dataset):
                                 input_sample['subject']=key
                                 self.inputs.append(input_sample)
                 elif phase == 'test':
-                    print('[INFO]initializing a test set...')
+                    #print('[INFO]initializing a test set...')
                     for key in subjects:
                         for i in range(dev_divider,total_num_sentence):
                             input_sample = get_input_sample(input_dataset_dict[key][i],self.tokenizer,eeg_type,bands = bands, add_CLS_token = is_add_CLS_token, subj=key,raw_eeg=raweeg)
@@ -218,32 +216,32 @@ class ZuCo_dataset(Dataset):
                                 input_sample['subject']=key
                                 self.inputs.append(input_sample)
             elif setting == 'unique_subj':
-                print('WARNING!!! only implemented for SR v1 dataset ')
+                #print('WARNING!!! only implemented for SR v1 dataset ')
                 # subject ['ZAB', 'ZDM', 'ZGW', 'ZJM', 'ZJN', 'ZJS', 'ZKB', 'ZKH', 'ZKW'] for train
                 # subject ['ZMG'] for dev
                 # subject ['ZPH'] for test
                 if phase == 'train':
-                    print(f'[INFO]initializing a train set using {setting} setting...')
+                    #print(f'[INFO]initializing a train set using {setting} setting...')
                     for i in range(total_num_sentence):
                         for key in ['ZAB', 'ZDM', 'ZGW', 'ZJM', 'ZJN', 'ZJS', 'ZKB', 'ZKH','ZKW', 'ZMG']:
                             input_sample = get_input_sample(input_dataset_dict[key][i],self.tokenizer,eeg_type,bands = bands, add_CLS_token = is_add_CLS_token, subj=key)
                             if input_sample is not None:
                                 self.inputs.append(input_sample)
                 if phase == 'dev':
-                    print(f'[INFO]initializing a dev set using {setting} setting...')
+                    #print(f'[INFO]initializing a dev set using {setting} setting...')
                     for i in range(total_num_sentence):
                         for key in ['ZMG']:
                             input_sample = get_input_sample(input_dataset_dict[key][i],self.tokenizer,eeg_type,bands = bands, add_CLS_token = is_add_CLS_token, subj=key)
                             if input_sample is not None:
                                 self.inputs.append(input_sample)
                 if phase == 'test':
-                    print(f'[INFO]initializing a test set using {setting} setting...')
+                    #print(f'[INFO]initializing a test set using {setting} setting...')
                     for i in range(total_num_sentence):
                         for key in ['ZPH']:
                             input_sample = get_input_sample(input_dataset_dict[key][i],self.tokenizer,eeg_type,bands = bands, add_CLS_token = is_add_CLS_token, subj=key)
                             if input_sample is not None:
                                 self.inputs.append(input_sample)
-            print('++ adding task to dataset, now we have:', len(self.inputs))
+            #print('++ adding task to dataset, now we have:', len(self.inputs))
 
         #print('[INFO]input tensor size:', self.inputs[0]['input_embeddings'].size())
         #print()
@@ -257,48 +255,49 @@ class ZuCo_dataset(Dataset):
         return {"signal": input_sample['input_embeddings'],  "text_output":input_sample['target_ids']}
 
 
-def get_loaders (processed_data_path, version, batch_size=16, val_batch_size=16):
+def get_dada_loaders_all (PROCESSED_DATA_PATH, batch_size=16, val_batch_size=16):
+    check_dataset = 'ZuCo'
+    processed_data_path = PROCESSED_DATA_PATH
 
-    whole_dataset_dicts = []
-    
-    dataset_path_task1 = '%s/task1-SR/pickle/task1-SR-dataset_wRaw.pickle'%processed_data_path
-    with open(dataset_path_task1, 'rb') as handle:
-        whole_dataset_dicts.append(pickle.load(handle))
+    if check_dataset == 'ZuCo':
+        whole_dataset_dicts = []
+        
+        dataset_path_task1 = '%s/task1-SR/pickle/task1-SR-dataset_wRaw.pickle'%processed_data_path
+        with open(dataset_path_task1, 'rb') as handle:
+            whole_dataset_dicts.append(pickle.load(handle))
 
-    dataset_path_task2 = '%s/task2-NR/pickle/task2-NR-dataset_wRaw.pickle'%processed_data_path
-    with open(dataset_path_task2, 'rb') as handle:
-        whole_dataset_dicts.append(pickle.load(handle))
+        # dataset_path_task2 = '%s/task2-NR/pickle/task2-NR-dataset_wRaw.pickle'%processed_data_path
+        # with open(dataset_path_task2, 'rb') as handle:
+        #     whole_dataset_dicts.append(pickle.load(handle))
 
-    if version == 1:
         dataset_path_task3 = '%s/task3-TSR/pickle/task3-TSR-dataset_wRaw.pickle'%processed_data_path
         with open(dataset_path_task3, 'rb') as handle:
             whole_dataset_dicts.append(pickle.load(handle))
 
-    elif version == 2:
-        dataset_path_task3 = '%s/task2-NR-2.0/pickle/task2-NR-2.0-dataset_wRaw.pickle'%processed_data_path
-        with open(dataset_path_task3, 'rb') as handle:
+        dataset_path_task2_v2 = '%s/task2-NR-2.0/pickle/task2-NR-2.0-dataset_wRaw.pickle'%processed_data_path
+        with open(dataset_path_task2_v2, 'rb') as handle:
             whole_dataset_dicts.append(pickle.load(handle))
 
-    print()
-    for key in whole_dataset_dicts[0]:
-        print(f'task2_v2, sentence num in {key}:',len(whole_dataset_dicts[0][key]))
-    print()
+        # print()
+        # for key in whole_dataset_dicts[0]:
+        #     print(f'task2_v2, sentence num in {key}:',len(whole_dataset_dicts[0][key]))
+        # print()
 
-    tokenizer = None
-    dataset_setting = 'unique_sent'
-    #dataset_setting = 'unique_subj'
-    subject_choice = 'ALL'
-    print(f'![Debug]using {subject_choice}')
-    eeg_type_choice = 'GD'
-    print(f'[INFO]eeg type {eeg_type_choice}') 
-    bands_choice = ['_t1','_t2','_a1','_a2','_b1','_b2','_g1','_g2'] 
-    print(f'[INFO]using bands {bands_choice}')
-    train_set = ZuCo_dataset(whole_dataset_dicts, 'train', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice, setting = dataset_setting, raweeg=True)
-    dev_set = ZuCo_dataset(whole_dataset_dicts, 'dev', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice, setting = dataset_setting, raweeg=True)
-    test_set = ZuCo_dataset(whole_dataset_dicts, 'test', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice, setting = dataset_setting, raweeg=True)
+        tokenizer = None
+        dataset_setting = 'unique_sent'
+        #dataset_setting = 'unique_subj'
+        subject_choice = 'ALL'
+        #print(f'![Debug]using {subject_choice}')
+        eeg_type_choice = 'GD'
+        #print(f'[INFO]eeg type {eeg_type_choice}') 
+        bands_choice = ['_t1','_t2','_a1','_a2','_b1','_b2','_g1','_g2'] 
+        #print(f'[INFO]using bands {bands_choice}')
+        train_set = ZuCo_dataset(whole_dataset_dicts, 'train', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice, setting = dataset_setting, raweeg=True)
+        dev_set = ZuCo_dataset(whole_dataset_dicts, 'dev', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice, setting = dataset_setting, raweeg=True)
+        test_set = ZuCo_dataset(whole_dataset_dicts, 'test', tokenizer, subject = subject_choice, eeg_type = eeg_type_choice, bands = bands_choice, setting = dataset_setting, raweeg=True)
 
-    data_loaders_train = DataLoader(train_set, batch_size=batch_size, shuffle=True, pin_memory=True)
-    data_loaders_test  = DataLoader(test_set, batch_size=val_batch_size)
+        data_loaders_train = DataLoader(train_set, batch_size=batch_size, shuffle=True, pin_memory=True)
+        data_loaders_test  = DataLoader(test_set, batch_size=val_batch_size)
 
-    return data_loaders_train, data_loaders_test
+        return data_loaders_train, data_loaders_test
 

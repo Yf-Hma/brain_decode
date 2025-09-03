@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, os.getcwd())
 
-import src.configs.perceived.configs as configs
+import configs.configs_perceived as configs
 
 WER_metric = WER()
 BLEU_metric = BLEU(n=1)
@@ -67,9 +67,6 @@ if __name__ == "__main__":
     reals = content["target"].values.tolist()
 
 
-    # print (predictions[0])
-
-
     N = WINDOW // CHUNKLEN
     #N = 1
     # temp = '{} ' * N
@@ -88,19 +85,6 @@ if __name__ == "__main__":
         segmented_sentences_pred.append (segment_pred)
         segmented_sentences_real.append (segment_real)
 
-    #print (segmented_sentences_pred[0])
-
-    #exit ()
-    # temp = '{} ' * N
-    # print (len (predictions))
-    # predictions = [temp.format(*ele) for ele in zip(*[iter(predictions)] * N)]
-    # targets = [temp.format(*ele) for ele in zip(*[iter(targets)] * N)]
-
-
-    # print (len (segmented_list))
-    # exit ()
-
-
     total_bleu = 0
     total_meteor = 0
     total_bert_score = 0
@@ -110,13 +94,8 @@ if __name__ == "__main__":
       pred = str (pred).replace('\_', '').replace('\n', ' ').strip()
       targ = targ.strip()
 
-
       bleu_score = BLEU_metric.score([targ], [pred])[0]
       meteor_score = METEOR_metric.score([targ], [pred])[0]
-
-    #   bleu_score = BLEU_metric.score([targ.split()], [pred.split()])[0]
-    #   meteor_score = METEOR_metric.score([targ.split()], [pred.split()])[0]
-
 
       bert_score = BERTSCORE_metric.score([pred], [targ])[0]
 

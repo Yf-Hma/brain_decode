@@ -84,11 +84,8 @@ def test_from_loader (val_data_loader, model, model_name, epoch):
     results = []
     sample_id = 0
     for sample in val_data_loader:
-
-        src_fmri = sample["signal"]
-
         ground_truth = sample["text_output"]
-        output_text = model.generate (src_fmri)
+        output_text = model.generate (sample)
 
         for a, b in  zip(output_text, ground_truth):
             results.append ({"text_predicted": a, "text_target": b})

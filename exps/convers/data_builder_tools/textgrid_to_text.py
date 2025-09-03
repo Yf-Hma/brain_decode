@@ -4,7 +4,7 @@ import os, sys
 import shutil
 
 sys.path.insert(0, os.getcwd())
-import src.configs.convers.configs as configs
+import configs.configs_convers as configs
 
 
 def parse_textgrid(file_path):

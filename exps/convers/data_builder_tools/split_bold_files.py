@@ -4,8 +4,7 @@ import pandas as pd
 import numpy as np
 
 sys.path.insert(0, os.getcwd())
-
-import src.configs.convers.configs as configs
+import configs.configs_convers as configs
 
 def split_tensor(tensor, sub_tensor_length, exclude_steps):
     time_steps = tensor.shape[0]

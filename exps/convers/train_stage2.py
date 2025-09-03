@@ -4,13 +4,14 @@ import torch
 import sys
 import json
 
+from tokenizers import Tokenizer
 from transformers import set_seed
 
 sys.path.insert(0, os.getcwd())
 
-from src.load_convers_data import data_builder
-from src.models.models_convers import BrainDEC_V0, BrainDEC_V1, BrainDEC_V2
-import src.configs.convers.configs as configs
+from src.loaders.dataloader_convers import get_loaders as convers_loader
+from src.model import BrainDEC_V0, BrainDEC_V1, BrainDEC_V2
+import configs.configs_convers as configs
 from src.transformers_src.Transformer import *
 
 
@@ -90,6 +91,7 @@ if __name__ == '__main__':
     parser.add_argument("--lr", default = 0.0001, type = float)
     parser.add_argument("--starting_epoch", default = 1, type = int)
     parser.add_argument("--save_epochs", default = 50, type = int)
+    parser.add_argument("--device", default = "cuda", type = str)
     parser.add_argument("--epochs", default = 200, type = int)
     parser.add_argument("--saved_checkpoint", "-s", type = str)
     parser.add_argument('--use_lora', action='store_true', help = "To use LoRA on the decoder LLM.")
@@ -104,19 +106,41 @@ if __name__ == '__main__':
     'BrainDEC_V2':BrainDEC_V2,
     }
 
-    data_loader = data_builder(args.batch_size)
     set_seed(args.seed)
-
-
     assert os.path.exists(configs.LLM_PATH), "LLM_PATH does not exist."
 
+    ################# Load Datasets #######################
+    train_set_convers, test_set_convers = convers_loader(batch_size = args.batch_size, 
+                                                         val_batch_size = args.batch_size, 
+                                                         version = args.model_name.split("_")[-1])
 
     ################# Init fMRI Encoder #######################
     encoder_path = os.path.join (configs.MODELS_TRAIN_PATH, "DeconvBipartiteTransformerConv_%d.pt"%(configs.src_fmri_features))
-    encoder_class = DeconvBipartiteTransformerConv
+    
+    assert os.path.exists(encoder_path), "Encoder path does not exist."
 
+    tokenizer = Tokenizer.from_file("./tools/tokenizer-convers.json")
+    vocab_len = tokenizer.get_vocab_size()
+    encoder_model = DeconvBipartiteTransformerConv(configs.time_steps, 
+                                                   configs.src_fmri_features, 
+                                                   configs.max_size,\
+                                                   vocab_len, 
+                                                   configs.d_model, 
+                                                   configs.d_ff, 
+                                                   configs.N, 
+                                                   configs.heads, 
+                                                   args.device).float()
+    
+    encoder_model.load_state_dict(torch.load(encoder_path, weights_only=True))
+    encoder_model = encoder_model.encoder
+    
     ################# Init BrainDEC Model #######################
-    BrainDEC_model = models_dict[args.model_name](encoder_class = encoder_class, encoder_path = encoder_path, load_in_4bit = args.load_in_4bit, lora = args.use_lora, inference_mode = args.test)
+    mllm_model = models_dict[args.model_name](encoder_model, 
+                                              configs, 
+                                              configs.src_fmri_features, 
+                                              load_in_4bit = args.load_in_4bit, 
+                                              lora = args.use_lora, 
+                                              device=args.device)
 
     ################# Checkpoint Filename #######################
     if args.use_lora:
@@ -127,17 +151,17 @@ if __name__ == '__main__':
     ################# Model Training / Testing #######################
     if args.test:
         name = args.saved_checkpoint.split('/')[-1].split('.')[0]
-        BrainDEC_model = load_from_checkpoint(llm, args.saved_checkpoint)
-        test (llm, data_loader["test"], name)
+        mllm_model = load_from_checkpoint(mllm_model, args.saved_checkpoint)
+        test (mllm_model, test_set_convers, name)
     else:
         if args.retrain:
-            BrainDEC_model = load_from_checkpoint(llm, args.saved_checkpoint)
+            mllm_model = load_from_checkpoint(mllm_model, args.saved_checkpoint)
 
-        train (BrainDEC_model,
+        train (mllm_model,
             name,
             configs.type,
-            data_loader["train"],
-            data_loader["test"],
+            train_set_convers,
+            test_set_convers,
             configs.MODELS_TRAIN_PATH,
             epochs = args.epochs,
             save_epochs = args.save_epochs,

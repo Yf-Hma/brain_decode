@@ -8,8 +8,9 @@ import json
 
 sys.path.insert(0, os.getcwd())
 
-import src.configs.convers.configs as configs
-from src.load_convers_data import data_builder
+import configs.configs_convers as configs
+from src.loaders.dataloader_convers import get_loaders as convers_loader
+
 from src.transformers_src.Transformer import *
 from src.transformers_src.Train_Function import train_model
 
@@ -40,7 +41,7 @@ def inference(model, saving_file, tokenizer, vocab_len, test_dataset, sos_token_
     for batch in test_dataset:
         # batch_end = min(batch_start + batch_size, train_num_samples)
         # batch = train_dataset[batch_start:batch_end]
-        src, trg_sentences = batch["bold_signal"], batch["text_output"]
+        src, trg_sentences = batch["signal"], batch["text_output"]
 
         trg = []
         for a in trg_sentences:
@@ -88,6 +89,7 @@ def generate_sentence_ids(model, src, sos_token_id, eos_token_id, pad_token_id, 
             prob[:, t, :] = next_prob
 
             next_tokens = next_prob.argmax(dim=-1)
+            
             sentences[:, t] = int (next_tokens)
 
     return sentences.to(device), prob.to(device), logits.to(device)
@@ -140,11 +142,19 @@ if __name__ == '__main__':
         batch_size = 1
 
     ################ Datasets ##############
-    data_loader = data_builder(batch_size=batch_size)
+    train_set_convers, test_set_convers = convers_loader(batch_size = batch_size, val_batch_size = batch_size)
 
     ################ Model Init ##############
     model_class = models_dict[args.model_name]
-    model = model_class(time_steps, src_fmri_features, max_size, vocab_len, d_model, d_ff, N, heads, device).to(device)
+    model = model_class(time_steps, 
+                        src_fmri_features, 
+                        max_size, 
+                        vocab_len, 
+                        d_model, 
+                        d_ff, 
+                        N, 
+                        heads, 
+                        device).to(device)
     model = model.float()
     optim = torch.optim.Adam(model.parameters(), lr=args.lr)
 
@@ -162,10 +172,10 @@ if __name__ == '__main__':
             os.mkdir('results/convers/%s'%(args.model_name))
 
         saving_file = 'results/convers/%s/%s.json'%(args.model_name, name)
-        inference(model, saving_file, tokenizer, vocab_len, data_loader["test"], sos_token_id, eos_token_id, pad_token_id, max_size, device)
+        inference(model, saving_file, tokenizer, vocab_len, test_set_convers, sos_token_id, eos_token_id, pad_token_id, max_size, device)
     else:
         if args.retrain:
             assert os.path.exists('%s.pt'%(out_name)), "Checkpoint does not exists."
             checkpoint = torch.load('%s.pt'%(out_name), map_location=torch.device(device))
             model.load_state_dict(checkpoint)
-        model = train_model(out_name, model, data_loader["train"], batch_size, optim, epochs, lr, N, sos_token_id, eos_token_id, pad_token_id,max_size, tokenizer, device, wandb_log)
+        model = train_model(out_name, model, train_set_convers, batch_size, optim, epochs, lr, N, sos_token_id, eos_token_id, pad_token_id,max_size, tokenizer, device, wandb_log)

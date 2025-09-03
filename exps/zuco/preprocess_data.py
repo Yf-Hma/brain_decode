@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, os.getcwd())
 
-import src.configs.zuco.configs as configs
+import configs.configs_zuco as configs
 
 parser = argparse.ArgumentParser(description='Specify task name for converting ZuCo v1.0 Mat file to Pickle')
 parser.add_argument('-t', '--task_name', help='name of the task in /dataset/ZuCo, choose from {task1-SR,task2-NR,task3-TSR}', required=True)
