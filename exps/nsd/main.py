@@ -48,11 +48,12 @@ def main_single(ngpus_per_node, encoder_model, data_path, src_fmri_features, arg
 
     print('Making model..')
     llm = BrainDEC_V0(encoder_model,
-                      configs, 
-                      src_fmri_features, 
-                      freeze_encoder = False, 
+                      configs,
+                      src_fmri_features,
+                      lora=True,
+                      freeze_encoder = False,
                       load_in_4bit = args.load_in_4bit)
-    
+
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
     lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs)
 
@@ -105,14 +106,14 @@ def main_worker(rank, ngpus_per_node, encoder_model, data_path, src_fmri_feature
                                         world_size=args.world_size,
                                         coco_captions_file = coco_captions_file
                                         )
-    
+
     # N_samples per rank
     n_samples = 0
     for sample in train_loader:
         n_samples += 1
 
 
-    print('Making model..')    
+    print('Making model..')
     llm = BrainDEC_V0(encoder_model, configs, src_fmri_features, freeze_encoder = False, device="cuda:%d"%rank, load_in_4bit = args.load_in_4bit).to("cuda:%d"%rank)
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
 
@@ -168,13 +169,13 @@ def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loader
         if args.distributed:
             dist.barrier()
 
-        if epoch % save_epochs == 0:                
+        if epoch % save_epochs == 0:
             if rank == 0:
                 if args.distributed:
                     test_from_loader (val_loader, model.module, model_name, args, epoch)
                 else:
                     test_from_loader (val_loader, model, model_name, args, epoch)
-                    
+
                 print ('Loss: ', (mean_loss / n_samples))
                 if (mean_loss / n_samples) < best_loss:
                     best_loss = mean_loss / n_samples
@@ -184,8 +185,8 @@ def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loader
                     save_checkpoint(model.module, optim, lr_scheduler, epoch, model_name, saving_path, best_loss)
                 else:
                     save_checkpoint(model, optim, lr_scheduler, epoch, model_name, saving_path, best_loss)
-                    
-                    
+
+
 
 def test_from_loader (data_loader, model, model_name, args, epoch):
     model.eval()
@@ -209,9 +210,14 @@ def test_from_loader (data_loader, model, model_name, args, epoch):
 
 
 def test (data_path, encoder_model, configs, src_fmri_features, args):
-    
-    model = BrainDEC_V0(encoder_model, configs, src_fmri_features, freeze_encoder = False, load_in_4bit=args.load_in_4bit)
-    
+
+    model = BrainDEC_V0(encoder_model,
+                        configs,
+                        src_fmri_features,
+                        lora=True,
+                        freeze_encoder = False,
+                        load_in_4bit=args.load_in_4bit)
+
     model_name = args.saved_checkpoint.split('/')[-1].split('.')[0]
     checkpoint = torch.load(args.saved_checkpoint, map_location="cuda")
 
@@ -340,23 +346,23 @@ if __name__ == '__main__':
     data_path = configs.DATA_PATH
 
     #########################################################
-    encoder_model = Transformer(configs.time_steps, 
-                                src_fmri_features, 
+    encoder_model = Transformer(configs.time_steps,
+                                src_fmri_features,
                                 configs.max_size,
                                 configs.vocab_len,
-                                configs.d_model, 
-                                configs.d_ff, 
-                                configs.N, 
-                                configs.heads, 
+                                configs.d_model,
+                                configs.d_ff,
+                                configs.N,
+                                configs.heads,
                                 args.device).to(args.device).encoder
-    
+
     #########################################################
     if args.test:
         test (data_path, encoder_model, configs, src_fmri_features, args)
     else:
         ngpus_per_node = torch.cuda.device_count()
         args.world_size = ngpus_per_node
-        
+
         if args.distributed:
             mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, encoder_model, data_path, src_fmri_features, args))
         else:
