@@ -139,9 +139,8 @@ This is a comparison with brain understanding benchmark ([BrainHub](https://gith
 
 
 #### Results
-The results presented here show an improvement over those reported in the paper after (1) training the first stage of the model in a cross-subject manner, (2) using the curated coco annotations (COCO_73k_annots_curated.npy) and (3) adjustment of the decoder LLM’s inference hyperparameters (see the [configuration file](configs/configs_nsd.py).
-Not that the results may vary depending on initialization seed and non-deterministic behavior of some underlying algorithms, but the overall variation is relatively low. The presented values in the following tables corresponding to BrainDEC are the average over 3 runs.
-We compare our model with existing methods available in the [BrainHub benchmark](https://github.com/weihaox/BrainHub):
+The results presented here improve upon those reported in the paper by (1) training the first stage in a cross-subject manner, (2) using curated COCO annotations (COCO_73k_annots_curated.npy) and (3) adjusting the decoder LLM’s inference hyperparameters (see the [configuration file](configs/configs_nsd.py)).
+Results may vary slightly due to initialization and non-deterministic algorithms, but the variation remains low. Reported BrainDEC values are averaged over three runs. We compare our model with existing methods from the [BrainHub benchmark](https://github.com/weihaox/BrainHub):
 
 | Method    | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | CIDEr | SPICE | CLIPS | RefCLIPS |
 |-----------|------|-------|-------|--------|-------|-------|-------|-------|----------|
