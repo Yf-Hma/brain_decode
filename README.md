@@ -138,9 +138,10 @@ This a comparison with brain understanding benchmark ([BrainHub](https://github.
  With DATA_PATH set to "data/nsd", you should obtain the following structure:
 
 
-#### Comparison with BrainHub Benchmark
-The results presented in this benchmark show an improvement over those reported in the paper after (1) training the first stage of the model in a cross-subject manner, (2) using the curated coco annotations (COCO_73k_annots_curated.npy) and (3) adjustment of the decoder LLM’s inference hyperparameters (see the [configuration file](configs/configs_nsd.py).
+#### Results
+The results presented here show an improvement over those reported in the paper after (1) training the first stage of the model in a cross-subject manner, (2) using the curated coco annotations (COCO_73k_annots_curated.npy) and (3) adjustment of the decoder LLM’s inference hyperparameters (see the [configuration file](configs/configs_nsd.py).
 Not that the results may vary depending on initialization seed and non-deterministic behavior of some underlying algorithms, but the overall variation is relatively low. The presented values in the following tables corresponding to BrainDEC are the average over 3 runs.
+We compare our model with existing methods available in the [BrainHub benchmark](https://github.com/weihaox/BrainHub):
 
 | Method    | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | CIDEr | SPICE | CLIPS | RefCLIPS |
 |-----------|------|-------|-------|--------|-------|-------|-------|-------|----------|
