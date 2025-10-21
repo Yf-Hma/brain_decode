@@ -19,76 +19,6 @@ import configs.configs_convers as configs
 
 _, preprocessor = clip.load("ViT-B/32", device="cuda")
 
-# class BoldCaptioningDataset(Dataset):
-#     def __init__(self, dataset):
-#         super(BoldCaptioningDataset, self).__init__()
-#         self.dataset = dataset
-#         self.prompt = ""
-#         self.max_words = 200
-#         _, self.preprocess = clip.load("ViT-B/32", device="cuda")
-#         self.device = "cuda"
-
-
-#     def __len__(self):
-#         return len(self.dataset)
-
-#     def pre_caption(self, caption):
-#         caption = re.sub(
-#             r"([.!\"()*#:;~])",
-#             " ",
-#             caption.lower(),
-#         )
-#         caption = re.sub(
-#             r"\s{2,}",
-#             " ",
-#             caption,
-#         )
-#         caption = caption.rstrip("\n")
-#         caption = caption.strip(" ")
-
-#         # truncate caption
-#         caption_words = caption.split(" ")
-#         if len(caption_words) > self.max_words:
-#             caption = " ".join(caption_words[: self.max_words])
-
-#         return caption
-
-
-#     def __getitem__(self, idx):
-#         #item = self.dataset[idx]
-#         bold_path = numpy.load (self.dataset[idx]["bold_signal"])
-#         bold_signal = torch.Tensor (bold_path)#.unsqueeze (0)
-
-#         assert bold_signal.shape[0] == configs.time_steps
-#         assert bold_signal.shape[1] == configs.src_fmri_features
-
-#         caption = self.prompt + self.pre_caption(self.dataset[idx]["text-output"])
-#         query = self.pre_caption(self.dataset[idx]["text-input"])
-
-#         try:
-#             image = Image.open(self.dataset[idx]["image"])
-#             image = image.resize((224,224))
-#             images_input = self.preprocess(image)
-#         except:
-#             images_input = None
-
-#         return {"signal": bold_signal, "text_input":query, "text_output":caption, "image": images_input}
-
-#     def collater(self, samples):
-#         # Filter out None samples
-#         samples = [s for s in samples if s is not None]
-#         # Check if samples is empty after filtering
-#         if not samples:
-#             return {}
-#         collated_dict = {}
-#         keys = samples[0].keys() # Use the keys of the first sample as a reference
-#         for k in keys:
-#             values = [sample[k] for sample in samples]
-#             # If the value type for the key is torch.Tensor, stack them else return list
-#             collated_dict[k] = torch.stack(values, dim=0) if isinstance(values[0], torch.Tensor) else values
-#         return collated_dict
-
-
 
 def pre_caption(caption, max_words=200):
     caption = re.sub(
@@ -121,7 +51,7 @@ def read_signal (signal_path):
     # elif len(bold_signal.shape) == 2:
     #     padded = torch.zeros(bold_signal.shape[0], configs.src_fmri_features_max - bold_signal.shape[1])
     #     bold_signal = torch.cat([bold_signal,padded], dim = 1)
-        
+
     return bold_signal
 
 
@@ -216,7 +146,7 @@ class IndexableDataset(IterableDataset):
                 batch["signal"] = torch.stack(batch["signal"])
                 batch["image"] = torch.stack(batch["image"])
                 yield batch
-            
+
             if  self.drop_last==False:
                 batch["signal"] = torch.stack(batch["signal"])
                 batch["image"] = torch.stack(batch["image"])
@@ -245,4 +175,3 @@ if __name__ == '__main__':
         # print (len (item["text_output"]))
         if i==1:
             break
-

@@ -37,7 +37,7 @@ def get_dataloaders(
     rank=0,
     world_size=1
 ):
-    
+
 
     def transform_sample(sample):
 
@@ -57,10 +57,10 @@ def get_dataloaders(
 
     print("Getting dataloaders...")
     assert image_var == 'images'
-    
+
     def my_split_by_node(urls):
         return urls
-    
+
     train_url = list(braceexpand.braceexpand(train_url))
     val_url = list(braceexpand.braceexpand(val_url))
 
@@ -68,10 +68,10 @@ def get_dataloaders(
 
     if num_devices is None:
         num_devices = torch.cuda.device_count()
-    
+
     if num_workers is None:
         num_workers = num_devices
-    
+
     if num_train is None:
         metadata = json.load(open(meta_url))
         num_train = metadata['totals']['train']
@@ -81,12 +81,12 @@ def get_dataloaders(
 
     if val_batch_size is None:
         val_batch_size = batch_size
-        
+
     global_batch_size = batch_size * num_devices
     num_batches = math.floor(num_train / global_batch_size)
     num_worker_batches = math.floor(num_batches / num_workers)
     if num_worker_batches == 0: num_worker_batches = 1
-    
+
 
     num_samples = int(num_train * data_ratio)
     train_data = wds.WebDataset(train_url,
@@ -108,15 +108,15 @@ def get_dataloaders(
 
     train_dl = DataLoader(train_data, batch_size=None, shuffle=False,  worker_init_fn=np.random.seed(42), pin_memory=False, num_workers=0)
 
-    # validation (no shuffling, should be deterministic)  
+    # validation (no shuffling, should be deterministic)
     num_batches = math.floor(num_val / global_batch_size)
     num_worker_batches = math.floor(num_batches / num_workers)
     if num_worker_batches == 0: num_worker_batches = 1
-    
+
     # print("\nnum_val", num_val)
     # print("val_num_batches", num_batches)
     # print("val_batch_size", val_batch_size)
-    
+
     val_data = wds.WebDataset(val_url, resampled=False, shardshuffle=False, cache_dir=cache_dir, nodesplitter=my_split_by_node)\
         .decode("torch")\
         .rename(images="jpg;png", voxels=voxels_key, trial="trial.npy", coco="coco73k.npy", reps="num_uniques.npy")\
@@ -124,8 +124,8 @@ def get_dataloaders(
         .batched(val_batch_size, partial=True)
 
     val_data = val_data.map(transform_sample)
-    val_dl = DataLoader(val_data, 
-                        batch_size=None, 
+    val_dl = DataLoader(val_data,
+                        batch_size=None,
                         shuffle=False)
 
     return train_dl, val_dl, num_train, num_val
@@ -142,7 +142,7 @@ def get_loaders (data_path, subj, batch_size, val_batch_size, num_devices, rank,
     num_workers = num_devices
     print('\nprepare train and validation dataloaders...')
     train_dl, val_dl, num_train, num_val = get_dataloaders(
-        batch_size, 
+        batch_size,
         coco_captions_file,
         'images',
         num_devices=num_devices,
@@ -153,31 +153,12 @@ def get_loaders (data_path, subj, batch_size, val_batch_size, num_devices, rank,
         num_train=num_train,
         num_val=num_val,
         val_batch_size=val_batch_size,
-        cache_dir=data_path, 
+        cache_dir=data_path,
         voxels_key='nsdgeneral.npy',
         to_tuple=["voxels", "images", "coco"],
         subj=subj,
-        rank=rank, 
+        rank=rank,
         world_size=world_size
     )
 
     return train_dl, val_dl, num_train, num_val
-
-
-
-if __name__ == '__main__':
-
-    data_path = '/home/youssef.hmamouche/lustre/aim_neural-7he0p8agska/users/youssef.hmamouche/brain_decode_small/data/nsd/'
-
-    coco_captions_file = np.load('tools/COCO_73k_annots_curated.npy')
-
-    train_loader, test_loader, _, _ = get_loaders (data_path, "1", 16, 16, num_devices=1, rank = 0, world_size=1, coco_captions_file=coco_captions_file)
-
-    for item in train_loader:
-        print (item ["signal"].shape, item ["text_output"])
-        break
-
-    for item in test_loader:
-        print (item ["signal"].shape, item ["text_output"])
-        break
-    
