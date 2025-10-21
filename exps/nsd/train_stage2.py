@@ -10,6 +10,8 @@ import torch.distributed as dist
 import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
 
+from tokenizers import Tokenizer
+
 torch.cuda.empty_cache()
 
 sys.path.insert(0, os.getcwd())
@@ -23,9 +25,22 @@ from src.transformers_src.Transformer import DeconvBipartiteTransformerConv, Tra
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-set_seed(42)
 
+#coco_captions_file = np.load('tools/COCO_73k_annots_curated.npy')
 coco_captions_file = np.load('tools/COCO_73k_annots_curated.npy')
+
+class SingleLayerModule(torch.nn.Module):
+    def __init__(self, input_features, output_features):
+        super(SingleLayerModule, self).__init__()
+        # Define the single layer here, for example, a linear layer
+        #self.hidden_layer = torch.nn.Linear(input_features, 64)
+        self.linear_layer = torch.nn.Linear(input_features, output_features)
+
+    def forward(self, x):
+        # Define the forward pass through the single layer
+        return self.linear_layer(x[0][-1])
+
+
 
 def main_single(ngpus_per_node, encoder_model, data_path, src_fmri_features, args):
     print('Making datasets..')
@@ -48,14 +63,15 @@ def main_single(ngpus_per_node, encoder_model, data_path, src_fmri_features, arg
 
     print('Making model..')
     llm = BrainDEC_V0(encoder_model,
-                      configs,
-                      src_fmri_features,
+                      configs, 
+                      src_fmri_features, 
+                      freeze_encoder = True, 
                       lora=True,
-                      freeze_encoder = False,
+                      align = "aug",
                       load_in_4bit = args.load_in_4bit)
-
+    
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
-    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs)
+    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=7)
 
     if args.retrain:
         args.starting_epoch, best_loss = load_from_checkpoint(llm, optim, lr_scheduler, args.saved_checkpoint, args.starting_epoch, 0)
@@ -106,15 +122,21 @@ def main_worker(rank, ngpus_per_node, encoder_model, data_path, src_fmri_feature
                                         world_size=args.world_size,
                                         coco_captions_file = coco_captions_file
                                         )
-
+    
     # N_samples per rank
     n_samples = 0
     for sample in train_loader:
         n_samples += 1
 
-
-    print('Making model..')
-    llm = BrainDEC_V0(encoder_model, configs, src_fmri_features, freeze_encoder = False, device="cuda:%d"%rank, load_in_4bit = args.load_in_4bit).to("cuda:%d"%rank)
+    print('Making model..')    
+    llm = BrainDEC_V0(encoder_model, 
+                      configs, src_fmri_features, 
+                      freeze_encoder = True, 
+                      lora=True,
+                      align = "aug",
+                      device="cuda:%d"%rank, 
+                      load_in_4bit = args.load_in_4bit).to("cuda:%d"%rank)
+    
     optim = torch.optim.AdamW (llm.parameters(), lr = args.lr, betas=(0.9, 0.99))
 
     lr_scheduler = torch.optim.lr_scheduler.OneCycleLR (optim, max_lr=0.001, steps_per_epoch=n_samples, epochs=args.epochs)
@@ -169,24 +191,23 @@ def train (model, optim, lr_scheduler, model_name, type, val_loader, data_loader
         if args.distributed:
             dist.barrier()
 
-        if epoch % save_epochs == 0:
+        if epoch % save_epochs == 0:                
             if rank == 0:
                 if args.distributed:
                     test_from_loader (val_loader, model.module, model_name, args, epoch)
                 else:
                     test_from_loader (val_loader, model, model_name, args, epoch)
-
+                    
                 print ('Loss: ', (mean_loss / n_samples))
-                if (mean_loss / n_samples) < best_loss:
-                    best_loss = mean_loss / n_samples
-                    print(model_name + "_" + type, epoch, saving_path)
+                current_loss = mean_loss / n_samples
+                print(model_name + "_" + type, epoch, saving_path)
 
                 if args.distributed:
-                    save_checkpoint(model.module, optim, lr_scheduler, epoch, model_name, saving_path, best_loss)
+                    save_checkpoint(model.module, optim, lr_scheduler, epoch, model_name, saving_path, current_loss)
                 else:
-                    save_checkpoint(model, optim, lr_scheduler, epoch, model_name, saving_path, best_loss)
-
-
+                    save_checkpoint(model, optim, lr_scheduler, epoch, model_name, saving_path, current_loss)
+                    
+                    
 
 def test_from_loader (data_loader, model, model_name, args, epoch):
     model.eval()
@@ -210,14 +231,15 @@ def test_from_loader (data_loader, model, model_name, args, epoch):
 
 
 def test (data_path, encoder_model, configs, src_fmri_features, args):
-
-    model = BrainDEC_V0(encoder_model,
-                        configs,
-                        src_fmri_features,
+    
+    model = BrainDEC_V0(encoder_model, 
+                        configs, 
+                        src_fmri_features, 
+                        freeze_encoder = True, 
                         lora=True,
-                        freeze_encoder = False,
+                        align = "aug",
                         load_in_4bit=args.load_in_4bit)
-
+    
     model_name = args.saved_checkpoint.split('/')[-1].split('.')[0]
     checkpoint = torch.load(args.saved_checkpoint, map_location="cuda")
 
@@ -296,7 +318,7 @@ def load_from_checkpoint(model, optimizer, lr_scheduler, checkpoint_path, starti
         start_epoch = starting_epoch +1
 
     if "loss" in checkpoint.keys():
-        best_loss = checkpoint["loss"]
+        best_loss = torch.tensor(checkpoint["loss"])
     else:
         best_loss = 10000
 
@@ -307,7 +329,7 @@ def load_from_checkpoint(model, optimizer, lr_scheduler, checkpoint_path, starti
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", default = 64, type = int)
-    parser.add_argument("--val_batch_size", default = 128, type = int)
+    parser.add_argument("--val_batch_size", default = 64, type = int)
     parser.add_argument("--seed", default = 42, type=int)
     parser.add_argument("--model_name", "-m", help="Name of the model to train.",
                         choices = ["MllmBrainToText_normal", "MllmBrainToText_deconv", "MllmBrainToText_clip_normal", "MllmBrainToText_clip_deconv"],
@@ -317,7 +339,7 @@ if __name__ == '__main__':
     parser.add_argument("--lr", default = 0.0001, type = float)
     parser.add_argument("--starting_epoch", default = 1, type = int)
     parser.add_argument("--save_epochs", default = 1, type = int)
-    parser.add_argument("--epochs", default = 6, type = int)
+    parser.add_argument("--epochs", default = 7, type = int)
     parser.add_argument("--device", default = "cuda", type = str)
     parser.add_argument("--saved_checkpoint", "-s", type = str)
     parser.add_argument('--load_in_4bit', action='store_true', help = "to load the llm quantized in 4 bits for inference.")
@@ -332,12 +354,13 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    set_seed(42)
+
     #########################################################
     args.saving_path = configs.MODELS_TRAIN_PATH
 
     #voxels_per_subj = {1: 15724, 2: 14280, 5: 13040, 7: 12685}
     src_fmri_features = 17910
-
 
     if not os.path.exists("results/nsd"):
         os.mkdir("results/nsd")
@@ -345,24 +368,40 @@ if __name__ == '__main__':
     args.model_name = "BrainDEC_V0"
     data_path = configs.DATA_PATH
 
-    #########################################################
-    encoder_model = Transformer(configs.time_steps,
-                                src_fmri_features,
-                                configs.max_size,
-                                configs.vocab_len,
-                                configs.d_model,
-                                configs.d_ff,
-                                configs.N,
-                                configs.heads,
-                                args.device).to(args.device).encoder
 
+    ################# Init fMRI Encoder #######################
+    encoder_path = os.path.join (configs.MODELS_TRAIN_PATH, "DeconvBipartiteTransformerConv_%s_caption.pt"%(configs.src_fmri_features))
+    assert os.path.exists(encoder_path), "Encoder path does not exist."
+    
+    tokenizer = Tokenizer.from_file("tools/tokenizer_nsd.json")
+    vocab_len = tokenizer.get_vocab_size()
+
+    transformer_model = DeconvBipartiteTransformerConv(configs.time_steps, 
+                                src_fmri_features, 
+                                configs.max_size,
+                                vocab_len,
+                                configs.d_model, 
+                                configs.d_ff, 
+                                configs.N, 
+                                configs.heads, 
+                                args.device).to(args.device)
+    
+    checkpoint = torch.load(encoder_path, weights_only=True, map_location="cuda")
+    transformer_model.load_state_dict(checkpoint)
+
+    encoder_model = transformer_model.encoder
+
+    #encoder_model = torch.nn.Sequential (encoder_model, encoder_raw)
+
+    #encoder_model = torch.nn.Sequential (encoder_raw, SingleLayerModule(src_fmri_features, configs.d_model))
+    
     #########################################################
     if args.test:
         test (data_path, encoder_model, configs, src_fmri_features, args)
     else:
         ngpus_per_node = torch.cuda.device_count()
         args.world_size = ngpus_per_node
-
+        
         if args.distributed:
             mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, encoder_model, data_path, src_fmri_features, args))
         else:

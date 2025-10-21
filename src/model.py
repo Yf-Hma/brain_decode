@@ -5,8 +5,7 @@ from peft import get_peft_model, LoraConfig
 
 from CLIP import clip
 
-
-########## Aligenemnt Block ##############
+########## Aligenemnt Block 1 ##############
 class alignment_block(nn.Module):
     def __init__(self, encoder, input_size, output_size, src_features_max, freeze_encoder, dropout_rate=0.01, device="cuda"):
         super(alignment_block, self).__init__()
@@ -37,6 +36,52 @@ class alignment_block(nn.Module):
         
         return x
     
+
+########## Aligenemnt Block 2 ##############
+class alignment_block_aug(nn.Module):
+    def __init__(self, encoder, input_size, output_size, src_features_max, freeze_encoder, dropout_rate=0.01, device="cuda"):
+        super(alignment_block_aug, self).__init__()
+        
+        self.linear_input = nn.Linear(src_features_max, input_size, device=device)
+        self.linear = nn.Linear(input_size, output_size, device=device)
+        self.dropout = nn.Dropout(dropout_rate).to(device)
+        self.linear_out = nn.Linear(output_size, output_size, device=device)
+        self.device = device
+
+        self.src_features_max = src_features_max
+        self.layer_norm = nn.LayerNorm(input_size)
+
+        # Adding learnable parameters to the encoder
+        encoder_layer = torch.nn.TransformerEncoderLayer(input_size, nhead=4, batch_first=True)
+        self.encoder_raw = torch.nn.TransformerEncoder(encoder_layer, num_layers=8)
+
+        #Freeze the encoder
+        self.encoder = encoder
+        if freeze_encoder:
+            for name, param in self.encoder.named_parameters():
+                param.requires_grad = False
+            self.encoder.eval()
+
+    def forward(self, x):
+
+        y = self.linear_input(x)
+        y = self.encoder_raw(y)
+        y = self.layer_norm(y)
+
+        x, _ = self.encoder (x)
+        x = x[-1]
+        x = self.layer_norm(x)
+
+        x = x[:, :3, :] + y
+        #x = torch.cat((x[:, :y.shape[1], :], y), 2)
+        x = self.layer_norm(x)
+
+        x = self.dropout(x)
+        x = self.linear(x)
+        x = self.linear_out(x)
+        
+        return x
+    
 ########## BrainDEC models ##############
 class BrainDEC_V0(nn.Module):
     def __init__(
@@ -50,7 +95,8 @@ class BrainDEC_V0(nn.Module):
         lora = False,
         inference_mode = False,
         load_in_4bit = False,
-        device = "cuda"
+        device = "cuda",
+        align = "normal"
     ):
         super().__init__()
 
@@ -61,9 +107,13 @@ class BrainDEC_V0(nn.Module):
         model_name_or_path = configs.LLM_PATH
 
         # Alignment_block for fMRI Encoder adaptation
-        llm_hidden_dim = configs.llm_hidden_dim        
-        self.frmi_encoder = alignment_block(encoder_model, d_model, llm_hidden_dim,  src_features_max, freeze_encoder, device=self.device).to(self.device)
-
+        llm_hidden_dim = configs.llm_hidden_dim     
+        
+        if align == "normal":   
+            self.frmi_encoder = alignment_block(encoder_model, d_model, llm_hidden_dim,  src_features_max, freeze_encoder, device=self.device).to(self.device)
+        elif align == "aug":   
+            self.frmi_encoder = alignment_block_aug(encoder_model, d_model, llm_hidden_dim,  src_features_max, freeze_encoder, device=self.device).to(self.device)
+            
         self.llm_tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
 
         if load_in_4bit:

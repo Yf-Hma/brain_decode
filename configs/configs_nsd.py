@@ -7,6 +7,8 @@ assert os.path.exists(MODELS_TRAIN_PATH), "MODELS_TRAIN_PATH does not exist."
 LLM_PATH = "LLMs/llama3"
 LLM_name = "llama"
 
+src_fmri_features = 17910
+
 # Transformers configs
 d_model = 1024
 emb_dim = d_model
@@ -18,12 +20,13 @@ max_size = 40
 type = 'caption'
 vocab_len = 20702
 
+
 # MLLM configs
 llm_hidden_dim = 4096
 max_txt_len=64
 max_output_txt_len=64
 use_nucleus_sampling=False
-num_beams=3
+num_beams=2
 max_new_tokens=12
 min_length=1
 top_p=0.9
