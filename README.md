@@ -104,7 +104,7 @@ python exps/perceived/evaluation.py $subject (for $subject  in ['S1', 'S2', 'S3'
 ```   
 
 #### 3. Brain Captioning - BrainHub benchmark on NSD dataset
-This a comparison with brain understanding benchmark ([BrainHub](https://github.com/weihaox/BrainHub)), based on Natural Scenes Dataset [NSD](https://naturalscenesdataset.org/) and [COCO](https://cocodataset.org).
+This is a comparison with brain understanding benchmark ([BrainHub](https://github.com/weihaox/BrainHub)), based on Natural Scenes Dataset [NSD](https://naturalscenesdataset.org/) and [COCO](https://cocodataset.org).
 
 ##### Configuration
 - The processed datasets are available in [here](https://huggingface.co/datasets/pscotti/naturalscenesdataset).
