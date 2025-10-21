@@ -238,10 +238,15 @@ python exps/zuco/evaluation.py
 
 ### Citation
 ```bibtex
-@article{hmamouche2024multimodal,
-  title={A multimodal LLM for the non-invasive decoding of spoken text from brain recordings},
-  author={Hmamouche, Youssef and Chihab, Ismail and Kdouri, Lahoucine and Seghrouchni, Amal El Fallah},
-  journal={arXiv preprint arXiv:2409.19710},
-  year={2024}
+@article{hmamouche2026braindec103589,
+title = {BrainDEC: A Multimodal LLM for the Non-Invasive Decoding of Text from Brain Recordings},
+journal = {Information Fusion},
+volume = {127},
+pages = {103589},
+year = {2026},
+issn = {1566-2535},
+doi = {https://doi.org/10.1016/j.inffus.2025.103589},
+url = {https://www.sciencedirect.com/science/article/pii/S156625352500661X},
+author = {Youssef Hmamouche and Ismail Chihab and Lahoucine Kdouri and Amal El Fallah Seghrouchni}
 }
 ```
