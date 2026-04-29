@@ -57,7 +57,7 @@ def train_model(out_path, model, train_datasets, optimizer, num_epochs, lr, N, s
 
         random.shuffle (train_datasets)
         for train_dataset in train_datasets:
-            
+
             for batch in train_dataset:
                 src, trg_sentences = batch["signal"], batch["text_output"]
 
@@ -109,20 +109,19 @@ if __name__ == '__main__':
     parser.add_argument("--val_batch_size", default = 128, type = int)
     parser.add_argument("--epochs", default = 40, type = int)
     parser.add_argument("--lr", default = 0.0001, type = float)
-    parser.add_argument('--subj', type=int, default=1, choices=[1, 2, 5, 7])
-    
+
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     torch.manual_seed(args.seed)
     seed_everything (args.seed)
-    
-    
+
+
     ################ Parameters Init ##############
     batch_size = args.batch_size
     epochs = args.epochs
     lr = args.lr
-    
+
     pad_token_id, sos_token_id, eos_token_id = 0, 1, 2
 
     src_fmri_features = configs.src_fmri_features
@@ -140,7 +139,7 @@ if __name__ == '__main__':
 
 
     ################ Datasets ##############
-    train_loader, val_loader, _, _ = nsd_loader (data_path, args.subj,
+    train_loader, val_loader, _, _ = nsd_loader (data_path, 1,
                                         args.batch_size,
                                         args.val_batch_size,
                                         num_devices=1,
@@ -148,40 +147,31 @@ if __name__ == '__main__':
                                         world_size = 1,
                                         coco_captions_file = coco_captions_file
                                         )
-    
-    train_loader, val_loader, _, _ = nsd_loader (data_path, 1, 
-                                        args.batch_size, 
-                                        args.val_batch_size, 
-                                        num_devices=1,
-                                        rank = 0, 
-                                        world_size = 1,
-                                        coco_captions_file = coco_captions_file
-                                        )
 
-    train_loader_2, _, _, _ = nsd_loader (data_path, 2, 
-                                        args.batch_size, 
-                                        args.val_batch_size, 
+    train_loader_2, _, _, _ = nsd_loader (data_path, 2,
+                                        args.batch_size,
+                                        args.val_batch_size,
                                         num_devices=1,
-                                        rank = 0, 
+                                        rank = 0,
                                         world_size = 1,
                                         coco_captions_file = coco_captions_file
                                         )
 
 
-    train_loader_5, _, _, _ = nsd_loader (data_path, 5, 
-                                        args.batch_size, 
-                                        args.val_batch_size, 
+    train_loader_5, _, _, _ = nsd_loader (data_path, 5,
+                                        args.batch_size,
+                                        args.val_batch_size,
                                         num_devices=1,
-                                        rank = 0, 
+                                        rank = 0,
                                         world_size = 1,
                                         coco_captions_file = coco_captions_file
                                         )
 
-    train_loader_7, _, _, _ = nsd_loader (data_path, 7, 
-                                        args.batch_size, 
-                                        args.val_batch_size, 
+    train_loader_7, _, _, _ = nsd_loader (data_path, 7,
+                                        args.batch_size,
+                                        args.val_batch_size,
                                         num_devices=1,
-                                        rank = 0, 
+                                        rank = 0,
                                         world_size = 1,
                                         coco_captions_file = coco_captions_file
                                         )
@@ -199,17 +189,15 @@ if __name__ == '__main__':
 
     if args.retrain:
         model = torch.load('%s.pt'%(out_name), map_location=torch.device(device))
-        
-    model = train_model(out_name, model, 
-                        [train_loader, train_loader_2, train_loader_5, train_loader_7], 
-                        optim, epochs, 
-                        lr, 
-                        N, 
-                        sos_token_id, 
-                        eos_token_id, 
+
+    model = train_model(out_name, model,
+                        [train_loader, train_loader_2, train_loader_5, train_loader_7],
+                        optim, epochs,
+                        lr,
+                        N,
+                        sos_token_id,
+                        eos_token_id,
                         pad_token_id,
-                        max_size, 
-                        tokenizer, 
+                        max_size,
+                        tokenizer,
                         device)
-
-
