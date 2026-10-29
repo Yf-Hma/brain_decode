@@ -139,8 +139,7 @@ This is a comparison with brain understanding benchmark ([BrainHub](https://gith
 
 
 #### Results
-The results presented here improve upon those reported in the paper by (1) training the first stage in a cross-subject manner, (2) using curated COCO annotations (COCO_73k_annots_curated.npy) and (3) adjusting the decoder LLM’s inference hyperparameters (see the [configuration file](configs/configs_nsd.py)).
-Results may vary slightly due to initialization and non-deterministic algorithms, but the variation remains low. Reported BrainDEC values are averaged over three runs. We compare our model with existing methods from the [BrainHub benchmark](https://github.com/weihaox/BrainHub):
+Reported BrainDEC values are averaged over three runs. We compare our model with existing methods from the [BrainHub benchmark](https://github.com/weihaox/BrainHub):
 
 | Method    | Eval | BLEU1 | BLEU4 | METEOR | ROUGE | CIDEr | SPICE | CLIPS | RefCLIPS |
 |-----------|------|-------|-------|--------|-------|-------|-------|-------|----------|
@@ -223,18 +222,18 @@ python exps/zuco/train_stage2.py --batch_size 16 --epochs 4
 python exps/zuco/evaluation.py
 ```   
 
+
+### Notes
+* In the comparison on perceived speech decoding, we used the same datasets and configuration setup in this [article](https://www.nature.com/articles/s41593-023-01304-9). Data preprocessing and preparation scripts are taken from this [link](https://github.com/HuthLab/semantic-decoding). We thank the authors for their great work.
+
+* The captioning results presented improve upon those reported in the paper by (1) training the first stage in a cross-subject manner and (2) adjusting the decoder LLM’s inference hyperparameters (see the [configuration file](configs/configs_nsd.py)).
+
+
 ### TODO
 - [x] Apply the proposed methodology for NSD datasets.
 - [x] Test other LLM decoders.
 - [x] Add experiments for decoding text from EEG signals.
 - [x] Cross-subject training for NSD dataset.
-
-### Notes
-* The structure of this repository is in work progress
-* Some parts of the code of this project are adapted from [InstructBlip](https://github.com/salesforce/LAVIS/blob/main/projects/instructblip/README.md), we thank the authors for their great work.
-
-* In the comparison on perceived speech decoding, we used the same datasets and configuration setup in this [article](https://www.nature.com/articles/s41593-023-01304-9). Data preprocessing and preparation scripts are taken from this [link](https://github.com/HuthLab/semantic-decoding). We thank the authors for their great work.
-
 
 ### Citation
 ```bibtex
